@@ -1,0 +1,252 @@
+buttons:
+  pureAccountSettings: Account
+  pureBackTop: BackTop
+  pureClickCollapse: Collapse
+  pureClickExpand: Expand
+  pureClose: Close
+  pureCloseAllTabs: Close AllTabs
+  pureCloseCurrentTab: Close CurrentTab
+  pureCloseLeftTabs: Close LeftTabs
+  pureCloseOtherTabs: Close OtherTabs
+  pureCloseRightTabs: Close RightTabs
+  pureCloseText: Close
+  pureConfirm: Confirm
+  pureContentExitFullScreen: Content ExitFullScreen
+  pureContentFullScreen: Content FullScreen
+  pureLogin: Login
+  pureLoginOut: LoginOut
+  pureOpenSystemSet: Open System Configs
+  pureOpenText: Open
+  pureReload: Reload
+  pureSwitch: Switch
+login:
+  pureAlipayLogin: Alipay Login
+  pureBack: Back
+  pureDefinite: Definite
+  pureForget: Forget Password?
+  pureGetVerifyCode: Get VerifyCode
+  pureInfo: Seconds
+  pureLogin: Login
+  pureLoginFail: Login Fail
+  pureLoginSuccess: Login Success
+  purePassWordDifferentReg: The two passwords do not match!
+  purePassWordReg: Please enter password
+  purePassWordRuleReg: The password format should be any combination of 8-18 digits
+  purePassWordSureReg: Please enter confirm password
+  purePassWordUpdateReg: Password has been updated
+  purePassword: Password
+  purePhone: Phone
+  purePhoneCorrectReg: Please enter the correct phone number format
+  purePhoneLogin: Phone Login
+  purePhoneReg: Please enter the phone
+  purePrivacyPolicy: Privacy Policy
+  pureQQLogin: QQ Login
+  pureQRCodeLogin: QRCode Login
+  pureReadAccept: I have read it carefully and accept
+  pureRegister: Register
+  pureRegisterSuccess: Regist Success
+  pureRemember: days no need to login
+  pureRememberInfo: >-
+    After checking and logging in, will automatically log in to the system
+    without entering your username and password within the specified number of
+    days.
+  pureSmsVerifyCode: SMS VerifyCode
+  pureSure: Sure Password
+  pureTest: Mock Test
+  pureThirdLogin: Third Login
+  pureTickPrivacy: Please tick Privacy Policy
+  pureTip: After scanning the code, click "Confirm" to complete the login
+  pureUsername: Username
+  pureUsernameReg: Your HRM username
+  pureVerifyCode: VerifyCode
+  pureVerifyCodeCorrectReg: Please enter correct verify code
+  pureVerifyCodeReg: Please enter verify code
+  pureVerifyCodeSixReg: Please enter a 6-digit verify code
+  pureWeChatLogin: WeChat Login
+  pureWeiBoLogin: Weibo Login
+menus:
+  calendar: Showing Calendar
+  co: Match / Sublease
+  pureAble: Able
+  pureAbnormal: Abnormal Page
+  pureAbout: About
+  pureAnimatecss: AnimateCss Selector
+  pureBarcode: Barcode
+  pureBoard: Paint Board
+  pureButton: Button Animation
+  pureCardList: Card List Page
+  pureCascader: Area Cascader
+  pureCheckButton: Check Button
+  pureCheckCard: CheckCard
+  pureChildMenuOverflow: Child Menu Overflow Show Tooltip Text
+  pureCodeMirror: CodeMirror
+  pureCollapse: Collapse
+  pureColorHuntDoc: ColorHunt
+  pureColorPicker: Color Picker
+  pureComponents: Components
+  pureContextmenu: Context Menu
+  pureCountTo: Digital Animation
+  pureCropping: Picture Cropping
+  pureDanmaku: Danmaku
+  pureDatePicker: Date Picker
+  pureDateTimePicker: DateTimePicker
+  pureDebounce: Debounce & Throttle
+  pureDept: Dept Manage
+  pureDialog: Dialog
+  pureDownload: Download
+  pureDraggable: Draggable
+  pureDrawer: Drawer
+  pureEditor: Editor
+  pureElButton: Button
+  pureEmbeddedDoc: Docs Embedded
+  pureEmpty: Empty Page
+  pureEpDoc: Element-Plus
+  pureExcel: Export Excel
+  pureExternalDoc: Docs External
+  pureExternalLink: Vue-Pure-Admin
+  pureExternalPage: External Page
+  pureFail: Fail Page
+  pureFive: '500'
+  pureFlowChart: Flow Chart
+  pureFormDesign: Form Design
+  pureFourZeroFour: '404'
+  pureFourZeroOne: '403'
+  pureGanttastic: Gantt Chart
+  pureGuide: Guide
+  pureHome: Home
+  pureIconSelect: Icon Select
+  pureInfiniteScroll: Table Infinite Scroll
+  pureJsonEditor: JSON Editor
+  pureLineTree: LineTree
+  pureList: List Page
+  pureLogin: Login
+  pureLoginLog: Login Log
+  pureMap: Map
+  pureMarkdown: Markdown
+  pureMenu1: Menu1
+  pureMenu1-1: Menu1-1
+  pureMenu1-2: Menu1-2
+  pureMenu1-2-1: Menu1-2-1
+  pureMenu1-2-2: Menu1-2-2
+  pureMenu1-3: Menu1-3
+  pureMenu2: Menu2
+  pureMenuOverflow: Menu Overflow Show Tooltip Text
+  pureMenuTree: Menu Tree
+  pureMenus: MultiLevel Menu
+  pureMessage: Message Tips
+  pureMindMap: Mind Map
+  pureMqtt: Mqtt Client
+  pureOnlineUser: Online User
+  pureOperationLog: Operation Log
+  pureOptimize: Debounce、Throttle、Copy、Longpress Directives
+  purePdf: PDF Preview
+  purePermission: Permission Manage
+  purePermissionButton: Button Permission
+  purePermissionButtonLogin: Login interface return button permission
+  purePermissionButtonRouter: Route return button permission
+  purePermissionPage: Page Permission
+  purePiniaDoc: Pinia
+  purePinyin: PinYin
+  purePrint: Print
+  pureProgress: Progress
+  pureQrcode: Qrcode
+  pureResult: Result Page
+  pureRipple: Ripple
+  pureRole: Role Manage
+  pureRouterDoc: Vue-Router
+  pureSchemaForm: Form
+  pureSeamless: Seamless Scroll
+  pureSegmented: Segmented
+  pureSelector: Scope Selector
+  pureSensitive: Sensitive Filter
+  pureShowing: Showing
+  pureSlider: Slider
+  pureSplitPane: Split Pane
+  pureStatistic: Statistic
+  pureSuccess: Success Page
+  pureSwiper: Swiper Plugin
+  pureSysManagement: System Manage
+  pureSysMonitor: System Monitor
+  pureSystemLog: System Log
+  pureSystemMenu: Menu Manage
+  pureTable: Table
+  pureTableBase: Base Usage
+  pureTableEdit: Edit Usage
+  pureTableHigh: High Usage
+  pureTabs: Tabs Operate
+  pureTag: Tag
+  pureTailwindcssDoc: Tailwindcss
+  pureText: Text Ellipsis
+  pureTimePicker: TimePicker
+  pureTimeline: Time Line
+  pureTypeit: Typeit
+  pureUiGradients: UiGradients
+  pureUpload: File Upload
+  pureUser: User Manage
+  pureUtilsLink: Pure-Admin-Utils
+  pureVerify: Captcha
+  pureVideo: Video
+  pureVideoFrame: Video Frame Capture
+  pureVirtualList: Virtual List
+  pureViteDoc: Vite
+  pureVueDoc: Vue3
+  pureVxeTable: Virtual Usage
+  pureWaitlist: Waitlist
+  pureWaterfall: Waterfall
+  pureWatermark: Water Mark
+  pureWavesurfer: Audio Visualization
+panel:
+  pureClearCache: Clear Cache
+  pureClearCacheAndToLogin: Clear cache and return to login page
+  pureCloseSystemSet: Close System Configs
+  pureGreyModel: Grey Model
+  pureHiddenFooter: Hidden Footer
+  pureHiddenTags: Hidden Tags
+  pureHorizontalTip: Top menu, concise overview
+  pureInterfaceDisplay: Interface Display
+  pureLayoutModel: Layout Model
+  pureMixTip: Mixed menu, flexible
+  pureMultiTagsCache: MultiTags Cache
+  pureOverallStyle: Overall Style
+  pureOverallStyleDark: Dark
+  pureOverallStyleDarkTip: Moonlight Overture, indulge in the tranquility and elegance of the night
+  pureOverallStyleLight: Light
+  pureOverallStyleLightTip: Set sail freshly and light up the comfortable work interface
+  pureOverallStyleSystem: Auto
+  pureOverallStyleSystemTip: Synchronize time, the interface naturally responds to morning and dusk
+  pureStretch: Stretch Page
+  pureStretchCustom: Custom
+  pureStretchCustomTip: Minimum 1280, maximum 1600
+  pureStretchFixed: Fixed
+  pureStretchFixedTip: Compact pages make it easy to find the information you need
+  pureSystemSet: System Configs
+  pureTagsStyle: Tags Style
+  pureTagsStyleCard: Card
+  pureTagsStyleCardTip: Card tags for efficient browsing
+  pureTagsStyleChrome: Chrome
+  pureTagsStyleChromeTip: Chrome style is classic and elegant
+  pureTagsStyleSmart: Smart
+  pureTagsStyleSmartTip: Smart tags add fun and brilliance
+  pureThemeColor: Theme Color
+  pureVerticalTip: The menu on the left is familiar and friendly
+  pureWeakModel: Weak Model
+schedule:
+  requiredAddress: Address is required.
+  requiredEndTime: End time is required.
+  requiredLocation: Apartment/ meeting location is required.
+  requiredStartTime: Start time is required.
+search:
+  pureCollect: Collect
+  pureDragSort: （Drag Sort）
+  pureEmpty: Empty
+  pureHistory: History
+  purePlaceholder: Search Menu
+  pureTotal: Total
+status:
+  pureLoad: Loading...
+  pureMessage: Message
+  pureNoMessage: No Message
+  pureNoNotify: No Notify
+  pureNoTodo: No Todo
+  pureNotify: Notify
+  pureTodo: Todo
