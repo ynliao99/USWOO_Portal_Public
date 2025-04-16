@@ -214,7 +214,12 @@ onMounted(() => fetchRecords());
     </PureTableBar>
 
     <!-- 新增/编辑对话框 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogTitle"
+      width="600px"
+      class="custom-dialog"
+    >
       <el-form :model="form" label-width="120px">
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
@@ -313,6 +318,7 @@ onMounted(() => fetchRecords());
       title="详细信息"
       width="600px"
       center
+      class="custom-dialog"
     >
       <div class="detail-content">
         <div class="detail-item">
@@ -411,5 +417,11 @@ onMounted(() => fetchRecords());
 
 .detail-value {
   color: #303133;
+}
+
+.el-dialog {
+  max-height: 80vh;
+  padding-right: 12px;
+  overflow-y: auto;
 }
 </style>
