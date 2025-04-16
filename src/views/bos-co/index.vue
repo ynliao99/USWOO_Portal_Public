@@ -1,42 +1,48 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { Plus } from "@element-plus/icons-vue";
 import { message } from "@/utils/message";
 import { useCoRecords, CoRecord } from "./useCoRecords";
-import { http } from "@/utils/http";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import EditIcon from "~icons/ri/edit-circle-line";
 import ViewIcon from "~icons/ri/eye-line";
 
-// 从 useCoRecords 中解构响应式数据与操作方法
+const tableRef = ref();
+defineOptions({
+  name: "co"
+});
+
+// 从 hook 中解构逻辑与数据
 const {
   paginatedRecords,
   loading,
   pagination,
   searchTerm,
   onlyMine,
+  columns,
+  fetchRecords,
+  saveRecord,
+  areas,
   setSearchTerm,
   setSort,
   toggleOnlyMine,
   setPage,
   setPageSize,
-  fetchRecords,
-  saveRecord,
-  areas
+  setFilter
 } = useCoRecords();
 
-// 新增/编辑、详情对话框相关状态
+// 本地搜索输入
+const searchTermLocal = ref(searchTerm.value);
+
+// 对话框相关状态
 const dialogVisible = ref(false);
 const detailDialogVisible = ref(false);
 const dialogTitle = ref("");
 const form = ref<Partial<CoRecord>>({});
 const recordDetail = ref<Partial<CoRecord>>({});
 
-// 本地搜索输入（保留在 PureTableBar 上方）
-const searchTermLocal = ref(searchTerm.value);
-
-// 新增：定义范围日期选择双向绑定，转换 form.term_sd 与 form.term_ed
+// 日期范围双向绑定
 const dateRange = computed<string[]>({
   get() {
     return form.value.term_sd && form.value.term_ed
@@ -44,7 +50,7 @@ const dateRange = computed<string[]>({
       : [];
   },
   set(val: string[]) {
-    if (val && val.length === 2) {
+    if (val.length === 2) {
       form.value.term_sd = val[0];
       form.value.term_ed = val[1];
     } else {
@@ -53,9 +59,8 @@ const dateRange = computed<string[]>({
     }
   }
 });
-const dynamicSize = ref();
-const size = ref("default");
 
+// 新增/编辑对话框打开
 function openDialog(mode: "add" | "edit", record?: CoRecord) {
   if (mode === "add") {
     dialogTitle.value = "新增需求";
@@ -83,6 +88,7 @@ function openDialog(mode: "add" | "edit", record?: CoRecord) {
   dialogVisible.value = true;
 }
 
+// 保存表单
 async function handleSave() {
   if (!form.value.type || !form.value.placeName || !form.value.location) {
     message("请填写所有必填项。", { type: "warning" });
@@ -91,188 +97,113 @@ async function handleSave() {
   try {
     await saveRecord(form.value);
     dialogVisible.value = false;
-  } catch (error) {
-    // 错误处理在 saveRecord 内部
+  } catch {
+    // 内部已处理
   }
 }
 
-function handleSearch(term: string) {
-  setSearchTerm(term);
+// 详情对话框
+function showDetails(record: CoRecord) {
+  recordDetail.value = { ...record };
+  detailDialogVisible.value = true;
 }
 
+// 事件处理
+function handleSearch(val: string) {
+  setSearchTerm(val);
+}
 function handleSortChange({ prop, order }: { prop: string; order: string }) {
   setSort(
     prop,
     order === "ascending" ? "asc" : order === "descending" ? "desc" : ""
   );
-  setPage(1);
 }
-
 function handleOnlyMineChange(val: boolean) {
   toggleOnlyMine(val);
-  setPage(1);
 }
-
 function handlePageChange(page: number) {
   setPage(page);
 }
 function handlePageSizeChange(size: number) {
   setPageSize(size);
 }
-
-// 筛选变化处理（这里示例仅重置页码后刷新数据，可根据实际业务扩展处理逻辑）
-function handleFilterChange(newFilters: Record<string, string[]>) {
-  setPage(1);
-  fetchRecords();
-}
-
-// 显示详情对话框
-function showDetails(record: CoRecord) {
-  recordDetail.value = { ...record };
-  detailDialogVisible.value = true;
-}
-
-// 定义表格列（对类型、经纪人、房源/通勤地点、地区、房型、性别要求提供筛选功能）
-const columns = [
-  { label: "操作", prop: "operation", slot: "operation", width: "150px" },
-  {
-    label: "类型",
-    prop: "type",
-    sortable: true,
-    filters: [
-      { text: "转租", value: "转租" },
-      { text: "拼室友", value: "拼室友" },
-      { text: "私人房东", value: "私人房东" },
-      { text: "单房", value: "单房" }
-    ],
-    filterMultiple: false
-  },
-  {
-    label: "经纪人",
-    prop: "userAgentName",
-    sortable: true,
-    filters: [], // 请在此补充经纪人筛选项
-    filterMultiple: false
-  },
-  {
-    label: "房源/通勤地点",
-    prop: "location",
-    sortable: true,
-    filters: [], // 请在此补充房源/通勤地点筛选项
-    filterMultiple: true
-  },
-  {
-    label: "地区",
-    prop: "area",
-    sortable: true,
-    filters: [
-      { text: "Allston", value: "Allston" },
-      { text: "Arlington", value: "Arlington" }
-    ],
-    filterMultiple: true
-  },
-  { label: "价格/预算", prop: "budget" },
-  {
-    label: "房型",
-    prop: "roomType",
-    filters: [], // 请在此补充房型筛选项
-    filterMultiple: true
-  },
-  { label: "租期/入住时段", prop: "term", slot: "term" },
-  {
-    label: "性别要求",
-    prop: "sexRequirement",
-    sortable: true,
-    filters: [
-      { text: "男", value: "男" },
-      { text: "女", value: "女" },
-      { text: "不限", value: "不限" }
-    ],
-    filterMultiple: true
-  },
-  {
-    label: "主观需求",
-    width: "400",
-    prop: "demand"
+function handleFilterChange(filtersMap: Record<string, string[]>) {
+  for (const key in filtersMap) {
+    setFilter(key, filtersMap[key] || []);
   }
-];
+}
+onMounted(() => fetchRecords());
 </script>
 
 <template>
   <div>
-    <!-- 搜索框 -->
     <el-input
       v-model="searchTermLocal"
       placeholder="全能搜索..."
       clearable
+      style="margin: 0"
       @input="handleSearch"
-      style="margin: 20px 0"
-    ></el-input>
+    />
 
-    <!-- 使用 PureTableBar 管理整个表格控件 -->
     <PureTableBar
       title="转租/拼室友"
       :columns="columns"
       @refresh="fetchRecords"
     >
-      <!-- 按钮区域（包含“只看我的”复选框与新增需求按钮） -->
       <template #buttons>
         <el-checkbox
           v-model="onlyMine"
-          @change="handleOnlyMineChange"
           style="margin-right: 16px"
+          @change="handleOnlyMineChange"
+          >只看我的</el-checkbox
         >
-          只看我的
-        </el-checkbox>
         <el-button type="primary" @click="openDialog('add')">
           <el-icon><Plus /></el-icon>
           新增需求
         </el-button>
       </template>
 
-      <!-- 默认插槽，用于渲染 pure-table -->
-      <template #default="{ size, dynamicColumns }">
+      <template #default="{ size }">
         <pure-table
+          ref="tableRef"
+          row-key="id"
           showOverflowTooltip
           :data="paginatedRecords"
-          :columns="dynamicColumns"
+          :columns="columns"
           :loading="loading"
           :pagination="pagination"
+          adaptive
+          table-layout="fixed"
+          stripe
+          :size="size"
           @sort-change="handleSortChange"
           @filter-change="handleFilterChange"
           @page-size-change="handlePageSizeChange"
           @page-current-change="handlePageChange"
-          :adaptive="true"
-          table-layout="fixed"
-          stripe
-          :size="size"
         >
-          <!-- 操作列：采用图标按钮（减少 padding），并确保不换行 -->
           <template #operation="{ row }">
             <div style="white-space: nowrap">
               <el-button
                 class="icon-button"
                 color="#557DED"
                 size="default"
-                @click="openDialog('edit', row)"
                 :icon="useRenderIcon(EditIcon)"
-              ></el-button>
+                @click="openDialog('edit', row)"
+              />
               <el-button
                 class="icon-button"
                 type="primary"
                 size="default"
-                @click="showDetails(row)"
                 :icon="useRenderIcon(ViewIcon)"
-              ></el-button>
+                @click="showDetails(row)"
+              />
             </div>
           </template>
 
-          <!-- 租期列：显示开始和结束日期 -->
           <template #term="{ row }">
             {{ row.term_sd }} - {{ row.term_ed }}
           </template>
 
-          <!-- 默认单元格渲染：对内容文字最多显示 3 行，超出部分截断，鼠标悬停显示 Tooltip -->
           <template #cell="{ row, column }">
             <el-tooltip effect="dark" :content="row[column.prop]">
               <span class="cell-text">{{ row[column.prop] }}</span>
@@ -283,13 +214,13 @@ const columns = [
     </PureTableBar>
 
     <!-- 新增/编辑对话框 -->
-    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="600px">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px">
       <el-form :model="form" label-width="120px">
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
             <el-radio-button value="Open">Open</el-radio-button>
             <el-radio-button value="Closed">Closed</el-radio-button>
-            </el-radio-group>
+          </el-radio-group>
         </el-form-item>
         <el-form-item label="类型">
           <el-radio-group v-model="form.type">
@@ -300,13 +231,13 @@ const columns = [
           </el-radio-group>
         </el-form-item>
         <el-form-item label="房源/地点">
-          <el-input v-model="form.placeName" placeholder="地点名称"></el-input>
+          <el-input v-model="form.placeName" placeholder="地点名称" />
         </el-form-item>
         <el-form-item label="Unit/学院">
-          <el-input v-model="form.unit" placeholder="单位/学院"></el-input>
+          <el-input v-model="form.unit" placeholder="单位/学院" />
         </el-form-item>
         <el-form-item label="详细地址">
-          <el-input v-model="form.location" placeholder="详细地址"></el-input>
+          <el-input v-model="form.location" placeholder="详细地址" />
         </el-form-item>
         <el-form-item label="区域">
           <el-select v-model="form.area" placeholder="请选择">
@@ -315,17 +246,14 @@ const columns = [
               :key="area"
               :label="area"
               :value="area"
-            ></el-option>
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="价格/预算">
-          <el-input v-model="form.budget" placeholder="价格或预算"></el-input>
+          <el-input v-model="form.budget" placeholder="价格或预算" />
         </el-form-item>
         <el-form-item label="房型">
-          <el-input
-            v-model="form.roomType"
-            placeholder="房型，用逗号分隔"
-          ></el-input>
+          <el-input v-model="form.roomType" placeholder="房型，用逗号分隔" />
         </el-form-item>
         <el-form-item label="租期">
           <el-date-picker
@@ -366,8 +294,8 @@ const columns = [
         </el-form-item>
         <el-form-item label="主观需求">
           <el-input
-            type="textarea"
             v-model="form.demand"
+            type="textarea"
             placeholder="备注信息"
             :rows="5"
           />
@@ -381,8 +309,8 @@ const columns = [
 
     <!-- 详情对话框 -->
     <el-dialog
-      title="详细信息"
       v-model="detailDialogVisible"
+      title="详细信息"
       width="600px"
       center
     >
@@ -476,9 +404,9 @@ const columns = [
 }
 
 .detail-label {
+  margin-right: 8px;
   font-weight: bold;
   color: #606266;
-  margin-right: 8px;
 }
 
 .detail-value {

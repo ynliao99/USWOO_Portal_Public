@@ -1,7 +1,6 @@
-// useCoRecords.tsx
-import { ref, reactive, computed, onMounted } from 'vue';
-import { http } from '@/utils/http';
-import { message } from '@/utils/message';
+import { ref, reactive, computed, onMounted } from "vue";
+import { http } from "@/utils/http";
+import { message } from "@/utils/message";
 
 export interface CoRecord {
   id: number;
@@ -24,36 +23,34 @@ export interface CoRecord {
   userAgentId?: string;
 }
 
-// 定义后端返回数据的类型（查询记录接口）
 interface FetchRecordsResponse {
-  status: 'success' | 'error';
+  status: "success" | "error";
   currentUserId: string;
   data: CoRecord[];
+  filters?: Record<string, string[]>;
   message?: string;
 }
 
 interface FetcAreasResponse {
-  areas?: any;
+  areas?: string[];
 }
 
+const backendFilters = reactive<Record<string, string[]>>({});
 
 export function useCoRecords() {
-  // 所有记录数据
   const records = ref<CoRecord[]>([]);
+  let filtersArray: Record<string, string[]>;
   const loading = ref(false);
-  
-  // 搜索、排序、筛选状态
-  const searchTerm = ref('');
-  const sortField = ref('');
-  const sortOrder = ref(''); // 'asc' 或 'desc'
+
+  const searchTerm = ref("");
+  const sortField = ref("");
+  const sortOrder = ref("");
+
   const filters = reactive<Record<string, string[]>>({});
 
-  // “只看我的”
   const onlyMine = ref(false);
-  // 初始值示例，后续根据接口返回更新当前登录经纪人的ID
-  const currentUserAgentId = ref('123');
+  const currentUserAgentId = ref("");
 
-  // 分页状态
   const pagination = reactive({
     currentPage: 1,
     pageSize: 10,
@@ -61,180 +58,239 @@ export function useCoRecords() {
     pageSizes: [10, 20, 40, 60]
   });
 
-  // 新增：区域数据
   const areas = ref<string[]>([]);
 
-  // 从后端 API 获取记录数据
-  const fetchRecords = async () => {
-    loading.value = true;
-    try {
-      const res = await http.request(
-        'get',
-        '/portalapi/co/',
-        { params: { action: 'view' } }
-      ) as FetchRecordsResponse;
-
-      if (res && res.status === 'success' && Array.isArray(res.data)) {
-        records.value = res.data;
-        pagination.total = res.data.length;
-        // 更新当前用户ID
-        currentUserAgentId.value = res.currentUserId;
-        // 如存在 updated_at 字段，按降序排序
-        records.value.sort((a, b) =>
-          new Date(b.updated_at || '').getTime() - new Date(a.updated_at || '').getTime()
-        );
-      } else {
-        message(res && res.message ? res.message : '数据格式错误', { type: 'warning' });
-        records.value = [];
-      }
-    } catch (error) {
-      console.error(error);
-      message('加载数据失败', { type: 'warning' });
-    } finally {
-      loading.value = false;
-    }
+  // 筛选方法：根据当前列属性做精确匹配 + 实时触发
+  const filterHandler = (value: any, row: any, column: any) => {
+    const property = column["property"];
+    const match = value.includes(row[property]);
+    return match;
   };
 
-  // 新增：从 /portalapi/bos_public/areas.json 获取区域数据
-  const fetchAreas = async () => {
-    try {
-      const res = await http.request('get', '/portalapi/bos_public/areas.json') as FetcAreasResponse;
-      // 假设返回数据格式为：{ areas: string[] }
-      if (res && res.areas && Array.isArray(res.areas)) {
-        areas.value = res.areas;
-      } else {
-        message('获取区域数据失败', { type: 'warning' });
-      }
-    } catch (error) {
-      console.error(error);
-      message('获取区域数据异常', { type: 'warning' });
+  const columns: TableColumnList = [
+    {
+      label: "操作",
+      prop: "operation",
+      slot: "operation",
+      columnKey: "type",
+      width: "150px"
+    },
+    {
+      label: "类型",
+      prop: "type",
+      sortable: true,
+      filters: [],
+      filterMultiple: true,
+      columnKey: "type",
+      filterMethod: filterHandler
+    },
+    {
+      label: "经纪人",
+      prop: "userAgentName",
+      sortable: true,
+      filters: [],
+      filterMultiple: true,
+      columnKey: "userAgentName",
+      filterMethod: filterHandler
+    },
+    {
+      label: "房源/通勤地点",
+      prop: "placeName",
+      sortable: true,
+      filters: [],
+      filterMultiple: true,
+      columnKey: "placeName",
+      filterMethod: filterHandler
+    },
+    {
+      label: "地区",
+      prop: "area",
+      sortable: true,
+      filters: [],
+      filterMultiple: true,
+      columnKey: "area",
+      filterMethod: filterHandler
+    },
+    {
+      label: "价格/预算",
+      columnKey: "budget",
+      prop: "budget"
+    },
+    {
+      label: "房型",
+      prop: "roomType",
+      filters: [],
+      filterMultiple: true,
+      columnKey: "roomType",
+      filterMethod: filterHandler
+    },
+    {
+      label: "租期/入住时段",
+      prop: "term",
+      columnKey: "term",
+      slot: "term"
+    },
+    {
+      label: "性别要求",
+      prop: "sexRequirement",
+      sortable: true,
+      columnKey: "sexRequirement",
+      filters: [],
+      filterMultiple: true,
+      filterMethod: filterHandler
+    },
+    {
+      label: "主观需求",
+      prop: "demand",
+      columnKey: "demand",
+      width: "400px"
     }
-  };
+  ];
 
-  // onMounted 钩子中同时获取记录数据和区域数据
-  onMounted(() => {
-    fetchRecords();
-    fetchAreas();
-  });
+  function updateColumnFilters() {
+    console.log("⬇️ 开始更新列 filters...");
+    console.log(filtersArray);
 
-  // 根据当前条件过滤数据
+    columns.forEach(col => {
+      const key = String(col.prop);
+      const values = filtersArray[key];
+      if (Array.isArray(values)) {
+        col.filters = values.map(v => ({ text: v, value: v }));
+      }
+    });
+  }
+
   const filteredRecords = computed(() => {
     let data = [...records.value];
-    // “只看我的”
     if (onlyMine.value && currentUserAgentId.value) {
-      data = data.filter(record => String(record.userAgentId) === currentUserAgentId.value);
+      data = data.filter(
+        r => String(r.userAgentId) === currentUserAgentId.value
+      );
     }
-    // 搜索
     if (searchTerm.value) {
       const term = searchTerm.value.toLowerCase();
-      data = data.filter(record =>
-        Object.values(record).some(val =>
-          typeof val === 'string' && val.toLowerCase().includes(term)
+      data = data.filter(r =>
+        Object.values(r).some(
+          v => typeof v === "string" && v.toLowerCase().includes(term)
         )
       );
     }
-    // 过滤：对 filters 中各个字段进行处理
     for (const key in filters) {
-      if (filters[key].length > 0) {
-        data = data.filter(record => filters[key].includes(record[key]));
+      if (filters[key]?.length) {
+        data = data.filter(r => filters[key].includes((r as any)[key]));
       }
     }
-    // 排序
     if (sortField.value) {
       data.sort((a, b) => {
-        const aVal = a[sortField.value] || '';
-        const bVal = b[sortField.value] || '';
-        if (aVal > bVal) return sortOrder.value === 'asc' ? 1 : -1;
-        if (aVal < bVal) return sortOrder.value === 'asc' ? -1 : 1;
+        const av = (a as any)[sortField.value] || "";
+        const bv = (b as any)[sortField.value] || "";
+        if (av > bv) return sortOrder.value === "asc" ? 1 : -1;
+        if (av < bv) return sortOrder.value === "asc" ? -1 : 1;
         return 0;
       });
     }
+    pagination.total = data.length;
     return data;
   });
 
-  // 分页：计算当前页数据
   const paginatedRecords = computed(() => {
     const start = (pagination.currentPage - 1) * pagination.pageSize;
     return filteredRecords.value.slice(start, start + pagination.pageSize);
   });
 
-  // 修改搜索、排序、筛选、分页的方法
-  function setSearchTerm(term: string) {
-    searchTerm.value = term;
-    pagination.currentPage = 1;
-  }
-  function setSort(field: string, order: string) {
-    sortField.value = field;
-    sortOrder.value = order;
-    pagination.currentPage = 1;
-  }
-  function setFilter(key: string, values: string[]) {
-    filters[key] = values;
-    pagination.currentPage = 1;
-  }
-  function toggleOnlyMine(val: boolean) {
-    onlyMine.value = val;
-    pagination.currentPage = 1;
-  }
-  function setPage(page: number) {
-    pagination.currentPage = page;
-  }
-  function setPageSize(size: number) {
-    pagination.pageSize = size;
-    pagination.currentPage = 1;
+  function fetchRecords() {
+    loading.value = true;
+
+    http
+      .request<FetchRecordsResponse>("get", "/portalapi/co/", {
+        params: { action: "view" }
+      })
+      .then(res => {
+        if (res.status === "success" && Array.isArray(res.data)) {
+          const sorted = [...res.data].sort((a, b) => {
+            const t1 = new Date(a.updated_at ?? 0).getTime();
+            const t2 = new Date(b.updated_at ?? 0).getTime();
+            return t2 - t1;
+          });
+
+          records.value = sorted;
+          filtersArray = res.filters ?? {};
+          currentUserAgentId.value = res.currentUserId;
+          console.log(res.filters);
+          Object.assign(backendFilters, res.filters || {});
+          updateColumnFilters();
+        }
+      })
+      .catch(() => {
+        message("加载数据失败", { type: "warning" });
+      })
+      .finally(() => {
+        loading.value = false;
+      });
   }
 
-  // 保存记录：新增或更新
-  async function saveRecord(record: Partial<CoRecord>) {
+  async function fetchAreas() {
     try {
-      let res;
-      if (record.id) {
-        // 更新记录时需要传入 caseID
-        res = await http.request('post', '/portalapi/co/', {
-          params: { action: 'update' },
-          data: { ...record, caseID: record.id }
-        });
-      } else {
-        res = await http.request('post', '/portalapi/co/', {
-          params: { action: 'add' },
-          data: { ...record }
-        });
+      const res = await http.request<FetcAreasResponse>(
+        "get",
+        "/portalapi/bos_public/areas.json"
+      );
+      if (res.areas && Array.isArray(res.areas)) {
+        areas.value = res.areas;
       }
-      if (res.status === 'success') {
-        message(record.id ? '更新成功！' : '添加成功！', { type: 'success' });
-      } else {
-        message(res.message || (record.id ? '更新失败' : '添加失败'), { type: 'warning' });
-      }
-      fetchRecords();
-      return res;
-    } catch (error) {
-      console.error(error);
-      message('提交失败', { type: 'warning' });
-      throw error;
+    } catch {
+      message("获取区域数据异常", { type: "warning" });
     }
   }
+
+  async function saveRecord(rec: Partial<CoRecord>) {
+    const action = rec.id ? "update" : "add";
+    const params: any = { action };
+    if (rec.id) params.caseID = rec.id;
+    await http.request("post", "/portalapi/co/", { params, data: rec });
+    fetchRecords();
+  }
+
+  onMounted(() => {
+    fetchRecords();
+    fetchAreas();
+  });
 
   return {
     records,
     loading,
     searchTerm,
-    sortField,
-    sortOrder,
-    filters,
     onlyMine,
-    currentUserAgentId,
-    areas, // 导出区域数组
+    columns,
+    areas,
     pagination,
-    fetchRecords,
-    filteredRecords,
     paginatedRecords,
-    setSearchTerm,
-    setSort,
-    setFilter,
-    toggleOnlyMine,
-    setPage,
-    setPageSize,
+    fetchRecords,
     saveRecord,
-    fetchAreas,
+    setSearchTerm: (v: string) => {
+      searchTerm.value = v;
+      pagination.currentPage = 1;
+    },
+    setSort: (f: string, o: string) => {
+      sortField.value = f;
+      sortOrder.value = o;
+      pagination.currentPage = 1;
+    },
+    toggleOnlyMine: (v: boolean) => {
+      onlyMine.value = v;
+      pagination.currentPage = 1;
+    },
+    setPage: (p: number) => {
+      pagination.currentPage = p;
+    },
+    setPageSize: (s: number) => {
+      pagination.pageSize = s;
+      pagination.currentPage = 1;
+    },
+    setFilter: (prop: string, values: string[]) => {
+      console.log(filters);
+      filters[prop] = values;
+      pagination.currentPage = 1;
+    }
   };
 }

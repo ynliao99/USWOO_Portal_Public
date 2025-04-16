@@ -9,7 +9,7 @@ import { http } from "@/utils/http";
 // 定义返回数据类型
 export type WaitlistResult = {
   status: string;
-  data: any[];  // 根据实际数据类型进行调整
+  data: any[]; // 根据实际数据类型进行调整
   total: number;
 };
 
@@ -32,13 +32,13 @@ export function useColumns() {
     {
       label: "经纪人",
       prop: "userAgentName",
-      filters: [],               // 筛选项将动态生成
+      filters: [], // 筛选项将动态生成
       filterMethod: filterHandler
     },
     {
       label: "房源",
       prop: "apartment",
-      filters: [],               // 筛选项将动态生成
+      filters: [], // 筛选项将动态生成
       filterMethod: filterHandler
     },
     {
@@ -118,7 +118,7 @@ export function useColumns() {
       text: apartment,
       value: apartment
     }));
-
+    console.log(apartmentFilters);
     // 更新 columns 中对应列的 filters 字段
     columns.forEach(col => {
       if (col.prop === "userAgentName") {
@@ -136,17 +136,13 @@ export function useColumns() {
     loading.value = true;
 
     http
-      .request<WaitlistResult>(
-        "get",
-        "/portalapi/waitlist/",
-        {
-          params: {
-            action: "view",
-            page: pagination.currentPage,
-            pageSize: pagination.pageSize
-          }
+      .request<WaitlistResult>("get", "/portalapi/waitlist/", {
+        params: {
+          action: "view",
+          page: pagination.currentPage,
+          pageSize: pagination.pageSize
         }
-      )
+      })
       .then(res => {
         if (res.status === "success" && Array.isArray(res.data)) {
           dataList.value = res.data;
