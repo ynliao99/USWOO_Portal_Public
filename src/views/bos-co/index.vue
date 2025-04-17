@@ -7,6 +7,7 @@ import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import EditIcon from "~icons/ri/edit-circle-line";
 import ViewIcon from "~icons/ri/eye-line";
+import AddIcon from "~icons/ri/add-circle-line";
 
 const tableRef = ref();
 defineOptions({
@@ -157,8 +158,11 @@ onMounted(() => fetchRecords());
           @change="handleOnlyMineChange"
           >只看我的</el-checkbox
         >
-        <el-button type="primary" @click="openDialog('add')">
-          <el-icon><Plus /></el-icon>
+        <el-button
+          type="primary"
+          :icon="useRenderIcon(AddIcon)"
+          @click="openDialog('add')"
+        >
           新增需求
         </el-button>
       </template>
