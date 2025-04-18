@@ -81,7 +81,7 @@ const onlyMine = ref(false);
 const ruleFormRef = ref<FormInstance>();
 
 // 提交前先触发表单验证
-const onLogin = async (formEl: FormInstance | undefined) => {
+const onSubmit = async (formEl: FormInstance | undefined) => {
   if (!formEl) return;
   message("请填写所有的必填项目。", { type: "warning" });
   await formEl.validate(valid => {
@@ -259,7 +259,9 @@ watch(
       const end = new Date(newVal);
       if (end.getTime() <= start.getTime()) {
         // 如果结束时间不大于开始时间，结束时间设置到开始时间并通知用户
-        form.endTime = formatDate(new Date(new Date(form.startTime).getTime() + 60 * 1000));
+        form.endTime = formatDate(
+          new Date(new Date(form.startTime).getTime() + 60 * 1000)
+        );
         message("结束时间必须晚于开始时间。", { type: "warning" });
       }
     }
@@ -302,13 +304,13 @@ watch(
           :columns="dynamicColumns"
           :loading="loading"
           :pagination="{ ...pagination, size }"
+          table-layout="auto"
+          stripe
+          :size="size"
           @sort-change="handleSortChange"
           @filter-change="handleFilterChange"
           @page-size-change="handleSizeChange"
           @page-current-change="handleCurrentChange"
-          table-layout="auto"
-          stripe
-          :size="size"
         >
           <!-- 操作列插槽：仅当记录的 userAgentId 与 currentUserAgentId 相同时显示编辑和删除按钮 -->
           <template #operation="{ row }">
@@ -318,10 +320,9 @@ watch(
               <el-button
                 color="#557DED"
                 size="default"
-                @click="openDialog('edit', row)"
                 :icon="useRenderIcon(EditIcon)"
-              >
-              </el-button>
+                @click="openDialog('edit', row)"
+              />
               <el-popconfirm
                 title="确定删除此看房记录？删除后不可恢复！"
                 @confirm="handleDelete(row)"
@@ -331,7 +332,7 @@ watch(
                     type="danger"
                     size="default"
                     :icon="useRenderIcon(DeleteIcon)"
-                  ></el-button>
+                  />
                 </template>
               </el-popconfirm>
             </template>
@@ -399,7 +400,7 @@ watch(
         <el-form-item label="房型/Unit">
           <el-input v-model="form.unit" placeholder="列出要看的Unit和房型" />
         </el-form-item>
-        <div style="text-align: center; margin: 20px 0">
+        <div style="margin: 20px 0; text-align: center">
           <i>只有持证经纪人或组长可以领取钥匙</i>
         </div>
         <el-form-item label="客户性别">
@@ -432,15 +433,15 @@ watch(
         </el-form-item>
         <el-form-item label="备注">
           <el-input
-            type="textarea"
             v-model="form.note"
+            type="textarea"
             placeholder="备注（如同一客户多个看房，可在此添加更多房源）"
           />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">关闭</el-button>
-        <el-button type="primary" @click="onLogin(ruleFormRef)">
+        <el-button type="primary" @click="onSubmit(ruleFormRef)">
           保存
         </el-button>
       </template>
@@ -449,27 +450,28 @@ watch(
 </template>
 
 <style>
-/* 通过 Tailwind 和媒体查询，调整对话框宽度 */
-.el-dialog {
-  /* 默认宽度为600px */
-  width: 600px !important;
-}
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .el-dialog {
     width: 90% !important;
   }
 }
 
+@media (width <= 768px) {
+  .dialog-form .el-form-item__label {
+    /* 移除固定宽度 */
+    width: auto !important;
+    text-align: left !important;
+  }
+}
+
+.el-dialog {
+  /* 默认宽度为600px */
+  width: 600px !important;
+}
+
 /* 针对 .dialog-form 中的 label 进行调整 */
 .dialog-form .el-form-item__label {
   text-align: right;
-}
-@media (max-width: 768px) {
-  .dialog-form .el-form-item__label {
-    text-align: left !important;
-    /* 移除固定宽度 */
-    width: auto !important;
-  }
 }
 
 .automap_autocomplete-suggestions {
@@ -479,18 +481,21 @@ watch(
 .only-mine-tag {
   display: inline-block;
   padding: 4px 8px;
-  border: 1px solid #dcdfe6; /* 未选中时边框颜色 */
-  border-radius: 4px;
   color: #606266; /* 未选中时文字颜色 */
   cursor: pointer;
+  border: 1px solid #dcdfe6; /* 未选中时边框颜色 */
+  border-radius: 4px;
   transition:
     background 0.3s,
     color 0.3s,
     border 0.3s;
 }
+
 .only-mine-tag.active {
+  color: #fff;
   background-color: var(--el-color-primary, #409eff); /* Element Plus 主色 */
   border-color: var(--el-color-primary, #409eff);
-  color: #fff;
 }
+
+/* 通过 Tailwind 和媒体查询，调整对话框宽度 */
 </style>

@@ -1,73 +1,51 @@
-// import type { FormRules } from "element-plus";
-// import { $t, transformI18n } from "@/plugins/i18n";
-
-// /** 看房表单校验 */
-// const showingFormRules: FormRules = {
-//   location: [
-//     {
-//       validator: (rule, value, callback) => {
-//         if (value === "") {
-//           callback(new Error(transformI18n("请输入公寓/见面地点")));
-//         } else {
-//           callback();
-//         }
-//       },
-//       trigger: "blur"
-//     }
-//   ],
-//   startTime: [
-//     {
-//       validator: (rule, value, callback) => {
-//         if (value === "" || value === null) {
-//           callback(new Error(transformI18n("请输入看房开始时间")));
-//         } else {
-//           callback();
-//         }
-//       },
-//       trigger: "blur"
-//     }
-//   ],
-//   endTime: [
-//     {
-//       validator: (rule, value, callback) => {
-//         if (value === "" || value === null) {
-//           callback(new Error(transformI18n("请输入看房结束时间")));
-//         } else {
-//           callback();
-//         }
-//       },
-//       trigger: "blur"
-//     }
-//   ],
-//   address: [
-//     {
-//       validator: (rule, value, callback) => {
-//         if (value === "") {
-//           callback(new Error(transformI18n("请输入详细地址")));
-//         } else {
-//           callback();
-//         }
-//       },
-//       trigger: "blur"
-//     }
-//   ]
-// };
-
-// export { showingFormRules };
-
 // rule.ts
 import { reactive } from "vue";
 import type { FormRules } from "element-plus";
 import { $t, transformI18n } from "@/plugins/i18n";
 
 /** 看房表单校验 */
-const showingFormRules: FormRules = reactive({
+const coFormRules: FormRules = reactive({
+  status: [
+    {
+      validator: (rule, value, callback) => {
+        if (value === "") {
+          callback(new Error(transformI18n($t("co.requiredStatus"))));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur"
+    }
+  ],
+  type: [
+    {
+      validator: (rule, value, callback) => {
+        if (value === "") {
+          callback(new Error(transformI18n($t("co.requiredType"))));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur"
+    }
+  ],
+  placeName: [
+    {
+      validator: (rule, value, callback) => {
+        if (value === "") {
+          callback(new Error(transformI18n($t("co.requiredPlaceName"))));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur"
+    }
+  ],
   location: [
     {
       validator: (rule, value, callback) => {
         if (value === "") {
-          // 使用国际化，如无对应 key 可直接写提示文本
-          callback(new Error(transformI18n($t("schedule.requiredLocation"))));
+          callback(new Error(transformI18n($t("co.requiredLocation"))));
         } else {
           callback();
         }
@@ -75,35 +53,83 @@ const showingFormRules: FormRules = reactive({
       trigger: "blur"
     }
   ],
-  startTime: [
-    {
-      validator: (rule, value, callback) => {
-        if (value === "" || value === null) {
-          callback(new Error(transformI18n($t("schedule.requiredStartTime"))));
-        } else {
-          callback();
-        }
-      },
-      trigger: "blur"
-    }
-  ],
-  endTime: [
-    {
-      validator: (rule, value, callback) => {
-        if (value === "" || value === null) {
-          callback(new Error(transformI18n($t("schedule.requiredEndTime"))));
-        } else {
-          callback();
-        }
-      },
-      trigger: "blur"
-    }
-  ],
-  address: [
+  area: [
     {
       validator: (rule, value, callback) => {
         if (value === "") {
-          callback(new Error(transformI18n($t("schedule.requiredAddress"))));
+          callback(new Error(transformI18n($t("co.requiredArea"))));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur"
+    }
+  ],
+  budget: [
+    {
+      validator: (rule, value, callback) => {
+        if (value === "") {
+          callback(new Error(transformI18n($t("co.requiredBudget"))));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur"
+    }
+  ],
+  roomType: [
+    {
+      validator: (rule, value, callback) => {
+        if (!Array.isArray(value) || value.length === 0) {
+          callback(new Error(transformI18n($t("co.requiredRoomType"))));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur"
+    }
+  ],
+  dateRange: [
+    {
+      validator: (rule, value, callback) => {
+        if (!value || value.length !== 2 || !value[0] || !value[1]) {
+          callback(new Error(transformI18n($t("co.requiredDateRange"))));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur"
+    }
+  ],
+  sex: [
+    {
+      validator: (rule, value, callback) => {
+        if (value === "") {
+          callback(new Error(transformI18n($t("co.requiredSex"))));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur"
+    }
+  ],
+  sexRequirement: [
+    {
+      validator: (rule, value, callback) => {
+        if (value === "") {
+          callback(new Error(transformI18n($t("co.requiredSexRequirement"))));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur"
+    }
+  ],
+  identity: [
+    {
+      validator: (rule, value, callback) => {
+        if (value === "") {
+          callback(new Error(transformI18n($t("co.requiredIdentity"))));
         } else {
           callback();
         }
@@ -113,4 +139,4 @@ const showingFormRules: FormRules = reactive({
   ]
 });
 
-export { showingFormRules };
+export { coFormRules };

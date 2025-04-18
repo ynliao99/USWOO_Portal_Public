@@ -19,6 +19,18 @@ buttons:
   pureOpenText: 开
   pureReload: 重新加载
   pureSwitch: 切换
+co:
+  requiredArea: 请选择区域
+  requiredBudget: 请输入预算/价格
+  requiredDateRange: 请选择入住时段
+  requiredIdentity: 请选择本人身份
+  requiredLocation: 请输入详细地址
+  requiredPlaceName: 请输入通勤地点/房源地点
+  requiredRoomType: 请选择房型
+  requiredSex: 请选择本人性别/整套转租
+  requiredSexRequirement: 请选择性别要求
+  requiredStatus: 请选择状态
+  requiredType: 请选择需求类型
 login:
   pureAlipayLogin: 支付宝登录
   pureBack: 返回

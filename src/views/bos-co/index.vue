@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue";
-import { ElForm } from "element-plus";
+import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { ElForm, FormInstance } from "element-plus";
 import { message } from "@/utils/message";
 import { useCoRecords, CoRecord } from "./useCoRecords";
 import { PureTableBar } from "@/components/RePureTableBar";
@@ -8,6 +8,7 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import EditIcon from "~icons/ri/edit-circle-line";
 import ViewIcon from "~icons/ri/eye-line";
 import AddIcon from "~icons/ri/add-circle-line";
+import { coFormRules } from "./utils/rule";
 
 const tableRef = ref();
 const formRef = ref<InstanceType<typeof ElForm>>();
@@ -66,12 +67,19 @@ const dateRange = computed<string[]>({
   }
 });
 
-// 表单校验规则
-const rules = {
-  type: [{ required: true, message: "请选择类型", trigger: "change" }],
-  placeName: [{ required: true, message: "请输入房源/地点", trigger: "blur" }],
-  location: [{ required: true, message: "请输入详细地址", trigger: "blur" }],
-  area: [{ required: true, message: "请选择区域", trigger: "change" }]
+// 表单校验
+// 表单 ref，用于校验
+const ruleFormRef = ref<FormInstance>();
+
+// 提交前先触发表单验证
+const onSubmit = async (formEl: FormInstance | undefined) => {
+  if (!formEl) return;
+  message("请填写所有的必填项目。", { type: "warning" });
+  await formEl.validate(valid => {
+    if (valid) {
+      handleSave();
+    }
+  });
 };
 
 // 新增/编辑对话框 模式
@@ -179,7 +187,47 @@ function handleFilterChange(filtersMap: Record<string, string[]>) {
   }
 }
 
-onMounted(() => fetchRecords());
+// 监听对话框显示变化，首次打开时加载地图自动补全脚本
+// 定义一个状态标识，记录是否已初始化自动补全
+const autoCompleteInitialized = ref(false);
+// 声明外部全局函数
+declare const initiateMapAutoComplete: (...args: any[]) => void;
+
+watch(dialogVisible, newVal => {
+  if (newVal && !autoCompleteInitialized.value) {
+    nextTick(() => {
+      const script = document.createElement("script");
+      script.src =
+        "https://api.uswoo.cn/map/place-req.js?location=42.3601,-71.0589&radius=241400&strictbounds&v=" +
+        new Date().getTime();
+      script.async = true;
+      script.onload = () => {
+        if (typeof initiateMapAutoComplete === "function") {
+          initiateMapAutoComplete(
+            "placeName,location",
+            "placeName",
+            "location",
+            "none",
+            "placeName"
+          );
+          autoCompleteInitialized.value = true;
+        }
+      };
+      document.body.appendChild(script);
+    });
+  }
+});
+
+onMounted(() => {
+  fetchRecords();
+  // 监听 autocomplete-selected 事件，更新表单数据
+  document.addEventListener("autocomplete-selected", (e: CustomEvent) => {
+    const { marker, value } = e.detail;
+    if (marker && form.value.hasOwnProperty(marker)) {
+      form[marker] = value;
+    }
+  });
+});
 </script>
 
 <template>
@@ -291,32 +339,54 @@ onMounted(() => fetchRecords());
       width="600px"
       class="custom-dialog"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="5em">
-        <el-form-item v-if="!isAddMode" label="状态">
+      <el-form
+        ref="ruleFormRef"
+        :model="form"
+        :rules="coFormRules"
+        label-width="6em"
+      >
+        <el-form-item v-if="!isAddMode" label="状态" prop="status">
           <el-radio-group v-model="form.status">
             <el-radio-button value="Open">Open</el-radio-button>
             <el-radio-button value="Closed">Closed</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="类型">
-          <el-radio-group v-model="form.type">
+        <el-form-item label="类型" prop="type">
+          <el-radio-group v-model="form.type" required>
             <el-radio-button value="转租">转租</el-radio-button>
             <el-radio-button value="私人房东">私人房东</el-radio-button>
             <el-radio-button value="拼室友">拼室友</el-radio-button>
             <el-radio-button value="找短租">找短租</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item :label="isSharedOrShortTerm ? '通勤地点' : '房源地址'">
-          <el-input v-model="form.placeName" placeholder="地点名称" />
+        <el-form-item
+          :label="isSharedOrShortTerm ? '通勤地点' : '房源地址'"
+          required
+          prop="placeName"
+        >
+          <el-input
+            v-model="form.placeName"
+            placeholder="地点名称"
+            required
+            data-marker="placeName"
+          />
         </el-form-item>
-        <el-form-item :label="isSharedOrShortTerm ? '学院' : 'Unit'">
-          <el-input v-model="form.unit" placeholder="单位/学院" />
+        <el-form-item
+          :label="isSharedOrShortTerm ? '学院' : 'Unit'"
+          prop="unit"
+        >
+          <el-input v-model="form.unit" />
         </el-form-item>
-        <el-form-item label="详细地址">
-          <el-input v-model="form.location" placeholder="详细地址" />
+        <el-form-item label="详细地址" required prop="location">
+          <el-input
+            v-model="form.location"
+            placeholder="详细地址"
+            required
+            data-marker="location"
+          />
         </el-form-item>
-        <el-form-item label="区域">
-          <el-select v-model="form.area" placeholder="请选择">
+        <el-form-item label="区域" required prop="area">
+          <el-select v-model="form.area" placeholder="请选择" required>
             <el-option
               v-for="area in areas"
               :key="area"
@@ -325,11 +395,15 @@ onMounted(() => fetchRecords());
             />
           </el-select>
         </el-form-item>
-        <el-form-item :label="isSharedOrShortTerm ? '预算' : '价格'">
-          <el-input v-model="form.budget" placeholder="预算/价格" />
+        <el-form-item
+          :label="isSharedOrShortTerm ? '预算' : '价格'"
+          required
+          prop="budget"
+        >
+          <el-input v-model="form.budget" placeholder="请输入" required />
         </el-form-item>
-        <el-form-item label="房型">
-          <el-checkbox-group v-model="form.roomType as string[]">
+        <el-form-item label="房型" required prop="roomType">
+          <el-checkbox-group v-model="form.roomType as string[]" required>
             <el-checkbox-button value="Studio">Studio</el-checkbox-button>
             <el-checkbox-button value="1B1B">1B1B</el-checkbox-button>
             <el-checkbox-button value="1B Den">1B+Den</el-checkbox-button>
@@ -345,7 +419,7 @@ onMounted(() => fetchRecords());
           </el-checkbox-group>
         </el-form-item>
 
-        <el-form-item label="租期">
+        <el-form-item label="租期" required prop="dateRange">
           <el-date-picker
             v-model="dateRange"
             type="daterange"
@@ -356,23 +430,24 @@ onMounted(() => fetchRecords());
             end-placeholder="结束时间"
             :popper-options="{ placement: 'bottom-start' }"
             size="default"
+            required
           />
         </el-form-item>
-        <el-form-item label="本人性别">
+        <el-form-item label="本人性别" required prop="sex">
           <el-radio-group v-model="form.sex">
             <el-radio-button value="男">男</el-radio-button>
             <el-radio-button value="女">女</el-radio-button>
             <el-radio-button value="整套转租">整套转租</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="性别要求">
+        <el-form-item label="性别要求" required prop="sexRequirement">
           <el-radio-group v-model="form.sexRequirement">
             <el-radio-button value="男">男</el-radio-button>
             <el-radio-button value="女">女</el-radio-button>
             <el-radio-button value="不限">不限</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="本人身份">
+        <el-form-item label="本人身份" required prop="identity">
           <el-radio-group v-model="form.identity">
             <el-radio-button value="本科">本科</el-radio-button>
             <el-radio-button value="研究生">研究生</el-radio-button>
@@ -380,7 +455,10 @@ onMounted(() => fetchRecords());
             <el-radio-button value="访问学者">访问学者</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item :label="isSharedOrShortTerm ? '主观需求' : '备注信息'">
+        <el-form-item
+          :label="isSharedOrShortTerm ? '主观需求' : '备注信息'"
+          prop="demand"
+        >
           <el-input
             v-model="form.demand"
             type="textarea"
@@ -395,7 +473,9 @@ onMounted(() => fetchRecords());
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">关闭</el-button>
-        <el-button type="primary" @click="handleSave">保存</el-button>
+        <el-button type="primary" @click="onSubmit(ruleFormRef)"
+          >保存</el-button
+        >
       </template>
     </el-dialog>
 
