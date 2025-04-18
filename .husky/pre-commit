@@ -1,10 +1,10 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+. "$(dirname "$0")/common.sh"
 
-# 手动加载 nvm（确保 Git hook 环境能用到新 Node）
-export NVM_DIR="$HOME/.nvm"
-. "$NVM_DIR/nvm.sh"
-nvm use node > /dev/null
+[ -n "$CI" ] && exit 0
+
+PATH="/usr/local/bin:$PATH"
 
 # Perform lint check on files in the staging area through .lintstagedrc configuration
 pnpm exec lint-staged
