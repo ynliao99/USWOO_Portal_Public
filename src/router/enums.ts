@@ -30,7 +30,8 @@ const home = 0, // 平台规定只有 home 路由的 rank 才能为 0 ，所以�
   menuoverflow = 40,
   showing = 27,
   co = 28,
-  waitlist = 39
+  aptInfo = 29,
+  waitlist = 39;
 
 export {
   home,
@@ -63,5 +64,6 @@ export {
   menuoverflow,
   showing,
   co,
+  aptInfo,
   waitlist
 };
