@@ -69,3 +69,20 @@ getPlatformConfig(app).then(async config => {
     .use(useEcharts);
   app.mount("#app");
 });
+
+console.log(
+  "\n %c Lyndon's Studio  %c https://lyndons.cn \n\n",
+  "background: #35495e; padding: 1px; border-radius: 3px 0 0 3px; color: #fff",
+  "background: #fadfa3; padding: 1px; border-radius: 0 3px 3px 0; color: #fff"
+);
+console.log(
+  "\n %c 1.0正式版 %c General Content Management System \n\n",
+  "background: #35495e; padding: 1px; border-radius: 3px 0 0 3px; color: #fff",
+  "background: #fadfa3; padding: 1px; border-radius: 0 3px 3px 0; color: #fff"
+);
+
+console.log(
+  "\n %c Powered by  %c PureAdmin 6.0 https://github.com/pure-admin/ ",
+  "background: #35495e; padding: 1px; border-radius: 3px 0 0 3px; color: #fff",
+  "background: #fadfa3; padding: 1px; border-radius: 0 3px 3px 0; color: #fff"
+);

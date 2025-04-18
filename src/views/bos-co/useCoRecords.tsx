@@ -12,7 +12,7 @@ export interface CoRecord {
   location: string;
   area: string;
   budget: string;
-  roomType: string;
+  roomType: string | string[];
   term_sd: string;
   term_ed: string;
   sex: string;
@@ -60,11 +60,20 @@ export function useCoRecords() {
 
   const areas = ref<string[]>([]);
 
-  // 筛选方法：根据当前列属性做精确匹配 + 实时触发
   const filterHandler = (value: any, row: any, column: any) => {
-    const property = column["property"];
-    const match = value.includes(row[property]);
-    return match;
+    const values = Array.isArray(value) ? value : [value];
+    const property = column.property;
+    const cell = (row as any)[property];
+
+    if (typeof cell === "string") {
+      return values.some(v => cell.includes(v));
+    }
+
+    if (Array.isArray(cell)) {
+      return cell.some(v => values.includes(v));
+    }
+
+    return false;
   };
 
   const columns: TableColumnList = [
@@ -111,25 +120,17 @@ export function useCoRecords() {
       columnKey: "area",
       filterMethod: filterHandler
     },
-    {
-      label: "价格/预算",
-      columnKey: "budget",
-      prop: "budget"
-    },
+    { label: "价格/预算", columnKey: "budget", prop: "budget" },
     {
       label: "房型",
       prop: "roomType",
       filters: [],
       filterMultiple: true,
       columnKey: "roomType",
+      slot: "roomType",
       filterMethod: filterHandler
     },
-    {
-      label: "租期/入住时段",
-      prop: "term",
-      columnKey: "term",
-      slot: "term"
-    },
+    { label: "租期/入住时段", prop: "term", columnKey: "term", slot: "term" },
     {
       label: "性别要求",
       prop: "sexRequirement",
@@ -139,18 +140,10 @@ export function useCoRecords() {
       filterMultiple: true,
       filterMethod: filterHandler
     },
-    {
-      label: "主观需求",
-      prop: "demand",
-      columnKey: "demand",
-      width: "400px"
-    }
+    { label: "主观需求", prop: "demand", columnKey: "demand", width: "400px" }
   ];
 
   function updateColumnFilters() {
-    console.log("⬇️ 开始更新列 filters...");
-    console.log(filtersArray);
-
     columns.forEach(col => {
       const key = String(col.prop);
       const values = filtersArray[key];
@@ -177,16 +170,23 @@ export function useCoRecords() {
     }
     for (const key in filters) {
       if (filters[key]?.length) {
-        data = data.filter(r => filters[key].includes((r as any)[key]));
+        data = data.filter(r => {
+          const cell = (r as any)[key];
+          const values = filters[key];
+          if (typeof cell === "string")
+            return values.some(v => cell.includes(v));
+          if (Array.isArray(cell)) return cell.some(v => values.includes(v));
+          return false;
+        });
       }
     }
     if (sortField.value) {
       data.sort((a, b) => {
         const av = (a as any)[sortField.value] || "";
         const bv = (b as any)[sortField.value] || "";
-        if (av > bv) return sortOrder.value === "asc" ? 1 : -1;
-        if (av < bv) return sortOrder.value === "asc" ? -1 : 1;
-        return 0;
+        return sortOrder.value === "asc"
+          ? av.localeCompare(bv)
+          : bv.localeCompare(av);
       });
     }
     pagination.total = data.length;
@@ -200,23 +200,29 @@ export function useCoRecords() {
 
   function fetchRecords() {
     loading.value = true;
-
     http
       .request<FetchRecordsResponse>("get", "/portalapi/co/", {
         params: { action: "view" }
       })
       .then(res => {
         if (res.status === "success" && Array.isArray(res.data)) {
-          const sorted = [...res.data].sort((a, b) => {
-            const t1 = new Date(a.updated_at ?? 0).getTime();
-            const t2 = new Date(b.updated_at ?? 0).getTime();
-            return t2 - t1;
-          });
+          const sorted = [...res.data]
+            .sort((a, b) => {
+              const t1 = new Date(a.updated_at ?? 0).getTime();
+              const t2 = new Date(b.updated_at ?? 0).getTime();
+              return t2 - t1;
+            })
+            .map(r => ({
+              ...r,
+              roomType:
+                typeof r.roomType === "string"
+                  ? r.roomType.split(/\s*,\s*/).map(s => s.trim())
+                  : r.roomType
+            }));
 
           records.value = sorted;
           filtersArray = res.filters ?? {};
           currentUserAgentId.value = res.currentUserId;
-          console.log(res.filters);
           Object.assign(backendFilters, res.filters || {});
           updateColumnFilters();
         }
@@ -288,7 +294,6 @@ export function useCoRecords() {
       pagination.currentPage = 1;
     },
     setFilter: (prop: string, values: string[]) => {
-      console.log(filters);
       filters[prop] = values;
       pagination.currentPage = 1;
     }

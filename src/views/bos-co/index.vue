@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { Plus } from "@element-plus/icons-vue";
+import { ref, computed, onMounted, watch } from "vue";
+import { ElForm } from "element-plus";
 import { message } from "@/utils/message";
 import { useCoRecords, CoRecord } from "./useCoRecords";
 import { PureTableBar } from "@/components/RePureTableBar";
@@ -10,6 +10,7 @@ import ViewIcon from "~icons/ri/eye-line";
 import AddIcon from "~icons/ri/add-circle-line";
 
 const tableRef = ref();
+const formRef = ref<InstanceType<typeof ElForm>>();
 defineOptions({
   name: "co"
 });
@@ -61,6 +62,14 @@ const dateRange = computed<string[]>({
   }
 });
 
+// 表单校验规则
+const rules = {
+  type: [{ required: true, message: "请选择类型", trigger: "change" }],
+  placeName: [{ required: true, message: "请输入房源/地点", trigger: "blur" }],
+  location: [{ required: true, message: "请输入详细地址", trigger: "blur" }],
+  area: [{ required: true, message: "请选择区域", trigger: "change" }]
+};
+
 // 新增/编辑对话框打开
 function openDialog(mode: "add" | "edit", record?: CoRecord) {
   if (mode === "add") {
@@ -74,7 +83,7 @@ function openDialog(mode: "add" | "edit", record?: CoRecord) {
       location: "",
       area: "",
       budget: "",
-      roomType: "",
+      roomType: [],
       term_sd: "",
       term_ed: "",
       sex: "",
@@ -84,23 +93,50 @@ function openDialog(mode: "add" | "edit", record?: CoRecord) {
     };
   } else if (mode === "edit" && record) {
     dialogTitle.value = "编辑需求";
-    form.value = { ...record };
+    form.value = {
+      ...record,
+      roomType: Array.isArray(record.roomType)
+        ? record.roomType
+        : typeof record.roomType === "string"
+          ? record.roomType.split(/\s*,\s*/)
+          : []
+    };
   }
   dialogVisible.value = true;
 }
 
-// 保存表单
 async function handleSave() {
-  if (!form.value.type || !form.value.placeName || !form.value.location) {
-    message("请填写所有必填项。", { type: "warning" });
-    return;
-  }
-  try {
-    await saveRecord(form.value);
-    dialogVisible.value = false;
-  } catch {
-    // 内部已处理
-  }
+  formRef.value?.validate(async valid => {
+    if (!valid) return;
+    const payload = {
+      ...form.value,
+      roomType: Array.isArray(form.value.roomType)
+        ? form.value.roomType.join(", ")
+        : (form.value.roomType ?? "")
+    };
+    try {
+      await saveRecord(payload);
+      dialogVisible.value = false;
+    } catch {
+      // handled
+    }
+  });
+}
+
+function clearFilters() {
+  const { clearFilter } = tableRef.value.getTableRef();
+  clearFilter();
+  columns.forEach(col => {
+    if (col.filters && typeof col.prop === "string") {
+      setFilter(col.prop, []);
+    }
+  });
+  searchTermLocal.value = "";
+  setSearchTerm("");
+  setSort("", "");
+  toggleOnlyMine(false);
+  setPage(1);
+  fetchRecords();
 }
 
 // 详情对话框
@@ -133,6 +169,7 @@ function handleFilterChange(filtersMap: Record<string, string[]>) {
     setFilter(key, filtersMap[key] || []);
   }
 }
+
 onMounted(() => fetchRecords());
 </script>
 
@@ -168,6 +205,8 @@ onMounted(() => fetchRecords());
       </template>
 
       <template #default="{ size }">
+        <el-button @click="clearFilters">重置所有筛选项目</el-button>
+
         <pure-table
           ref="tableRef"
           row-key="id"
@@ -190,20 +229,30 @@ onMounted(() => fetchRecords());
               <el-button
                 class="icon-button"
                 color="#557DED"
-                size="default"
                 :icon="useRenderIcon(EditIcon)"
+                size="default"
                 @click="openDialog('edit', row)"
               />
               <el-button
                 class="icon-button"
                 type="primary"
-                size="default"
                 :icon="useRenderIcon(ViewIcon)"
+                size="default"
                 @click="showDetails(row)"
               />
             </div>
           </template>
-
+          <template #roomType="{ row }">
+            <span>
+              {{
+                Array.isArray(row.roomType)
+                  ? row.roomType.join(", ")
+                  : typeof row.roomType === "string"
+                    ? row.roomType.split(",").join(", ")
+                    : row.roomType
+              }}
+            </span>
+          </template>
           <template #term="{ row }">
             {{ row.term_sd }} - {{ row.term_ed }}
           </template>
@@ -224,7 +273,7 @@ onMounted(() => fetchRecords());
       width="600px"
       class="custom-dialog"
     >
-      <el-form :model="form" label-width="120px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
             <el-radio-button value="Open">Open</el-radio-button>
@@ -262,43 +311,55 @@ onMounted(() => fetchRecords());
           <el-input v-model="form.budget" placeholder="价格或预算" />
         </el-form-item>
         <el-form-item label="房型">
-          <el-input v-model="form.roomType" placeholder="房型，用逗号分隔" />
+          <el-checkbox-group v-model="form.roomType as string[]">
+            <el-checkbox-button value="Studio">Studio</el-checkbox-button>
+            <el-checkbox-button value="1B1B">1B1B</el-checkbox-button>
+            <el-checkbox-button value="1B Den">1B+Den</el-checkbox-button>
+            <el-checkbox-button value="2B1B">2B1B</el-checkbox-button>
+            <el-checkbox-button value="2B2B">2B2B</el-checkbox-button>
+            <el-checkbox-button value="3B1B">3B1B</el-checkbox-button>
+            <el-checkbox-button value="3B2B">3B2B</el-checkbox-button>
+            <el-checkbox-button value="3B3B">3B3B</el-checkbox-button>
+            <el-checkbox-button value="4B2B">4B2B</el-checkbox-button>
+            <el-checkbox-button value="4B3B">4B3B</el-checkbox-button>
+            <el-checkbox-button value="4B4B">4B4B</el-checkbox-button>
+            <el-checkbox-button value="5B+">5B+</el-checkbox-button>
+          </el-checkbox-group>
         </el-form-item>
+
         <el-form-item label="租期">
           <el-date-picker
             v-model="dateRange"
             type="daterange"
             value-format="YYYY-MM-DD"
-            class="w-[240px]!"
             unlink-panels
             range-separator="至"
             start-placeholder="开始时间"
             end-placeholder="结束时间"
             :popper-options="{ placement: 'bottom-start' }"
-            :size="dynamicSize"
-            :disabled="size === 'disabled'"
+            size="default"
           />
         </el-form-item>
         <el-form-item label="本人性别">
           <el-radio-group v-model="form.sex">
-            <el-radio value="男">男</el-radio>
-            <el-radio value="女">女</el-radio>
-            <el-radio value="整套转租">整套转租</el-radio>
+            <el-radio-button value="男">男</el-radio-button>
+            <el-radio-button value="女">女</el-radio-button>
+            <el-radio-button value="整套转租">整套转租</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="性别要求">
           <el-radio-group v-model="form.sexRequirement">
-            <el-radio value="男">男</el-radio>
-            <el-radio value="女">女</el-radio>
-            <el-radio value="不限">不限</el-radio>
+            <el-radio-button value="男">男</el-radio-button>
+            <el-radio-button value="女">女</el-radio-button>
+            <el-radio-button value="不限">不限</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="本人身份">
           <el-radio-group v-model="form.identity">
-            <el-radio value="本科">本科</el-radio>
-            <el-radio value="研究生">研究生</el-radio>
-            <el-radio value="工作">工作</el-radio>
-            <el-radio value="访问学者">访问学者</el-radio>
+            <el-radio-button value="本科">本科</el-radio-button>
+            <el-radio-button value="研究生">研究生</el-radio-button>
+            <el-radio-button value="工作">工作</el-radio-button>
+            <el-radio-button value="访问学者">访问学者</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="主观需求">
@@ -359,7 +420,13 @@ onMounted(() => fetchRecords());
         </div>
         <div class="detail-item">
           <span class="detail-label">房型：</span>
-          <span class="detail-value">{{ recordDetail.roomType }}</span>
+          <span class="detail-value">
+            {{
+              Array.isArray(recordDetail.roomType)
+                ? recordDetail.roomType.join(", ")
+                : recordDetail.roomType
+            }}
+          </span>
         </div>
         <div class="detail-item">
           <span class="detail-label">租期：</span>
@@ -385,17 +452,15 @@ onMounted(() => fetchRecords());
         </div>
       </div>
       <template #footer>
-        <el-button type="primary" @click="detailDialogVisible = false">
-          关闭
-        </el-button>
+        <el-button type="primary" @click="detailDialogVisible = false"
+          >关闭</el-button
+        >
       </template>
     </el-dialog>
   </div>
 </template>
 
 <style>
-/* 按钮样式：减少按钮内左右 padding 并确保按钮宽度自适应内容 */
-
 /* 表格标题行的每个标题不换行 */
 .pure-table .el-table__header-wrapper th {
   white-space: nowrap;
@@ -404,12 +469,12 @@ onMounted(() => fetchRecords());
 .detail-content {
   display: flex;
   flex-direction: column;
-  gap: 12px; /* 信息间距 */
+  gap: 12px;
   margin: 20px 0;
 }
 
 .detail-item {
-  font-size: 16px; /* 较大的字体 */
+  font-size: 16px;
   line-height: 1.6;
 }
 
