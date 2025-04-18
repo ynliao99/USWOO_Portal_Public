@@ -43,6 +43,10 @@ const detailDialogVisible = ref(false);
 const dialogTitle = ref("");
 const form = ref<Partial<CoRecord>>({});
 const recordDetail = ref<Partial<CoRecord>>({});
+// 动态表单项 label 显示
+const isSharedOrShortTerm = computed(() => {
+  return ["拼室友", "找短租"].includes(form.value.type || "");
+});
 
 // 日期范围双向绑定
 const dateRange = computed<string[]>({
@@ -70,13 +74,17 @@ const rules = {
   area: [{ required: true, message: "请选择区域", trigger: "change" }]
 };
 
+// 新增/编辑对话框 模式
+let isAddMode = false;
+
 // 新增/编辑对话框打开
 function openDialog(mode: "add" | "edit", record?: CoRecord) {
   if (mode === "add") {
+    isAddMode = true;
     dialogTitle.value = "新增需求";
     form.value = {
       id: null,
-      status: "",
+      status: "Open", // 状态默认 Open
       type: "",
       placeName: "",
       unit: "",
@@ -92,6 +100,7 @@ function openDialog(mode: "add" | "edit", record?: CoRecord) {
       demand: ""
     };
   } else if (mode === "edit" && record) {
+    isAddMode = false;
     dialogTitle.value = "编辑需求";
     form.value = {
       ...record,
@@ -242,6 +251,15 @@ onMounted(() => fetchRecords());
               />
             </div>
           </template>
+          <template #placeName="{ row }">
+            <a
+              :href="`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(row.location)}`"
+              target="_blank"
+              style="color: #409eff"
+            >
+              {{ row.placeName }}
+            </a>
+          </template>
           <template #roomType="{ row }">
             <span>
               {{
@@ -273,8 +291,8 @@ onMounted(() => fetchRecords());
       width="600px"
       class="custom-dialog"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
-        <el-form-item label="状态">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="5em">
+        <el-form-item v-if="!isAddMode" label="状态">
           <el-radio-group v-model="form.status">
             <el-radio-button value="Open">Open</el-radio-button>
             <el-radio-button value="Closed">Closed</el-radio-button>
@@ -283,15 +301,15 @@ onMounted(() => fetchRecords());
         <el-form-item label="类型">
           <el-radio-group v-model="form.type">
             <el-radio-button value="转租">转租</el-radio-button>
-            <el-radio-button value="拼室友">拼室友</el-radio-button>
             <el-radio-button value="私人房东">私人房东</el-radio-button>
-            <el-radio-button value="单房">单房</el-radio-button>
+            <el-radio-button value="拼室友">拼室友</el-radio-button>
+            <el-radio-button value="找短租">找短租</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="房源/地点">
+        <el-form-item :label="isSharedOrShortTerm ? '通勤地点' : '房源地址'">
           <el-input v-model="form.placeName" placeholder="地点名称" />
         </el-form-item>
-        <el-form-item label="Unit/学院">
+        <el-form-item :label="isSharedOrShortTerm ? '学院' : 'Unit'">
           <el-input v-model="form.unit" placeholder="单位/学院" />
         </el-form-item>
         <el-form-item label="详细地址">
@@ -307,8 +325,8 @@ onMounted(() => fetchRecords());
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="价格/预算">
-          <el-input v-model="form.budget" placeholder="价格或预算" />
+        <el-form-item :label="isSharedOrShortTerm ? '预算' : '价格'">
+          <el-input v-model="form.budget" placeholder="预算/价格" />
         </el-form-item>
         <el-form-item label="房型">
           <el-checkbox-group v-model="form.roomType as string[]">
@@ -362,11 +380,15 @@ onMounted(() => fetchRecords());
             <el-radio-button value="访问学者">访问学者</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="主观需求">
+        <el-form-item :label="isSharedOrShortTerm ? '主观需求' : '备注信息'">
           <el-input
             v-model="form.demand"
             type="textarea"
-            placeholder="备注信息"
+            :placeholder="
+              isSharedOrShortTerm
+                ? '如意向公寓、通勤时间、室内洗烘、车位、宠物、偏好卧室、偏好区域'
+                : '输入房源的其他说明，例如家具、价格浮动空间、室友情况等'
+            "
             :rows="5"
           />
         </el-form-item>
@@ -399,11 +421,23 @@ onMounted(() => fetchRecords());
           <span class="detail-value">{{ recordDetail.userAgentName }}</span>
         </div>
         <div class="detail-item">
-          <span class="detail-label">房源/地点：</span>
+          <span class="detail-label">
+            {{
+              ["拼室友", "找短租"].includes(recordDetail.type || "")
+                ? "通勤地点："
+                : "房源地址："
+            }}
+          </span>
           <span class="detail-value">{{ recordDetail.placeName }}</span>
         </div>
         <div class="detail-item">
-          <span class="detail-label">Unit/学院：</span>
+          <span class="detail-label">
+            {{
+              ["拼室友", "找短租"].includes(recordDetail.type || "")
+                ? "学院："
+                : "Unit："
+            }}
+          </span>
           <span class="detail-value">{{ recordDetail.unit }}</span>
         </div>
         <div class="detail-item">
@@ -415,7 +449,13 @@ onMounted(() => fetchRecords());
           <span class="detail-value">{{ recordDetail.area }}</span>
         </div>
         <div class="detail-item">
-          <span class="detail-label">价格/预算：</span>
+          <span class="detail-label">
+            {{
+              ["拼室友", "找短租"].includes(recordDetail.type || "")
+                ? "预算："
+                : "价格："
+            }}
+          </span>
           <span class="detail-value">{{ recordDetail.budget }}</span>
         </div>
         <div class="detail-item">
@@ -447,7 +487,13 @@ onMounted(() => fetchRecords());
           <span class="detail-value">{{ recordDetail.identity }}</span>
         </div>
         <div class="detail-item">
-          <span class="detail-label">主观需求：</span>
+          <span class="detail-label">
+            {{
+              ["拼室友", "找短租"].includes(recordDetail.type || "")
+                ? "主观需求："
+                : "备注信息："
+            }}
+          </span>
           <span class="detail-value">{{ recordDetail.demand }}</span>
         </div>
       </div>

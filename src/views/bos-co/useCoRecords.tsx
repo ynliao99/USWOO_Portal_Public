@@ -103,12 +103,13 @@ export function useCoRecords() {
       filterMethod: filterHandler
     },
     {
-      label: "房源/通勤地点",
+      label: "地点",
       prop: "placeName",
       sortable: true,
       filters: [],
       filterMultiple: true,
       columnKey: "placeName",
+      slot: "placeName",
       filterMethod: filterHandler
     },
     {
@@ -253,7 +254,7 @@ export function useCoRecords() {
     const action = rec.id ? "update" : "add";
     const params: any = { action };
     if (rec.id) params.caseID = rec.id;
-    await http.request("post", "/portalapi/co/", { params, data: rec });
+    await http.request("post", "/portalapi/co111/", { params, data: rec });
     fetchRecords();
   }
 
