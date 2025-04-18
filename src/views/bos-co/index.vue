@@ -25,6 +25,7 @@ const {
   onlyMine,
   columns,
   fetchRecords,
+  currentUserAgentId, //当前用户id
   saveRecord,
   areas,
   setSearchTerm,
@@ -282,22 +283,26 @@ onMounted(() => {
           @page-current-change="handlePageChange"
         >
           <template #operation="{ row }">
-            <div style="white-space: nowrap">
-              <el-button
-                class="icon-button"
-                color="#557DED"
-                :icon="useRenderIcon(EditIcon)"
-                size="default"
-                @click="openDialog('edit', row)"
-              />
-              <el-button
-                class="icon-button"
-                type="primary"
-                :icon="useRenderIcon(ViewIcon)"
-                size="default"
-                @click="showDetails(row)"
-              />
-            </div>
+            <template
+              v-if="String(row.userAgentId) === String(currentUserAgentId)"
+            >
+              <div style="white-space: nowrap">
+                <el-button
+                  class="icon-button"
+                  color="#557DED"
+                  :icon="useRenderIcon(EditIcon)"
+                  size="default"
+                  @click="openDialog('edit', row)"
+                />
+                <el-button
+                  class="icon-button"
+                  type="primary"
+                  :icon="useRenderIcon(ViewIcon)"
+                  size="default"
+                  @click="showDetails(row)"
+                />
+              </div>
+            </template>
           </template>
           <template #placeName="{ row }">
             <a

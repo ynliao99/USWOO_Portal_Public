@@ -274,6 +274,7 @@ export function useCoRecords() {
     paginatedRecords,
     fetchRecords,
     saveRecord,
+    currentUserAgentId,
     setSearchTerm: (v: string) => {
       searchTerm.value = v;
       pagination.currentPage = 1;
