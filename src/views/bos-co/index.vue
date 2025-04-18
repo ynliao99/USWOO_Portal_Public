@@ -221,12 +221,13 @@ watch(dialogVisible, newVal => {
 
 onMounted(() => {
   fetchRecords();
-  // 监听 autocomplete-selected 事件，更新表单数据
   document.addEventListener("autocomplete-selected", (e: CustomEvent) => {
-    const { marker, value } = e.detail;
-    if (marker && form.value.hasOwnProperty(marker)) {
-      form[marker] = value;
-    }
+    const { marker, value } = e.detail as {
+      marker: keyof CoRecord;
+      value: any;
+    };
+    // 简单断言
+    form.value[marker] = value;
   });
 });
 </script>

@@ -2,7 +2,7 @@ import { ref, reactive, computed, onMounted } from "vue";
 import { http } from "@/utils/http";
 import { message } from "@/utils/message";
 
-export interface CoRecord {
+export interface GjgyRecord {
   id: number | null;
   status: string;
   type: string;
@@ -26,7 +26,7 @@ export interface CoRecord {
 interface FetchRecordsResponse {
   status: "success" | "error";
   currentUserId: string;
-  data: CoRecord[];
+  data: GjgyRecord[];
   filters?: Record<string, string[]>;
   message?: string;
 }
@@ -37,8 +37,8 @@ interface FetcAreasResponse {
 
 const backendFilters = reactive<Record<string, string[]>>({});
 
-export function useCoRecords() {
-  const records = ref<CoRecord[]>([]);
+export function useGjgyRecords() {
+  const records = ref<GjgyRecord[]>([]);
   let filtersArray: Record<string, string[]>;
   const loading = ref(false);
 
@@ -250,7 +250,7 @@ export function useCoRecords() {
     }
   }
 
-  async function saveRecord(rec: Partial<CoRecord>) {
+  async function saveRecord(rec: Partial<GjgyRecord>) {
     const action = rec.id ? "update" : "add";
     const params: any = { action };
     if (rec.id) params.caseID = rec.id;
