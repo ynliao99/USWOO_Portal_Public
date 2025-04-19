@@ -24,6 +24,9 @@ import FullIcon from "~icons/gravity-ui/star-fill";
 import HalfIcon from "~icons/fluent/star-half-12-regular";
 import NoneIcon from "~icons/hugeicons/star";
 import InfoIcon from "~icons/fa6-solid/info";
+import CalendarIcon from "~icons/ph/calendar-fill";
+import BuildingIcon from "~icons/carbon/floorplan";
+import VideoIcon from "~icons/icon-park-solid/play";
 
 import { coFormRules } from "./utils/rule";
 
@@ -44,6 +47,24 @@ function openDialogTWithOptions(
   iframeDialog.value.open();
 }
 
+function handleTourClick(row: AptRecord) {
+  const allowedTypes = [0, 2, 3];
+  const type = Number(row.tour_url_type);
+  if (allowedTypes.includes(type)) {
+    openDialogTWithOptions({
+      url: String(row.tour_url),
+      title: "预约看房",
+      message: "如无法加载，点此前往官网预约",
+      message_url: row.website
+    });
+  } else {
+    window.open(row.tour_url, "_blank");
+  }
+}
+
+function isTourDialog(row: AptRecord): boolean {
+  return [0, 2, 3].includes(Number(row.tour_url_type));
+}
 const tableRef = ref();
 const formRef = ref<InstanceType<typeof ElForm>>();
 defineOptions({
@@ -284,33 +305,6 @@ onMounted(() => {
         <div style="margin: 0 16px">
           <el-button type="primary" @click="clearFilters">筛选</el-button>
           <el-button @click="clearFilters">重置筛选</el-button>
-          <el-button
-            type="primary"
-            @click="
-              openDialogTWithOptions({
-                url: 'https://example.com',
-                title: '示例页面1',
-                message: '这是第一个弹窗',
-                message_url: 'https://www.baidu.com'
-              })
-            "
-          >
-            弹窗1
-          </el-button>
-
-          <el-button
-            type="success"
-            @click="
-              openDialogTWithOptions({
-                url: 'https://another.com',
-                title: '第二个弹窗',
-                message: '不同的提示信息',
-                message_url: 'https://www.google.com'
-              })
-            "
-          >
-            弹窗2
-          </el-button>
         </div>
 
         <pure-table
@@ -329,7 +323,7 @@ onMounted(() => {
           @page-current-change="handlePageChange"
         >
           <template #operation="{ row }">
-            <div style="white-space: nowrap">
+            <div style="white-space: nowrap" class="opt-buttons">
               <el-button
                 class="icon-button"
                 color="#557DED"
@@ -341,6 +335,37 @@ onMounted(() => {
                 class="icon-button"
                 type="primary"
                 :icon="useRenderIcon(ViewIcon)"
+                size="default"
+                @click="showDetails(row)"
+              />
+
+              <el-button
+                v-if="row.sightmap_id"
+                class="icon-button"
+                color="#8f16f3"
+                size="default"
+                :icon="useRenderIcon(BuildingIcon)"
+                @click="
+                  openDialogTWithOptions({
+                    url: `https://sightmap.com/embed/${row.sightmap_id}?enable_api=1`,
+                    title: '实时房源预览'
+                  })
+                "
+              />
+
+              <el-button
+                v-if="row.tour_url"
+                class="icon-button"
+                :icon="useRenderIcon(CalendarIcon)"
+                :type="isTourDialog(row) ? 'success' : undefined"
+                :color="!isTourDialog(row) ? '#0045f3' : undefined"
+                @click="handleTourClick(row)"
+              />
+
+              <el-button
+                class="icon-button"
+                color="#557DED"
+                :icon="useRenderIcon(VideoIcon)"
                 size="default"
                 @click="showDetails(row)"
               />
@@ -500,5 +525,11 @@ onMounted(() => {
   max-width: 400px;
   word-break: break-word;
   white-space: normal;
+}
+
+.opt-buttons .el-button,
+.el-button.is-round {
+  padding: 8px;
+  margin-left: 6px;
 }
 </style>

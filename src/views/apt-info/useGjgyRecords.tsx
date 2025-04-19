@@ -28,7 +28,7 @@ export interface AptRecord {
   current?: string;
   website?: string;
   tour_url?: string;
-  tour_url_type?: string;
+  tour_url_type?: string | number;
   amenities?: string;
   room_amenities?: string;
   sightmap_id?: string;
@@ -80,7 +80,7 @@ export function useGjgyRecords() {
       prop: "operation",
       slot: "operation",
       columnKey: "type",
-      width: "150px"
+      width: "217px"
     },
     {
       label: "更新于",
