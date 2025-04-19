@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { ref, computed, onMounted, watch, nextTick, h, VNode } from "vue";
 import { ElForm, FormInstance } from "element-plus";
 import { message } from "@/utils/message";
 import { useGjgyRecords, AptRecord } from "./useGjgyRecords";
@@ -11,12 +11,20 @@ import AddIcon from "~icons/ri/add-circle-line";
 import YesIcon from "~icons/mingcute/check-fill";
 import NoIcon from "~icons/fa6-solid/xmark";
 import UnknownIcon from "~icons/ic/baseline-question-mark";
-import FullIcon from "~icons/ic/baseline-star-rate";
-import HalfIcon from "~icons/ic/baseline-star-half";
-import NoneIcon from "~icons/lineicons/star-fat";
+import FullIcon from "~icons/gravity-ui/star-fill";
+import HalfIcon from "~icons/fluent/star-half-12-regular";
+import NoneIcon from "~icons/hugeicons/star";
 import InfoIcon from "~icons/fa6-solid/info";
 
 import { coFormRules } from "./utils/rule";
+
+import IframeDialog from "@/components/IframeDialog.vue";
+
+const iframeDialog = ref();
+
+function openDialogT() {
+  iframeDialog.value.open();
+}
 
 const tableRef = ref();
 const formRef = ref<InstanceType<typeof ElForm>>();
@@ -177,31 +185,42 @@ watch(dialogVisible, newVal => {
 // ─────────────────────────────
 // 工具函数
 // ─────────────────────────────
-const replaceYesNo = (text: string | null) => {
-  if (text == null) return "";
-  return text
-    .replace(
-      /\byes\b/i,
-      '<i class="fa-solid fa-check" style="color: #008a17;"></i>'
-    )
-    .replace(
-      /\bno\b/i,
-      '<i class="fa-regular fa-xmark" style="color: #eb0000;"></i>'
-    )
-    .replace(
-      /\bdk\b/i,
-      '<i class="fa-regular fa-question" style="color: #feb02a;"></i>'
-    );
+
+const replaceYesNo = (text: string | null): VNode | string => {
+  if (!text) return "";
+  const lower = text.toLowerCase();
+  if (lower === "yes") return h(YesIcon, { style: { color: "#008a17" } });
+  if (lower === "no") return h(NoIcon, { style: { color: "#eb0000" } });
+  if (lower === "dk") return h(UnknownIcon, { style: { color: "#feb02a" } });
+  return text;
 };
 
-const replaceBrokerFee = (text: string | null) => {
-  if (text == null) return "";
-  return text
-    .replace(/\bfull\b/i, '<i class="fas fa-star"></i>')
-    .replace(/\bhalf\b/i, '<i class="fas fa-star-half-alt"></i>')
-    .replace(/\bnone\b/i, '<i class="far fa-star"></i>')
-    .replace(/\bother\b/i, '<i class="fas fa-info"></i>')
-    .replace(/\bunknown\b/i, '<i class="fas fa-question"></i>');
+const replaceBrokerFee = (text: string | null): VNode | string => {
+  if (!text) return "";
+  const lower = text.toLowerCase();
+  if (lower.includes("full"))
+    return h(FullIcon, { style: { color: "#fc676e" } });
+  if (lower.includes("half"))
+    return h(HalfIcon, { style: { color: "#feb02a" } });
+  if (lower.includes("none")) return h(NoneIcon, { style: { color: "#ccc" } });
+  if (lower.includes("other") || lower.includes("unknown"))
+    return h(InfoIcon, { style: { color: "#999" } });
+  return text;
+};
+
+const formatDate = (input: string): string => {
+  const date = new Date(input);
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  const yy = String(date.getFullYear()).slice(-2);
+  return `${mm}/${dd}/${yy}`;
+};
+
+const isRecent = (input: string): boolean => {
+  const date = new Date(input);
+  const now = new Date();
+  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  return date >= twoWeeksAgo;
 };
 
 onMounted(() => {
@@ -246,6 +265,12 @@ onMounted(() => {
         <div style="margin: 0 16px">
           <el-button type="primary" @click="clearFilters">筛选</el-button>
           <el-button @click="clearFilters">重置筛选</el-button>
+          <el-button type="primary" @click="openDialogT">打开弹窗</el-button>
+          <IframeDialog
+            ref="iframeDialog"
+            url="https://example.com"
+            title="示例页面"
+          />
         </div>
 
         <pure-table
@@ -285,6 +310,47 @@ onMounted(() => {
             <a :href="`${row.website}`" target="_blank" style="color: #409eff">
               {{ row.building_name }}
             </a>
+          </template>
+          <template #last_edited="{ row }">
+            <span
+              :style="{
+                color: isRecent(row.last_edited) ? '#008a17' : '#ca0000'
+              }"
+            >
+              {{ formatDate(row.last_edited) }}
+            </span>
+          </template>
+
+          <template #broker_fee="{ row }">
+            <span class="table-icon">
+              <component :is="replaceBrokerFee(row.broker_fee)" />
+              <span v-if="row.broker_fee_desc">
+                | {{ row.broker_fee_desc }}</span
+              >
+            </span>
+          </template>
+
+          <template #undergrad="{ row }">
+            <span class="table-icon">
+              <component :is="replaceYesNo(row.undergrad)" />
+              <span v-if="row.undergrad_desc"> | {{ row.undergrad_desc }}</span>
+            </span>
+          </template>
+
+          <template #intl_student="{ row }">
+            <span class="table-icon">
+              <component :is="replaceYesNo(row.intl_student)" />
+              <span v-if="row.intl_student_desc">
+                | {{ row.intl_student_desc }}</span
+              >
+            </span>
+          </template>
+
+          <template #pet="{ row }">
+            <span class="table-icon">
+              <component :is="replaceYesNo(row.pet)" />
+              <span v-if="row.pet_desc"> | {{ row.pet_desc }}</span>
+            </span>
           </template>
 
           <template #address="{ row }">

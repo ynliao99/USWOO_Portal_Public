@@ -122,15 +122,15 @@ export function useGjgyRecords() {
     },
     {
       label: "本科生",
-      prop: "concessions",
-      columnKey: "concessions",
-      slot: "concessions"
-    },
-    {
-      label: "国际生",
       prop: "undergrad",
       columnKey: "undergrad",
       slot: "undergrad"
+    },
+    {
+      label: "国际生",
+      prop: "intl_student",
+      columnKey: "intl_student",
+      slot: "intl_student"
     },
     {
       label: "宠物",
@@ -216,8 +216,8 @@ export function useGjgyRecords() {
       .then(res => {
         if (res.status === "success" && Array.isArray(res.data)) {
           const sorted = [...res.data].sort((a, b) => {
-            const t1 = new Date(a.updated_at ?? 0).getTime();
-            const t2 = new Date(b.updated_at ?? 0).getTime();
+            const t1 = new Date(a.last_edited ?? 0).getTime();
+            const t2 = new Date(b.last_edited ?? 0).getTime();
             return t2 - t1;
           });
 
