@@ -270,6 +270,8 @@ onMounted(() => {
             ref="iframeDialog"
             url="https://example.com"
             title="示例页面"
+            message="这里是一段提示文字"
+            message_url="https://www.baidu.com"
           />
         </div>
 

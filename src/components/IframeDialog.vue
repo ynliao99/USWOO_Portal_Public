@@ -14,7 +14,18 @@
         :src="url"
         frameborder="0"
         class="iframe-content"
+        :style="{
+          height: props.message ? 'calc(90vh - 162px)' : 'calc(90vh - 125px)'
+        }"
       />
+    </div>
+
+    <!-- 可选提示语 -->
+    <div v-if="props.message" class="dialog-message">
+      <div v-if="props.message_url">
+        <a :href="props.message_url" target="_blank">{{ props.message }}</a>
+      </div>
+      <div v-else>{{ props.message }}</div>
     </div>
     <template #footer>
       <el-button @click="visible = false">关闭</el-button>
@@ -24,11 +35,14 @@
 
 <script setup lang="ts">
 import { ref, defineProps, defineExpose } from "vue";
+import { nextTick } from "vue";
 
 const props = defineProps({
   url: { type: String, required: true },
   title: { type: String, default: "弹窗标题" },
-  width: { type: String, default: "90vw" }
+  width: { type: String, default: "90vw" },
+  message: { type: String, default: "" },
+  message_url: { type: String, default: "" }
 });
 
 const visible = ref(false);
@@ -39,9 +53,7 @@ function open() {
 function close() {
   visible.value = false;
 }
-function onOpen() {
-  /* 打开时逻辑 */
-}
+function onOpen() {}
 function onClose() {
   /* 关闭时逻辑 */
 }
@@ -54,25 +66,15 @@ defineExpose({ open, close });
 .iframe-dialog {
   /* 注意：Element Plus 会给 .el-dialog 加内联 width，这里用 custom-class + !important */
   width: 90vw !important;
-  height: 90vh !important;
+  //height: 90vh !important;
   margin: 0 auto;
 
   /* 水平居中 */
 }
 
-/* 去掉 dialog-body 的默认 padding，并撑满剩余高度 */
-.iframe-dialog .el-dialog__body {
-  /* calc(总高 90vh - header 高度 - footer 高度) 
-     header ~ 56px, footer ~ 56px（可根据实际样式微调） */
-  height: calc(90vh - 125px);
-  padding: 0;
-  overflow: hidden;
-}
-
 /* iframe 占满整个 body 区域 */
 .iframe-content {
   width: 100%;
-  height: calc(90vh - 125px);
   border: 0;
 }
 
@@ -82,5 +84,13 @@ defineExpose({ open, close });
   max-height: 90vh !important;
   margin-top: 5vh;
   margin-bottom: 5vh;
+}
+
+/* 新增提示语样式 */
+.dialog-message {
+  padding-top: 16px;
+  font-size: 14px;
+  color: #606266;
+  text-align: center;
 }
 </style>
