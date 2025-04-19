@@ -357,6 +357,7 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   word-break: break-word;
   -webkit-box-orient: vertical;
 }
