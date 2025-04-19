@@ -2,32 +2,47 @@ import { ref, reactive, computed, onMounted } from "vue";
 import { http } from "@/utils/http";
 import { message } from "@/utils/message";
 
-export interface GjgyRecord {
+export interface AptRecord {
   id: number | null;
-  status: string;
-  type: string;
   userAgentName: string;
-  placeName: string;
-  unit: string;
-  location: string;
+  userAgentId: string;
   area: string;
-  budget: string;
-  roomType: string | string[];
-  term_sd: string;
-  term_ed: string;
-  sex: string;
-  sexRequirement: string;
-  identity: string;
-  demand: string;
+  building_name: string;
+  pid?: string;
+  address?: string;
+  concessions?: string;
+  broker_fee?: string;
+  broker_fee_desc?: string;
+  note?: string;
+  ut?: string;
+  undergrad?: string;
+  undergrad_desc?: string;
+  intl_student?: string;
+  intl_student_desc?: string;
+  pet?: string;
+  pet_desc?: string;
+  parking?: string;
+  contact?: string;
+  percent?: string;
   updated_at?: string;
-  userAgentId?: string;
+  current?: string;
+  website?: string;
+  tour_url?: string;
+  tour_url_type?: string;
+  amenities?: string;
+  room_amenities?: string;
+  sightmap_id?: string;
+  last_edited?: string;
+  created_at?: string;
 }
 
 interface FetchRecordsResponse {
-  status: "success" | "error";
+  status: "success" | "error" | number;
   currentUserId: string;
-  data: GjgyRecord[];
-  filters?: Record<string, string[]>;
+  data: AptRecord[];
+  cCount?: number;
+  lastRecordCount?: number;
+  totalCount?: number;
   message?: string;
 }
 
@@ -35,11 +50,10 @@ interface FetcAreasResponse {
   areas?: string[];
 }
 
-const backendFilters = reactive<Record<string, string[]>>({});
+// const backendFilters = reactive<Record<string, string[]>>({});
 
 export function useGjgyRecords() {
-  const records = ref<GjgyRecord[]>([]);
-  let filtersArray: Record<string, string[]>;
+  const records = ref<AptRecord[]>([]);
   const loading = ref(false);
 
   const searchTerm = ref("");
@@ -60,22 +74,6 @@ export function useGjgyRecords() {
 
   const areas = ref<string[]>([]);
 
-  const filterHandler = (value: any, row: any, column: any) => {
-    const values = Array.isArray(value) ? value : [value];
-    const property = column.property;
-    const cell = (row as any)[property];
-
-    if (typeof cell === "string") {
-      return values.some(v => cell.includes(v));
-    }
-
-    if (Array.isArray(cell)) {
-      return cell.some(v => values.includes(v));
-    }
-
-    return false;
-  };
-
   const columns: TableColumnList = [
     {
       label: "操作",
@@ -85,73 +83,83 @@ export function useGjgyRecords() {
       width: "150px"
     },
     {
-      label: "类型",
-      prop: "type",
+      label: "更新于",
+      prop: "last_edited",
       sortable: true,
-      filters: [],
-      filterMultiple: true,
-      columnKey: "type",
-      filterMethod: filterHandler
-    },
-    {
-      label: "经纪人",
-      prop: "userAgentName",
-      sortable: true,
-      filters: [],
-      filterMultiple: true,
-      columnKey: "userAgentName",
-      filterMethod: filterHandler
-    },
-    {
-      label: "地点",
-      prop: "placeName",
-      sortable: true,
-      filters: [],
-      filterMultiple: true,
-      columnKey: "placeName",
-      slot: "placeName",
-      filterMethod: filterHandler
+      slot: "last_edited",
+      columnKey: "last_edited"
     },
     {
       label: "地区",
       prop: "area",
       sortable: true,
-      filters: [],
-      filterMultiple: true,
-      columnKey: "area",
-      filterMethod: filterHandler
+      slot: "area",
+      columnKey: "area"
     },
-    { label: "价格/预算", columnKey: "budget", prop: "budget" },
     {
-      label: "房型",
-      prop: "roomType",
-      filters: [],
-      filterMultiple: true,
-      columnKey: "roomType",
-      slot: "roomType",
-      filterMethod: filterHandler
+      label: "名称",
+      prop: "building_name",
+      columnKey: "building_name",
+      slot: "building_name"
     },
-    { label: "租期/入住时段", prop: "term", columnKey: "term", slot: "term" },
     {
-      label: "性别要求",
-      prop: "sexRequirement",
-      sortable: true,
-      columnKey: "sexRequirement",
-      filters: [],
-      filterMultiple: true,
-      filterMethod: filterHandler
+      label: "优惠",
+      prop: "concessions",
+      columnKey: "concessions",
+      slot: "operaconcessionstion"
     },
-    { label: "主观需求", prop: "demand", columnKey: "demand", width: "400px" }
+    {
+      label: "中介费",
+      prop: "broker_fee",
+      columnKey: "broker_fee",
+      slot: "broker_fee"
+    },
+    {
+      label: "杂费",
+      prop: "ut",
+      columnKey: "ut",
+      slot: "ut"
+    },
+    {
+      label: "本科生",
+      prop: "concessions",
+      columnKey: "concessions",
+      slot: "concessions"
+    },
+    {
+      label: "国际生",
+      prop: "undergrad",
+      columnKey: "undergrad",
+      slot: "undergrad"
+    },
+    {
+      label: "宠物",
+      prop: "pet",
+      columnKey: "pet",
+      slot: "pet"
+    },
+    {
+      label: "备注",
+      prop: "note",
+      columnKey: "note",
+      slot: "note"
+    },
+    {
+      label: "地址",
+      prop: "address",
+      columnKey: "address",
+      slot: "address"
+    },
+    {
+      label: "更新人",
+      prop: "userAgentName",
+      columnKey: "userAgentName",
+      slot: "userAgentName"
+    }
   ];
 
   function updateColumnFilters() {
-    columns.forEach(col => {
-      const key = String(col.prop);
-      const values = filtersArray[key];
-      if (Array.isArray(values)) {
-        col.filters = values.map(v => ({ text: v, value: v }));
-      }
-    });
+    // 填充Filters
   }
 
   const filteredRecords = computed(() => {
@@ -202,29 +210,19 @@ export function useGjgyRecords() {
   function fetchRecords() {
     loading.value = true;
     http
-      .request<FetchRecordsResponse>("get", "/portalapi/co/", {
+      .request<FetchRecordsResponse>("get", "/portalapi/gjgy/", {
         params: { action: "view" }
       })
       .then(res => {
         if (res.status === "success" && Array.isArray(res.data)) {
-          const sorted = [...res.data]
-            .sort((a, b) => {
-              const t1 = new Date(a.updated_at ?? 0).getTime();
-              const t2 = new Date(b.updated_at ?? 0).getTime();
-              return t2 - t1;
-            })
-            .map(r => ({
-              ...r,
-              roomType:
-                typeof r.roomType === "string"
-                  ? r.roomType.split(/\s*,\s*/).map(s => s.trim())
-                  : r.roomType
-            }));
+          const sorted = [...res.data].sort((a, b) => {
+            const t1 = new Date(a.updated_at ?? 0).getTime();
+            const t2 = new Date(b.updated_at ?? 0).getTime();
+            return t2 - t1;
+          });
 
           records.value = sorted;
-          filtersArray = res.filters ?? {};
           currentUserAgentId.value = res.currentUserId;
-          Object.assign(backendFilters, res.filters || {});
           updateColumnFilters();
         }
       })
@@ -250,7 +248,7 @@ export function useGjgyRecords() {
     }
   }
 
-  async function saveRecord(rec: Partial<GjgyRecord>) {
+  async function saveRecord(rec: Partial<AptRecord>) {
     const action = rec.id ? "update" : "add";
     const params: any = { action };
     if (rec.id) params.caseID = rec.id;

@@ -264,7 +264,9 @@ onMounted(() => {
       </template>
 
       <template #default="{ size }">
-        <el-button @click="clearFilters">重置所有筛选项目</el-button>
+        <div style="margin: 0 16px">
+          <el-button @click="clearFilters">重置所有筛选项目</el-button>
+        </div>
 
         <pure-table
           ref="tableRef"
@@ -624,5 +626,24 @@ onMounted(() => {
   max-height: 80vh;
   padding-right: 12px;
   overflow-y: auto;
+}
+
+.cell {
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 3;
+  word-break: break-word;
+  -webkit-box-orient: vertical;
+}
+
+.el-table .cell.el-tooltip {
+  white-space: normal;
+}
+
+.el-popper {
+  max-width: 400px;
+  word-break: break-word;
+  white-space: normal;
 }
 </style>

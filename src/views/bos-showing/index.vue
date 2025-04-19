@@ -286,7 +286,7 @@ watch(
 
       <template #default="{ size, dynamicColumns }">
         <!-- 添加“只看我的”按钮 -->
-        <div style="margin: 12px 16px">
+        <div style="margin: 0 16px">
           <el-check-tag
             :class="[
               'select-none',
