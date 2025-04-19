@@ -34,17 +34,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, defineExpose } from "vue";
-import { nextTick } from "vue";
+import { ref, defineProps, defineExpose, defineEmits, watch } from "vue";
 
-const props = defineProps({
-  url: { type: String, required: true },
-  title: { type: String, default: "弹窗标题" },
-  width: { type: String, default: "90vw" },
-  message: { type: String, default: "" },
-  message_url: { type: String, default: "" }
-});
+// IframeDialog.vue
+export interface IframeDialogProps {
+  url: string;
+  title?: string;
+  width?: string;
+  message?: string;
+  message_url?: string;
+}
+const props = defineProps<IframeDialogProps>();
 
+// 声明一个关闭时要 emit 的事件
+const emit = defineEmits<{
+  (e: "closed"): void;
+}>();
 const visible = ref(false);
 
 function open() {
@@ -56,7 +61,12 @@ function close() {
 function onOpen() {}
 function onClose() {
   /* 关闭时逻辑 */
+  emit("closed");
 }
+// 另外，监控 visible 也能触发 closed
+watch(visible, v => {
+  if (!v) emit("closed");
+});
 
 defineExpose({ open, close });
 </script>

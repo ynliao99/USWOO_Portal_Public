@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick, h, VNode } from "vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  watch,
+  nextTick,
+  h,
+  VNode,
+  isVNode
+} from "vue";
 import { ElForm, FormInstance } from "element-plus";
 import { message } from "@/utils/message";
 import { useGjgyRecords, AptRecord } from "./useGjgyRecords";
@@ -18,11 +27,20 @@ import InfoIcon from "~icons/fa6-solid/info";
 
 import { coFormRules } from "./utils/rule";
 
-import IframeDialog from "@/components/IframeDialog.vue";
+import IframeDialog, {
+  IframeDialogProps
+} from "@/components/IframeDialog/Iframe.vue";
 
 const iframeDialog = ref();
 
-function openDialogT() {
+const iframeDialogOptions = ref<Partial<IframeDialogProps> & { url: string }>({
+  url: ""
+});
+
+function openDialogTWithOptions(
+  options: Partial<IframeDialogProps> & { url: string }
+) {
+  iframeDialogOptions.value = { ...options };
   iframeDialog.value.open();
 }
 
@@ -262,17 +280,37 @@ onMounted(() => {
       </template>
 
       <template #default="{ size }">
+        <IframeDialog ref="iframeDialog" v-bind="iframeDialogOptions" />
         <div style="margin: 0 16px">
           <el-button type="primary" @click="clearFilters">筛选</el-button>
           <el-button @click="clearFilters">重置筛选</el-button>
-          <el-button type="primary" @click="openDialogT">打开弹窗</el-button>
-          <IframeDialog
-            ref="iframeDialog"
-            url="https://example.com"
-            title="示例页面"
-            message="这里是一段提示文字"
-            message_url="https://www.baidu.com"
-          />
+          <el-button
+            type="primary"
+            @click="
+              openDialogTWithOptions({
+                url: 'https://example.com',
+                title: '示例页面1',
+                message: '这是第一个弹窗',
+                message_url: 'https://www.baidu.com'
+              })
+            "
+          >
+            弹窗1
+          </el-button>
+
+          <el-button
+            type="success"
+            @click="
+              openDialogTWithOptions({
+                url: 'https://another.com',
+                title: '第二个弹窗',
+                message: '不同的提示信息',
+                message_url: 'https://www.google.com'
+              })
+            "
+          >
+            弹窗2
+          </el-button>
         </div>
 
         <pure-table
@@ -325,7 +363,13 @@ onMounted(() => {
 
           <template #broker_fee="{ row }">
             <span class="table-icon">
-              <component :is="replaceBrokerFee(row.broker_fee)" />
+              <template v-if="isVNode(replaceBrokerFee(row.broker_fee))">
+                <component :is="replaceBrokerFee(row.broker_fee)" />
+              </template>
+              <template v-else>
+                {{ row.broker_fee }}
+              </template>
+
               <span v-if="row.broker_fee_desc">
                 | {{ row.broker_fee_desc }}</span
               >
@@ -334,14 +378,26 @@ onMounted(() => {
 
           <template #undergrad="{ row }">
             <span class="table-icon">
-              <component :is="replaceYesNo(row.undergrad)" />
+              <template v-if="isVNode(replaceYesNo(row.undergrad))">
+                <component :is="replaceYesNo(row.undergrad)" />
+              </template>
+              <template v-else>
+                {{ row.undergrad }}
+              </template>
+
               <span v-if="row.undergrad_desc"> | {{ row.undergrad_desc }}</span>
             </span>
           </template>
 
           <template #intl_student="{ row }">
             <span class="table-icon">
-              <component :is="replaceYesNo(row.intl_student)" />
+              <template v-if="isVNode(replaceYesNo(row.intl_student))">
+                <component :is="replaceYesNo(row.intl_student)" />
+              </template>
+              <template v-else>
+                {{ row.intl_student }}
+              </template>
+
               <span v-if="row.intl_student_desc">
                 | {{ row.intl_student_desc }}</span
               >
@@ -350,7 +406,13 @@ onMounted(() => {
 
           <template #pet="{ row }">
             <span class="table-icon">
-              <component :is="replaceYesNo(row.pet)" />
+              <template v-if="isVNode(replaceYesNo(row.pet))">
+                <component :is="replaceYesNo(row.pet)" />
+              </template>
+              <template v-else>
+                {{ row.pet }}
+              </template>
+
               <span v-if="row.pet_desc"> | {{ row.pet_desc }}</span>
             </span>
           </template>
