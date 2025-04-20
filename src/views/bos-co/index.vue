@@ -227,7 +227,7 @@ onMounted(() => {
       value: any;
     };
     // 简单断言
-    form.value[marker] = value;
+    form[marker] = value;
   });
 });
 </script>
@@ -593,8 +593,6 @@ onMounted(() => {
 </template>
 
 <style>
-
-
 @media (width <=768px) {
   .el-dialog {
     width: 90% !important;
