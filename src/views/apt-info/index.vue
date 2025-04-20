@@ -234,6 +234,69 @@ function similarity(a: string, b: string): number {
   return maxLen > 0 ? (maxLen - dist) / maxLen : 1;
 }
 
+// 以下 查询确认是最新的政策的字段
+// 字段分组："broker_fee" 等具有两子字段的，视作单一组
+const fieldGroups = [
+  ["concessions"],
+  ["broker_fee", "broker_fee_desc"],
+  ["ut"],
+  ["undergrad", "undergrad_desc"],
+  ["intl_student", "intl_student_desc"],
+  ["pet", "pet_desc"],
+  ["parking"],
+  ["amenities"],
+  ["room_amenities"],
+  ["contact"],
+  ["note"]
+] as const;
+
+type GroupKey = (typeof fieldGroups)[number][number];
+
+// 初始化每组的确认状态：使用主字段名作为 key
+const confirmNoChange = reactive<Record<string, boolean>>(
+  Object.fromEntries(fieldGroups.map(group => [group[0], false])) as Record<
+    string,
+    boolean
+  >
+);
+
+// Watch：一旦确认未变，则立即恢复该组所有字段的原始值
+watch(
+  () => ({ ...confirmNoChange }),
+  newFlags => {
+    fieldGroups.forEach(group => {
+      const key = group[0];
+      if (newFlags[key]) {
+        group.forEach(f => {
+          form[f] = originalForm.value[f];
+        });
+      }
+    });
+  },
+  { deep: true }
+);
+
+// computeCurrent：收集所有被锁定或实际改动的字段名
+function computeCurrent(): string {
+  const changed: string[] = [];
+  fieldGroups.forEach(group => {
+    const key = group[0];
+    if (confirmNoChange[key]) {
+      // 锁定：两个字段都算
+      changed.push(...group);
+    } else {
+      // 未锁定：如果任一子字段改动，两个字段都算
+      const diff = group.some(
+        f => String(form[f] ?? "") !== String(originalForm.value[f] ?? "")
+      );
+      if (diff) {
+        changed.push(...group);
+      }
+    }
+  });
+  return changed.join(",");
+}
+
 // 提交按钮逻辑：第一次校验 → 格式化 → 再校验 → 保存
 async function onSubmit() {
   const f = formRef.value;
@@ -326,7 +389,8 @@ async function onSubmit() {
     // 处理数组字段为 JSON 字符串
     payload.amenities = JSON.stringify(payload.amenities || []);
     payload.room_amenities = JSON.stringify(payload.room_amenities || []);
-
+    // current 字段
+    payload.current = computeCurrent();
     // 保存
     await saveRecord(payload);
     dialogVisible.value = false;
@@ -800,22 +864,51 @@ onMounted(() => {
           />
         </el-form-item>
 
+        <hr />
         <!-- 优惠 -->
-        <el-form-item label="优惠" prop="concessions">
+        <el-form-item label="优惠" prop="concessions" required>
           <el-input
             v-model="form.concessions"
             type="textarea"
             placeholder="请输入优惠信息"
             data-marker="concessions"
+            :disabled="confirmNoChange.concessions"
+            style="flex: 1"
+          />
+          <el-switch
+            v-model="confirmNoChange.concessions"
+            active-text="优惠未变"
+            inactive-text=""
+            style="margin: 0 8px"
+          />
+        </el-form-item>
+
+        <!-- 杂费 -->
+        <el-form-item label="杂费" prop="ut">
+          <el-input
+            v-model="form.ut"
+            placeholder="水、电、网、暖、垃圾费"
+            data-marker="ut"
+            :disabled="confirmNoChange.ut"
+            style="flex: 1"
+          />
+          <el-switch
+            v-model="confirmNoChange.ut"
+            active-text="杂费未变"
+            inactive-text=""
+            style="margin: 0 8px"
           />
         </el-form-item>
 
         <!-- 中介费 -->
         <el-form-item label="中介费" prop="broker_fee" required>
+          <!-- 先放 select -->
           <el-select
             v-model="form.broker_fee"
             placeholder="请选择"
+            :disabled="confirmNoChange.broker_fee"
             data-marker="broker_fee"
+            style=" flex-shrink: 0;width: 160px"
           >
             <el-option label="Full" value="Full" />
             <el-option label="Half" value="Half" />
@@ -823,22 +916,31 @@ onMounted(() => {
             <el-option label="Other" value="Other" />
             <el-option label="Unknown" value="Unknown" />
           </el-select>
+          <!-- 再放说明 input -->
           <el-input
             v-model="form.broker_fee_desc"
+            :disabled="confirmNoChange.broker_fee"
             placeholder="说明"
-            style="margin-top: 8px"
             data-marker="broker_fee_desc"
+            style="flex: 1; min-width: 0; margin: 0 12px"
+          />
+          <!-- 最后放开关 -->
+          <el-switch
+            v-model="confirmNoChange.broker_fee"
+            active-text="中介费未变"
+            inactive-text=""
+            style="white-space: nowrap"
           />
         </el-form-item>
 
-        <!-- 杂费 -->
-        <el-form-item label="杂费" prop="ut">
-          <el-input v-model="form.ut" placeholder="杂费金额" data-marker="ut" />
-        </el-form-item>
-
+        <hr />
         <!-- 本科生 -->
         <el-form-item label="本科生" prop="undergrad" required>
-          <el-radio-group v-model="form.undergrad" data-marker="undergrad">
+          <el-radio-group
+            v-model="form.undergrad"
+            data-marker="undergrad"
+            :disabled="confirmNoChange.undergrad"
+          >
             <el-radio value="YES">是</el-radio>
             <el-radio value="NO">否</el-radio>
             <el-radio value="DK">未知</el-radio>
@@ -846,8 +948,15 @@ onMounted(() => {
           <el-input
             v-model="form.undergrad_desc"
             placeholder="说明"
-            style="margin-top: 8px"
+            style=" flex: 1;margin: 0 8px"
             data-marker="undergrad_desc"
+            :disabled="confirmNoChange.undergrad"
+          />
+          <el-switch
+            v-model="confirmNoChange.undergrad"
+            active-text="本科生政策未变"
+            inactive-text=""
+            style="margin: 0 8px"
           />
         </el-form-item>
 
@@ -856,6 +965,7 @@ onMounted(() => {
           <el-radio-group
             v-model="form.intl_student"
             data-marker="intl_student"
+            :disabled="confirmNoChange.intl_student"
           >
             <el-radio value="YES">是</el-radio>
             <el-radio value="NO">否</el-radio>
@@ -864,14 +974,25 @@ onMounted(() => {
           <el-input
             v-model="form.intl_student_desc"
             placeholder="说明"
-            style="margin-top: 8px"
+            style=" flex: 1;margin: 0 8px"
+            :disabled="confirmNoChange.intl_student"
             data-marker="intl_student_desc"
+          />
+          <el-switch
+            v-model="confirmNoChange.intl_student"
+            active-text="国际生政策未变"
+            inactive-text=""
+            style="margin: 0 8px"
           />
         </el-form-item>
 
         <!-- 宠物 -->
         <el-form-item label="宠物" prop="pet" required>
-          <el-radio-group v-model="form.pet" data-marker="pet">
+          <el-radio-group
+            v-model="form.pet"
+            data-marker="pet"
+            :disabled="confirmNoChange.pet"
+          >
             <el-radio value="YES">允许</el-radio>
             <el-radio value="NO">不允许</el-radio>
             <el-radio value="DK">未知</el-radio>
@@ -879,8 +1000,15 @@ onMounted(() => {
           <el-input
             v-model="form.pet_desc"
             placeholder="说明"
-            style="margin-top: 8px"
+            style=" flex: 1;margin: 0 8px"
+            :disabled="confirmNoChange.pet"
             data-marker="pet_desc"
+          />
+          <el-switch
+            v-model="confirmNoChange.pet"
+            active-text="　宠物政策未变"
+            inactive-text=""
+            style="margin: 0 8px"
           />
         </el-form-item>
 
@@ -890,6 +1018,14 @@ onMounted(() => {
             v-model="form.parking"
             placeholder="停车信息"
             data-marker="parking"
+            style="flex: 1"
+            :disabled="confirmNoChange.parking"
+          />
+          <el-switch
+            v-model="confirmNoChange.parking"
+            active-text="停车费未变"
+            inactive-text=""
+            style="margin: 0 8px"
           />
         </el-form-item>
 
@@ -1155,7 +1291,7 @@ onMounted(() => {
 
         <hr />
 
-        <!-- 筛选字段图标展示 -->
+        <!-- 字段图标展示 -->
         <div
           class="detail-item"
           :class="{ highlight: currentFields.includes('undergrad') }"
@@ -1208,7 +1344,43 @@ onMounted(() => {
           <span class="detail-label">联系方式：</span>
           <span class="detail-value">{{ recordDetail.contact }}</span>
         </div>
+        <hr />
 
+        <!-- 设施展示 -->
+        <div class="facilities-container">
+          <div class="facility-category">
+            <h4>公共设施</h4>
+            <div class="facility-list">
+              <span v-if="!recordDetail.amenities" class="facility-item"
+                >无</span
+              >
+              <span
+                v-for="item in recordDetail.amenities
+                  ? JSON.parse(recordDetail.amenities)
+                  : []"
+                :key="item"
+                class="facility-item"
+                >{{ item }}</span
+              >
+            </div>
+          </div>
+          <div class="facility-category">
+            <h4>套内设施</h4>
+            <div class="facility-list">
+              <span v-if="!recordDetail.room_amenities" class="facility-item"
+                >无</span
+              >
+              <span
+                v-for="item in recordDetail.room_amenities
+                  ? JSON.parse(recordDetail.room_amenities)
+                  : []"
+                :key="item"
+                class="facility-item"
+                >{{ item }}</span
+              >
+            </div>
+          </div>
+        </div>
         <!-- 免责声明 -->
         <div class="disclaimer">
           政策随时调整，仅供参考！即使显示为近期更新，仍有可能随时过期。<br />
@@ -1224,7 +1396,6 @@ onMounted(() => {
 </template>
 
 <style>
-
 @media (width <=768px) {
   .el-dialog {
     width: 90% !important;
@@ -1364,10 +1535,40 @@ onMounted(() => {
 }
 
 hr {
-  margin: 16px 0;
+  margin: 8px 0;
   border: none;
   border-top: 1px solid #ebeef5;
 }
 
-/* 表格标题行的每个标题不换行 */
+.facilities-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.facility-category {
+  flex: 1;
+  min-width: 200px;
+}
+
+.facility-category h4 {
+  margin-bottom: 10px;
+  font-size: 1.1em;
+  color: #333;
+}
+
+.facility-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.facility-item {
+  padding: 5px 8px;
+  font-size: 0.9em;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
 </style>
