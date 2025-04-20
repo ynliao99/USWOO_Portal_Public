@@ -620,7 +620,7 @@ onMounted(() => {
         </el-button>
       </template>
 
-      <template #default="{ size }">
+      <template #default="{ size, dynamicColumns }">
         <div style="margin: 0 16px">
           <el-button type="primary" @click="openFilterDialog"
             >筛选<span v-if="filterCount"
@@ -635,10 +635,11 @@ onMounted(() => {
           row-key="id"
           showOverflowTooltip
           :data="paginatedRecords"
-          :columns="columns"
+          :columns="dynamicColumns"
           :loading="loading"
           :pagination="pagination"
           table-layout="auto"
+          adaptive
           stripe
           :size="size"
           @sort-change="handleSortChange"
@@ -908,7 +909,7 @@ onMounted(() => {
             placeholder="请选择"
             :disabled="confirmNoChange.broker_fee"
             data-marker="broker_fee"
-            style=" flex-shrink: 0;width: 160px"
+            style="flex-shrink: 0; width: 160px"
           >
             <el-option label="Full" value="Full" />
             <el-option label="Half" value="Half" />
@@ -948,7 +949,7 @@ onMounted(() => {
           <el-input
             v-model="form.undergrad_desc"
             placeholder="说明"
-            style=" flex: 1;margin: 0 8px"
+            style="flex: 1; margin: 0 8px"
             data-marker="undergrad_desc"
             :disabled="confirmNoChange.undergrad"
           />
@@ -974,7 +975,7 @@ onMounted(() => {
           <el-input
             v-model="form.intl_student_desc"
             placeholder="说明"
-            style=" flex: 1;margin: 0 8px"
+            style="flex: 1; margin: 0 8px"
             :disabled="confirmNoChange.intl_student"
             data-marker="intl_student_desc"
           />
@@ -1000,7 +1001,7 @@ onMounted(() => {
           <el-input
             v-model="form.pet_desc"
             placeholder="说明"
-            style=" flex: 1;margin: 0 8px"
+            style="flex: 1; margin: 0 8px"
             :disabled="confirmNoChange.pet"
             data-marker="pet_desc"
           />

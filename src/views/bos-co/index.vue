@@ -245,6 +245,7 @@ onMounted(() => {
     <PureTableBar
       title="转租/拼室友"
       :columns="columns"
+      :show-column-setting="false"
       @refresh="fetchRecords"
     >
       <template #buttons>
