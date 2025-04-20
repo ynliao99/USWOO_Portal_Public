@@ -1053,6 +1053,12 @@ onMounted(() => {
   white-space: normal;
 }
 
+.el-table--fit .el-popper {
+  max-width: 400px;
+  word-break: break-word;
+  white-space: normal;
+}
+
 .filter-dropdown,
 .filter-dropdown .el-scrollbar,
 .filter-dropdown .el-select-dropdown {

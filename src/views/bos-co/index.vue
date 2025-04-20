@@ -642,7 +642,7 @@ onMounted(() => {
   white-space: normal;
 }
 
-.el-popper {
+.el-table--fit .el-popper {
   max-width: 400px;
   word-break: break-word;
   white-space: normal;

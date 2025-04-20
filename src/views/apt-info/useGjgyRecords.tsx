@@ -1,6 +1,7 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import { http } from "@/utils/http";
 import { message } from "@/utils/message";
+import { ElMessageBox } from "element-plus";
 
 export interface AptRecord {
   id: number | null;
@@ -161,10 +162,6 @@ export function useGjgyRecords() {
     }
   ];
 
-  function updateColumnFilters() {
-    // 填充Filters
-  }
-
   const filteredRecords = computed(() => {
     let data = [...records.value];
 
@@ -213,19 +210,64 @@ export function useGjgyRecords() {
         params: { action: "view" }
       })
       .then(res => {
+        // 1. 正常加载并展示列表
         if (res.status === "success" && Array.isArray(res.data)) {
           const sorted = [...res.data].sort((a, b) => {
             const t1 = new Date(a.last_edited ?? 0).getTime();
             const t2 = new Date(b.last_edited ?? 0).getTime();
             return t2 - t1;
           });
-
           records.value = sorted;
           currentUserAgentId.value = res.currentUserAgentId;
           hasAdminPermission.value = res.hasAdminPermission ?? false;
-
-          updateColumnFilters();
+          if (res.message) {
+            message(res.message, { type: "success" });
+          }
         }
+
+        const code = Number(res.status);
+        // 2. status = -2：弹确认框申请临时权限
+        if (code === -2) {
+          ElMessageBox.confirm(res.message || "确认申请临时权限？", "提示", {
+            dangerouslyUseHTMLString: true,
+            confirmButtonText: "确认",
+            cancelButtonText: "取消",
+            type: "warning"
+          })
+            .then(() =>
+              http.request<FetchRecordsResponse>("get", "/portalapi/gjgy/", {
+                params: { action: "applyLsqx" }
+              })
+            )
+            .then(applyRes => {
+              if (applyRes.status === "success") {
+                message(applyRes.message, { type: "success" });
+              } else {
+                message(applyRes.message, { type: "warning" });
+              }
+              fetchRecords();
+            })
+            .catch(() => {
+              // 用户取消或申请失败，无后续操作
+            });
+        }
+        // 3. 其他负数状态：仅弹“我知道了”提示
+        else if (!isNaN(code) && code < 0) {
+          ElMessageBox.alert(res.message || "", "信息", {
+            dangerouslyUseHTMLString: true,
+            confirmButtonText: "我知道了",
+            type: "info"
+          });
+        }
+
+        const sorted = [...res.data].sort((a, b) => {
+          const t1 = new Date(a.last_edited ?? 0).getTime();
+          const t2 = new Date(b.last_edited ?? 0).getTime();
+          return t2 - t1;
+        });
+        records.value = sorted;
+        currentUserAgentId.value = res.currentUserAgentId;
+        hasAdminPermission.value = res.hasAdminPermission ?? false;
       })
       .catch(() => {
         message("加载数据失败", { type: "warning" });
