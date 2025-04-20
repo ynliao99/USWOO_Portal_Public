@@ -604,12 +604,18 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin: 20px 0;
 }
 
 .detail-item {
   font-size: 16px;
   line-height: 1.6;
+}
+
+.el-dialog {
+  max-height: 80vh;
+  padding-right: 12px;
+  margin-top: 10vh;
+  overflow-y: auto;
 }
 
 .detail-label {
@@ -620,12 +626,6 @@ onMounted(() => {
 
 .detail-value {
   color: #303133;
-}
-
-.el-dialog {
-  max-height: 80vh;
-  padding-right: 12px;
-  overflow-y: auto;
 }
 
 .cell {

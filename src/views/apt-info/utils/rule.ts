@@ -3,60 +3,12 @@ import { reactive } from "vue";
 import type { FormRules } from "element-plus";
 import { $t, transformI18n } from "@/plugins/i18n";
 
-/** 看房表单校验 */
-const coFormRules: FormRules = reactive({
-  status: [
-    {
-      validator: (rule, value, callback) => {
-        if (value === "") {
-          callback(new Error(transformI18n($t("co.requiredStatus"))));
-        } else {
-          callback();
-        }
-      },
-      trigger: "blur"
-    }
-  ],
-  type: [
-    {
-      validator: (rule, value, callback) => {
-        if (value === "") {
-          callback(new Error(transformI18n($t("co.requiredType"))));
-        } else {
-          callback();
-        }
-      },
-      trigger: "blur"
-    }
-  ],
-  placeName: [
-    {
-      validator: (rule, value, callback) => {
-        if (value === "") {
-          callback(new Error(transformI18n($t("co.requiredPlaceName"))));
-        } else {
-          callback();
-        }
-      },
-      trigger: "blur"
-    }
-  ],
-  location: [
-    {
-      validator: (rule, value, callback) => {
-        if (value === "") {
-          callback(new Error(transformI18n($t("co.requiredLocation"))));
-        } else {
-          callback();
-        }
-      },
-      trigger: "blur"
-    }
-  ],
+/** 公寓表单校验 */
+const aptFormRules: FormRules = reactive({
   area: [
     {
       validator: (rule, value, callback) => {
-        if (value === "") {
+        if (value === "" || value == null) {
           callback(new Error(transformI18n($t("co.requiredArea"))));
         } else {
           callback();
@@ -65,11 +17,11 @@ const coFormRules: FormRules = reactive({
       trigger: "blur"
     }
   ],
-  budget: [
+  broker_fee: [
     {
       validator: (rule, value, callback) => {
-        if (value === "") {
-          callback(new Error(transformI18n($t("co.requiredBudget"))));
+        if (value === "" || value == null) {
+          callback(new Error(transformI18n($t("apt.broker_fee"))));
         } else {
           callback();
         }
@@ -77,11 +29,11 @@ const coFormRules: FormRules = reactive({
       trigger: "blur"
     }
   ],
-  roomType: [
+  pet: [
     {
       validator: (rule, value, callback) => {
-        if (!Array.isArray(value) || value.length === 0) {
-          callback(new Error(transformI18n($t("co.requiredRoomType"))));
+        if (value === "" || value == null) {
+          callback(new Error(transformI18n($t("apt.pet"))));
         } else {
           callback();
         }
@@ -89,11 +41,11 @@ const coFormRules: FormRules = reactive({
       trigger: "blur"
     }
   ],
-  dateRange: [
+  address: [
     {
       validator: (rule, value, callback) => {
-        if (!value || value.length !== 2 || !value[0] || !value[1]) {
-          callback(new Error(transformI18n($t("co.requiredDateRange"))));
+        if (value === "" || value == null) {
+          callback(new Error(transformI18n($t("apt.address"))));
         } else {
           callback();
         }
@@ -101,11 +53,11 @@ const coFormRules: FormRules = reactive({
       trigger: "blur"
     }
   ],
-  sex: [
+  building_name: [
     {
       validator: (rule, value, callback) => {
-        if (value === "") {
-          callback(new Error(transformI18n($t("co.requiredSex"))));
+        if (value === "" || value == null) {
+          callback(new Error(transformI18n($t("apt.building_name"))));
         } else {
           callback();
         }
@@ -113,11 +65,11 @@ const coFormRules: FormRules = reactive({
       trigger: "blur"
     }
   ],
-  sexRequirement: [
+  intl_student: [
     {
       validator: (rule, value, callback) => {
-        if (value === "") {
-          callback(new Error(transformI18n($t("co.requiredSexRequirement"))));
+        if (value === "" || value == null) {
+          callback(new Error(transformI18n($t("apt.intl_student"))));
         } else {
           callback();
         }
@@ -125,11 +77,35 @@ const coFormRules: FormRules = reactive({
       trigger: "blur"
     }
   ],
-  identity: [
+  undergrad: [
     {
       validator: (rule, value, callback) => {
-        if (value === "") {
-          callback(new Error(transformI18n($t("co.requiredIdentity"))));
+        if (value === "" || value == null) {
+          callback(new Error(transformI18n($t("apt.undergrad"))));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur"
+    }
+  ],
+  room_amenities: [
+    {
+      validator: (rule, value, callback) => {
+        if (value === "" || value == null) {
+          callback(new Error(transformI18n($t("apt.room_amenities"))));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur"
+    }
+  ],
+  amenities: [
+    {
+      validator: (rule, value, callback) => {
+        if (value === "" || value == null) {
+          callback(new Error(transformI18n($t("apt.amenities"))));
         } else {
           callback();
         }
@@ -139,4 +115,4 @@ const coFormRules: FormRules = reactive({
   ]
 });
 
-export { coFormRules };
+export { aptFormRules };

@@ -1,3 +1,12 @@
+apt:
+  address: 请输入详细地址
+  amenities: 请选择公共设施
+  broker_fee: 请选择中介费情况
+  building_name: 请输入大楼名称
+  intl_student: 请选择是否接受国际学生
+  pet: 请选择是否接受宠物
+  room_amenities: 请选择套内设施
+  undergrad: 请选择是否接受本科生
 buttons:
   pureAccountSettings: 账户设置
   pureBackTop: 回到顶部
@@ -77,6 +86,8 @@ menus:
   apt-info: 高级公寓信息
   calendar: 看房日历
   co: 拼室友/转租/短租
+  drive: 视频云盘
+  driveList: 公共视频库
   pureAble: 功能
   pureAbnormal: 异常页面
   pureAbout: 关于

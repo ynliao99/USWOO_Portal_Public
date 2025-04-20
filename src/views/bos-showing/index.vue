@@ -351,7 +351,11 @@ watch(
     </PureTableBar>
 
     <!-- 新增/编辑看房记录模态框 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle">
+    <el-dialog
+      v-model="dialogVisible"
+      class="showing-dialog"
+      :title="dialogTitle"
+    >
       <el-form
         ref="ruleFormRef"
         :model="form"
@@ -464,7 +468,7 @@ watch(
   }
 }
 
-.el-dialog {
+.showing-dialog .el-dialog {
   /* 默认宽度为600px */
   width: 600px !important;
 }

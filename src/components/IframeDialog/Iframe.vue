@@ -1,36 +1,38 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    :title="title"
-    :width="width"
-    center
-    class="iframe-dialog"
-    @open="onOpen"
-    @close="onClose"
-  >
-    <div class="dialog-content">
-      <iframe
-        v-if="visible"
-        :src="url"
-        frameborder="0"
-        class="iframe-content"
-        :style="{
-          height: props.message ? 'calc(90vh - 162px)' : 'calc(90vh - 125px)'
-        }"
-      />
-    </div>
-
-    <!-- 可选提示语 -->
-    <div v-if="props.message" class="dialog-message">
-      <div v-if="props.message_url">
-        <a :href="props.message_url" target="_blank">{{ props.message }}</a>
+  <div class="iframe-dialog-container">
+    <el-dialog
+      v-model="visible"
+      :title="title"
+      :width="width"
+      center
+      class="iframe-dialog"
+      @open="onOpen"
+      @close="onClose"
+    >
+      <div class="dialog-content">
+        <iframe
+          v-if="visible"
+          :src="url"
+          frameborder="0"
+          class="iframe-content"
+          :style="{
+            height: props.message ? 'calc(90vh - 162px)' : 'calc(90vh - 125px)'
+          }"
+        />
       </div>
-      <div v-else>{{ props.message }}</div>
-    </div>
-    <template #footer>
-      <el-button @click="visible = false">关闭</el-button>
-    </template>
-  </el-dialog>
+
+      <!-- 可选提示语 -->
+      <div v-if="props.message" class="dialog-message">
+        <div v-if="props.message_url">
+          <a :href="props.message_url" target="_blank">{{ props.message }}</a>
+        </div>
+        <div v-else>{{ props.message }}</div>
+      </div>
+      <template #footer>
+        <el-button @click="visible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -88,7 +90,7 @@ defineExpose({ open, close });
   border: 0;
 }
 
-.el-dialog {
+.iframe-dialog-container .el-dialog {
   width: 90vw;
   height: 90vh;
   max-height: 90vh !important;

@@ -34,11 +34,13 @@ export interface AptRecord {
   sightmap_id?: string;
   last_edited?: string;
   created_at?: string;
+  [key: string]: any;
 }
 
 interface FetchRecordsResponse {
   status: "success" | "error" | number;
-  currentUserId: string;
+  hasAdminPermission?: boolean;
+  currentUserAgentId: string;
   data: AptRecord[];
   cCount?: number;
   lastRecordCount?: number;
@@ -64,6 +66,7 @@ export function useGjgyRecords() {
 
   const onlyMine = ref(false);
   const currentUserAgentId = ref("");
+  const hasAdminPermission = ref(false);
 
   const pagination = reactive({
     currentPage: 1,
@@ -164,11 +167,7 @@ export function useGjgyRecords() {
 
   const filteredRecords = computed(() => {
     let data = [...records.value];
-    if (onlyMine.value && currentUserAgentId.value) {
-      data = data.filter(
-        r => String(r.userAgentId) === currentUserAgentId.value
-      );
-    }
+
     if (searchTerm.value) {
       const term = searchTerm.value.toLowerCase();
       data = data.filter(r =>
@@ -222,7 +221,9 @@ export function useGjgyRecords() {
           });
 
           records.value = sorted;
-          currentUserAgentId.value = res.currentUserId;
+          currentUserAgentId.value = res.currentUserAgentId;
+          hasAdminPermission.value = res.hasAdminPermission ?? false;
+
           updateColumnFilters();
         }
       })
@@ -273,6 +274,7 @@ export function useGjgyRecords() {
     fetchRecords,
     saveRecord,
     currentUserAgentId,
+    hasAdminPermission,
     setSearchTerm: (v: string) => {
       searchTerm.value = v;
       pagination.currentPage = 1;

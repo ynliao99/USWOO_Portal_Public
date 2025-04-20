@@ -56,3 +56,34 @@ export default defineComponent({
   }
 });
 </script>
+
+<style>
+.el-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  padding-right: 12px;
+  margin-top: 5vh;
+  overflow-y: auto;
+
+  /* 整个 dialog 最多 90% 的视口高度 */
+}
+
+.el-dialog__header,
+.el-dialog__footer {
+  flex: none;
+
+  /* 固定高度，不跟 body 一起伸缩 */
+}
+
+.el-dialog__body {
+  flex: 1;
+
+  /* 占据剩余空间 */
+  overflow-y: auto;
+
+  /* 内容超出时滚动 */
+
+  /* 保留默认内边距（可按需调整） */
+}
+</style>
