@@ -1,4 +1,4 @@
-import { dayjs, cloneDeep, getRandomIntBetween } from "./utils";
+import { dayjs, getRandomIntBetween } from "./utils";
 
 /** 数据统计 */
 const tableData = Array.from({ length: 30 }).map((_, index) => {
@@ -12,5 +12,4 @@ const tableData = Array.from({ length: 30 }).map((_, index) => {
   };
 });
 
-
-export {  tableData};
+export { tableData };

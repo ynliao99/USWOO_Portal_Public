@@ -33,10 +33,14 @@ export function getDashboardData() {
   function assembleData(dashboardData: any): void {
     const gjgyRe = 12 - (dashboardData.gjgyCount || 0);
     const gjgyPercent =
-      dashboardData.gjgyCount == 0 ? 0 : (dashboardData.gjgyCount / 12 * 100).toFixed(0);
+      dashboardData.gjgyCount == 0
+        ? 0
+        : ((dashboardData.gjgyCount / 12) * 100).toFixed(0);
     const uploadRe = 4 - (dashboardData.uploadCount || 0);
     const uploadPercent =
-      dashboardData.uploadCount == 0 ? 0 : (dashboardData.uploadCount / 4 * 100).toFixed(0);
+      dashboardData.uploadCount == 0
+        ? 0
+        : ((dashboardData.uploadCount / 4) * 100).toFixed(0);
     const formattedlastReDtDealDate =
       dashboardData.lastDealInf && dashboardData.lastDealInf.lastReDtDeal
         ? dayjs(dashboardData.lastDealInf.lastReDtDeal).format("MM/DD/YY")
@@ -51,8 +55,9 @@ export function getDashboardData() {
         name: "季度业绩",
         value: dashboardData.goalCurrent,
         percent:
-          (dashboardData.goalCurrent / dashboardData.goalValue * 100)
-            .toFixed(2) + "%",
+          ((dashboardData.goalCurrent / dashboardData.goalValue) * 100).toFixed(
+            2
+          ) + "%",
         data: [2101, 5288, 4239, 4962, 6752, 5208, 7450]
       },
       {
@@ -61,7 +66,9 @@ export function getDashboardData() {
         color: "#e85f33",
         duration: 3000,
         name: "未开单天数",
-        value: dashboardData.lastDealInf && dashboardData.lastDealInf.lastReDtDealPassed,
+        value:
+          dashboardData.lastDealInf &&
+          dashboardData.lastDealInf.lastReDtDealPassed,
         percent: formattedlastReDtDealDate,
         data: [2216, 1148, 1255, 788, 4821, 1973, 4379]
       },
@@ -134,7 +141,8 @@ export function getDashboardData() {
       }));
 
     // monthlyPerformance：仅使用 thismonthtop_sales_data
-    const thismonthtop_sales_data: any[] = dashboardData.thismonthtop_sales_data || [];
+    const thismonthtop_sales_data: any[] =
+      dashboardData.thismonthtop_sales_data || [];
     const thismonthMap = new Map<string, { name: string; amount: number }>();
     thismonthtop_sales_data.forEach(item => {
       const name = item.userAgentName;
@@ -163,7 +171,7 @@ export function getDashboardData() {
       target: item.goal, // 使用接口中的 goal 值
       percentage: Number(item.percentage) || 0,
       duration: 0,
-      color: (Number(item.percentage) > 80) ? "#26ce83" : "#41b6ff"
+      color: Number(item.percentage) > 80 ? "#26ce83" : "#41b6ff"
     }));
     mappedProgress.sort((a, b) => b.percentage - a.percentage);
     const indexMy = mappedProgress.findIndex(item => item.name === "我");
@@ -171,7 +179,7 @@ export function getDashboardData() {
       const [myItem] = mappedProgress.splice(indexMy, 1);
       mappedProgress.unshift(myItem);
     }
-    mappedProgress = mappedProgress.map((item, index) => ({
+    mappedProgress = mappedProgress.map(item => ({
       ...item,
       duration: (item.percentage / 100) * 10
     }));

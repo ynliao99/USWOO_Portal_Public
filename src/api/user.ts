@@ -1,7 +1,5 @@
 import { http } from "@/utils/http";
 
-import axios from "axios";
-
 export type UserResult = {
   success: boolean;
   status: number;
