@@ -415,6 +415,15 @@ function handleFilterReset() {
   filterForm.pet = [];
   filterForm.recent = false;
 }
+
+// 解析 current 字段
+const currentFields = computed<string[]>(() => {
+  if (!recordDetail.value.current) return [];
+  return String(recordDetail.value.current)
+    .split(",")
+    .map(s => s.trim());
+});
+
 // 详情对话框
 function showDetails(record: AptRecord) {
   recordDetail.value = { ...record };
@@ -645,9 +654,7 @@ onMounted(() => {
                 {{ row.broker_fee }}
               </template>
 
-              <span v-if="row.broker_fee_desc">
-                | {{ row.broker_fee_desc }}</span
-              >
+              <span v-if="row.broker_fee_desc"> {{ row.broker_fee_desc }}</span>
             </span>
           </template>
 
@@ -660,7 +667,7 @@ onMounted(() => {
                 {{ row.undergrad }}
               </template>
 
-              <span v-if="row.undergrad_desc"> | {{ row.undergrad_desc }}</span>
+              <span v-if="row.undergrad_desc">{{ row.undergrad_desc }}</span>
             </span>
           </template>
 
@@ -674,7 +681,7 @@ onMounted(() => {
               </template>
 
               <span v-if="row.intl_student_desc">
-                | {{ row.intl_student_desc }}</span
+                {{ row.intl_student_desc }}</span
               >
             </span>
           </template>
@@ -688,7 +695,7 @@ onMounted(() => {
                 {{ row.pet }}
               </template>
 
-              <span v-if="row.pet_desc"> | {{ row.pet_desc }}</span>
+              <span v-if="row.pet_desc">{{ row.pet_desc }}</span>
             </span>
           </template>
 
@@ -720,7 +727,6 @@ onMounted(() => {
     <el-dialog
       v-model="videoDialogVisible"
       title="查看视频"
-      width="80vw"
       top="5vh"
       destroy-on-close
     >
@@ -729,16 +735,17 @@ onMounted(() => {
       </div>
     </el-dialog>
     <!-- 编辑公寓 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="60vw">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle">
       <el-form
         ref="formRef"
         :model="form"
         :rules="aptFormRules"
         label-width="120px"
         label-position="left"
+        class="detail-content"
       >
         <!-- 区域 -->
-        <el-form-item label="区域" prop="area">
+        <el-form-item label="区域" prop="area" required>
           <el-select
             v-model="form.area"
             placeholder="请选择区域"
@@ -754,11 +761,11 @@ onMounted(() => {
         </el-form-item>
 
         <!-- 公寓名称 -->
-        <el-form-item label="公寓名称" prop="building_name">
+        <el-form-item label="公寓名称" prop="building_name" required>
           <el-input v-model="form.building_name" data-marker="building_name" />
         </el-form-item>
         <!-- 地址 -->
-        <el-form-item label="地址" prop="address">
+        <el-form-item label="地址" prop="address" required>
           <el-input v-model="form.address" data-marker="address" />
         </el-form-item>
 
@@ -777,12 +784,20 @@ onMounted(() => {
           label="看房链接类型"
           prop="tour_url_type"
         >
-          <el-input v-model="form.tour_url_type" data-marker="tour_url_type" />
+          <el-input
+            v-model="form.tour_url_type"
+            data-marker="tour_url_type"
+            placeholder="1=跨域限制，直接跳转；2=需要加padding；3=doorway组件；4=悬浮日历，通常底部有按钮；5=udr；6=equity；7=tour24（含bldg89等不提供自助的）；8=类indie，日历形式拒绝跨域；"
+          />
         </el-form-item>
 
         <!-- Sightmap ID -->
         <el-form-item label="Sightmap ID" prop="sightmap_id">
-          <el-input v-model="form.sightmap_id" data-marker="sightmap_id" />
+          <el-input
+            v-model="form.sightmap_id"
+            data-marker="sightmap_id"
+            placeholder="不知道请留空"
+          />
         </el-form-item>
 
         <!-- 优惠 -->
@@ -796,7 +811,7 @@ onMounted(() => {
         </el-form-item>
 
         <!-- 中介费 -->
-        <el-form-item label="中介费" prop="broker_fee">
+        <el-form-item label="中介费" prop="broker_fee" required>
           <el-select
             v-model="form.broker_fee"
             placeholder="请选择"
@@ -822,7 +837,7 @@ onMounted(() => {
         </el-form-item>
 
         <!-- 本科生 -->
-        <el-form-item label="本科生" prop="undergrad">
+        <el-form-item label="本科生" prop="undergrad" required>
           <el-radio-group v-model="form.undergrad" data-marker="undergrad">
             <el-radio value="YES">是</el-radio>
             <el-radio value="NO">否</el-radio>
@@ -837,7 +852,7 @@ onMounted(() => {
         </el-form-item>
 
         <!-- 国际学生 -->
-        <el-form-item label="国际学生" prop="intl_student">
+        <el-form-item label="国际学生" prop="intl_student" required>
           <el-radio-group
             v-model="form.intl_student"
             data-marker="intl_student"
@@ -855,7 +870,7 @@ onMounted(() => {
         </el-form-item>
 
         <!-- 宠物 -->
-        <el-form-item label="宠物" prop="pet">
+        <el-form-item label="宠物" prop="pet" required>
           <el-radio-group v-model="form.pet" data-marker="pet">
             <el-radio value="YES">允许</el-radio>
             <el-radio value="NO">不允许</el-radio>
@@ -879,7 +894,7 @@ onMounted(() => {
         </el-form-item>
 
         <!-- 公共设施 -->
-        <el-form-item label="公共设施" prop="amenities">
+        <el-form-item label="公共设施" prop="amenities" required>
           <el-select
             v-model="form.amenities"
             multiple
@@ -896,7 +911,7 @@ onMounted(() => {
         </el-form-item>
 
         <!-- 套内设施 -->
-        <el-form-item label="套内设施" prop="room_amenities">
+        <el-form-item label="套内设施" prop="room_amenities" required>
           <el-select
             v-model="form.room_amenities"
             multiple
@@ -995,11 +1010,235 @@ onMounted(() => {
         <el-button type="primary" @click="handleFilterConfirm">确定</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog
+      v-model="detailDialogVisible"
+      title="公寓详情"
+      destroy-on-close
+      :before-close="() => (detailDialogVisible = false)"
+    >
+      <div class="detail-content">
+        <!-- 基本信息 -->
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('last_edited') }"
+        >
+          <span class="detail-label">更新时间：</span>
+          <span class="detail-value">{{ recordDetail.last_edited }}</span>
+        </div>
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('userAgentName') }"
+        >
+          <span class="detail-label">更新人：</span>
+          <span class="detail-value">{{ recordDetail.userAgentName }}</span>
+        </div>
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('id') }"
+        >
+          <span class="detail-label">数据 ID：</span>
+          <span class="detail-value">{{ recordDetail.id }}</span>
+        </div>
+        <div
+          v-if="recordDetail.website"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('website') }"
+        >
+          <span class="detail-label">网站：</span>
+          <span class="detail-value">
+            <a
+              :href="recordDetail.website"
+              target="_blank"
+              class="detail-link"
+              >{{ recordDetail.website }}</a
+            >
+          </span>
+        </div>
+        <div
+          v-if="recordDetail.tour_url"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('tour_url') }"
+        >
+          <span class="detail-label">Tour：</span>
+          <span class="detail-value">
+            <a
+              :href="recordDetail.tour_url"
+              target="_blank"
+              class="detail-link"
+              >{{ recordDetail.tour_url }}</a
+            >
+          </span>
+        </div>
+
+        <hr />
+
+        <!-- 核心字段 -->
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('area') }"
+        >
+          <span class="detail-label">区域：</span>
+          <span class="detail-value">{{ recordDetail.area }}</span>
+        </div>
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('building_name') }"
+        >
+          <span class="detail-label">公寓名称：</span>
+          <span class="detail-value">
+            <a
+              v-if="recordDetail.website"
+              :href="recordDetail.website"
+              target="_blank"
+              class="detail-link"
+              >{{ recordDetail.building_name }}</a
+            >
+            <span v-else>{{ recordDetail.building_name }}</span>
+          </span>
+        </div>
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('address') }"
+        >
+          <span class="detail-label">地址：</span>
+          <span class="detail-value">
+            <a
+              :href="`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(recordDetail.address)}`"
+              target="_blank"
+              class="detail-link"
+              >{{ recordDetail.address }}</a
+            >
+          </span>
+        </div>
+
+        <hr />
+
+        <!-- 其它信息 -->
+        <div
+          v-if="recordDetail.concessions"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('concessions') }"
+        >
+          <span class="detail-label">优惠：</span>
+          <span class="detail-value">{{ recordDetail.concessions }}</span>
+        </div>
+        <div
+          v-if="recordDetail.broker_fee || recordDetail.broker_fee_desc"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('broker_fee') }"
+        >
+          <span class="detail-label">中介费：</span>
+          <span class="detail-value">
+            <component :is="replaceBrokerFee(recordDetail.broker_fee)" />
+            <span v-if="recordDetail.broker_fee_desc"
+              >｜{{ recordDetail.broker_fee_desc }}</span
+            >
+          </span>
+        </div>
+        <div
+          v-if="recordDetail.ut"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('ut') }"
+        >
+          <span class="detail-label">杂费：</span>
+          <span class="detail-value">{{ recordDetail.ut }}</span>
+        </div>
+        <div
+          v-if="recordDetail.note"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('note') }"
+        >
+          <span class="detail-label">备注：</span>
+          <span class="detail-value">{{ recordDetail.note }}</span>
+        </div>
+
+        <hr />
+
+        <!-- 筛选字段图标展示 -->
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('undergrad') }"
+        >
+          <span class="detail-label">本科生：</span>
+          <span class="detail-value">
+            <component :is="replaceYesNo(recordDetail.undergrad)" />
+            <span v-if="recordDetail.undergrad_desc"
+              >｜{{ recordDetail.undergrad_desc }}</span
+            >
+          </span>
+        </div>
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('intl_student') }"
+        >
+          <span class="detail-label">国际学生：</span>
+          <span class="detail-value">
+            <component :is="replaceYesNo(recordDetail.intl_student)" />
+            <span v-if="recordDetail.intl_student_desc"
+              >｜{{ recordDetail.intl_student_desc }}</span
+            >
+          </span>
+        </div>
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('pet') }"
+        >
+          <span class="detail-label">宠物：</span>
+          <span class="detail-value">
+            <component :is="replaceYesNo(recordDetail.pet)" />
+            <span v-if="recordDetail.pet_desc"
+              >｜{{ recordDetail.pet_desc }}</span
+            >
+          </span>
+        </div>
+        <div
+          v-if="recordDetail.parking"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('parking') }"
+        >
+          <span class="detail-label">停车：</span>
+          <span class="detail-value">{{ recordDetail.parking }}</span>
+        </div>
+        <div
+          v-if="recordDetail.contact"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('contact') }"
+        >
+          <span class="detail-label">联系方式：</span>
+          <span class="detail-value">{{ recordDetail.contact }}</span>
+        </div>
+
+        <!-- 免责声明 -->
+        <div class="disclaimer">
+          政策随时调整，仅供参考！即使显示为近期更新，仍有可能随时过期。<br />
+          申请前务必再次与公寓确认。
+        </div>
+      </div>
+
+      <template #footer>
+        <el-button @click="detailDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <style>
-/* 表格标题行的每个标题不换行 */
+
+@media (width <=768px) {
+  .el-dialog {
+    width: 90% !important;
+  }
+}
+
+@media (width <=768px) {
+  .dialog-form .el-form-item__label {
+    /* 移除固定宽度 */
+    width: auto !important;
+    text-align: left !important;
+  }
+}
+
 .pure-table .el-table__header-wrapper th {
   white-space: nowrap;
 }
@@ -1008,22 +1247,13 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 0 10px;
   margin: 20px 0;
 }
 
 .detail-item {
   font-size: 16px;
   line-height: 1.6;
-}
-
-.detail-label {
-  margin-right: 8px;
-  font-weight: bold;
-  color: #606266;
-}
-
-.detail-value {
-  color: #303133;
 }
 
 .el-dialog {
@@ -1083,4 +1313,61 @@ onMounted(() => {
 .filter-dropdown {
   width: 400px !important;
 }
+
+.detail-label {
+  display: inline-block;
+  width: 100px;
+  margin-right: 8px;
+  font-weight: 600;
+  font-weight: bold;
+  color: #606266;
+}
+
+.detail-value {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  color: #303133;
+
+  /* 图标和文字之间留一点空隙 */
+}
+
+.detail-value svg {
+  display: inline-block !important;
+  vertical-align: middle;
+}
+
+.detail-link {
+  color: #409eff;
+  text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.detail-link:hover {
+  color: #66b1ff;
+}
+
+.detail-link:active {
+  color: #337ecc;
+}
+
+.disclaimer {
+  padding-top: 12px;
+  margin-top: 16px;
+  font-size: 12px;
+  color: #909399;
+  border-top: 1px solid #ebeef5;
+}
+
+.highlight .detail-value {
+  color: #008a17 !important;
+}
+
+hr {
+  margin: 16px 0;
+  border: none;
+  border-top: 1px solid #ebeef5;
+}
+
+/* 表格标题行的每个标题不换行 */
 </style>

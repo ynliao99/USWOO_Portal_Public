@@ -344,7 +344,6 @@ onMounted(() => {
     <el-dialog
       v-model="dialogVisible"
       :title="dialogTitle"
-      width="600px"
       class="custom-dialog"
     >
       <el-form
@@ -491,7 +490,6 @@ onMounted(() => {
     <el-dialog
       v-model="detailDialogVisible"
       title="详细信息"
-      width="600px"
       center
       class="custom-dialog"
     >
@@ -595,7 +593,22 @@ onMounted(() => {
 </template>
 
 <style>
-/* 表格标题行的每个标题不换行 */
+
+
+@media (width <=768px) {
+  .el-dialog {
+    width: 90% !important;
+  }
+}
+
+@media (width <=768px) {
+  .dialog-form .el-form-item__label {
+    /* 移除固定宽度 */
+    width: auto !important;
+    text-align: left !important;
+  }
+}
+
 .pure-table .el-table__header-wrapper th {
   white-space: nowrap;
 }
@@ -647,4 +660,6 @@ onMounted(() => {
   word-break: break-word;
   white-space: normal;
 }
+
+/* 表格标题行的每个标题不换行 */
 </style>
