@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { getCardList } from "@/api/list";
+import { getCardList } from "@/api/drive-list";
 import { message } from "@/utils/message";
 import { ElMessageBox } from "element-plus";
-import { ref, onMounted, nextTick } from "vue";
+import { ref, onMounted, nextTick, computed, watch } from "vue";
 import ListCard from "./components/ListCard.vue";
 
 defineOptions({
@@ -68,6 +68,31 @@ const onPageSizeChange = (size: number) => {
 const onCurrentChange = (current: number) => {
   pagination.value.current = current;
 };
+
+// 拉数据后设置 total
+onMounted(async () => {
+  const { data } = await getCardList();
+  dataList.value = data.list;
+  pagination.value.total = dataList.value.length;
+  dataLoading.value = false;
+});
+
+// 过滤列表：apartment 或 area 匹配都算
+const filteredList = computed(() => {
+  const kw = searchValue.value.trim().toLowerCase();
+  if (!kw) return dataList.value;
+  return dataList.value.filter(v => {
+    const a = String(v.apartment || "").toLowerCase();
+    const r = String(v.area || "").toLowerCase();
+    return a.includes(kw) || r.includes(kw);
+  });
+});
+
+// 当搜索关键词或原始列表变化时，更新 total，并回到第一页
+watch([filteredList], ([list]) => {
+  pagination.value.total = list.length;
+  pagination.value.current = 1;
+});
 </script>
 
 <template>
@@ -94,40 +119,31 @@ const onCurrentChange = (current: number) => {
       :element-loading-svg="svg"
       element-loading-svg-view-box="-10, -10, 50, 50"
     >
+      <!-- Empty -->
       <el-empty
-        v-show="
-          dataList
-            .slice(
-              pagination.pageSize * (pagination.current - 1),
-              pagination.pageSize * pagination.current
-            )
-            .filter(v =>
-              v.name.toLowerCase().includes(searchValue.toLowerCase())
-            ).length === 0
-        "
-        :description="`${searchValue} 产品不存在`"
+        v-if="filteredList.length === 0"
+        :description="`${searchValue} 数据不存在`"
       />
-      <template v-if="pagination.total > 0">
+
+      <!-- 列表 + 分页 -->
+      <template v-else>
         <el-row :gutter="16">
           <el-col
-            v-for="(product, index) in dataList
-              .slice(
-                pagination.pageSize * (pagination.current - 1),
-                pagination.pageSize * pagination.current
-              )
-              .filter(v =>
-                v.name.toLowerCase().includes(searchValue.toLowerCase())
-              )"
-            :key="index"
+            v-for="(video, i) in filteredList.slice(
+              (pagination.current - 1) * pagination.pageSize,
+              pagination.current * pagination.pageSize
+            )"
+            :key="i"
             :xs="24"
             :sm="12"
             :md="8"
             :lg="6"
             :xl="4"
           >
-            <ListCard :product="product" />
+            <ListCard :video="video" />
           </el-col>
         </el-row>
+
         <el-pagination
           v-model:currentPage="pagination.current"
           class="float-right"
