@@ -349,7 +349,7 @@ watch(loginDay, value => {
       target="_blank"
     >
       &nbsp;Lyndon's Studio.&nbsp;
-    </a> Powered by Pure Admin.
+    </a>
     </div>
   </div>
 </template>
