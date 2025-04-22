@@ -188,14 +188,14 @@ function openDialog(mode: "add" | "edit", record?: AptRecord) {
     if (typeof record.amenities === "string") {
       try {
         form.amenities = JSON.parse(record.amenities);
-      } catch {}
+      } catch { }
     } else {
       form.amenities = record.amenities as any;
     }
     if (typeof record.room_amenities === "string") {
       try {
         form.room_amenities = JSON.parse(record.room_amenities);
-      } catch {}
+      } catch { }
     } else {
       form.room_amenities = record.room_amenities as any;
     }
@@ -362,7 +362,7 @@ async function onSubmit() {
       try {
         await ElMessageBox.confirm(
           `检测到您此次提交与原始数据总体相似度高达 ${(avgSim * 100).toFixed(2)}%。\n` +
-            `恶意套刷更新次数将导致不良后果，是否确认继续提交？`,
+          `恶意套刷更新次数将导致不良后果，是否确认继续提交？`,
           "高相似度提示",
           {
             confirmButtonText: "继续提交",
@@ -585,6 +585,7 @@ const isRecent = (input: string): boolean => {
 };
 
 onMounted(() => {
+  // 自动补全同步信息
   document.addEventListener("autocomplete-selected", (e: CustomEvent) => {
     const { marker, value } = e.detail as {
       marker: keyof AptRecord;
@@ -609,7 +610,7 @@ onMounted(() => {
       <template #default="{ size, dynamicColumns }">
         <div style="margin: 0 16px">
           <el-button type="primary" @click="openFilterDialog">筛选<span v-if="filterCount">（{{ filterCount
-              }}）</span></el-button>
+          }}）</span></el-button>
           <el-button @click="clearFilters">重置筛选</el-button>
         </div>
 
@@ -630,7 +631,7 @@ onMounted(() => {
                     url: `https://sightmap.com/embed/${row.sightmap_id}?enable_api=1`,
                     title: '实时房源预览'
                   })
-                " />
+                  " />
 
               <el-button v-if="row.tour_url" class="icon-button" :icon="useRenderIcon(CalendarIcon)"
                 :type="isTourDialog(row) ? 'success' : undefined" :color="!isTourDialog(row) ? '#0045f3' : undefined"
@@ -647,8 +648,8 @@ onMounted(() => {
           </template>
           <template #last_edited="{ row }">
             <span :style="{
-                color: isRecent(row.last_edited) ? '#008a17' : '#ca0000'
-              }">
+              color: isRecent(row.last_edited) ? '#008a17' : '#ca0000'
+            }">
               {{ formatDate(row.last_edited) }}
             </span>
           </template>
@@ -841,11 +842,7 @@ onMounted(() => {
           </el-radio-group>
           <el-input v-model="form.pet_desc" placeholder="说明" style="flex: 1; margin: 0 8px"
             :disabled="confirmNoChange.pet" data-marker="pet_desc" />
-          <el-switch
-          v-if="!isAddMode"
-          v-model="confirmNoChange.pet" 
-          active-text="　宠物政策未变" 
-          inactive-text=""
+          <el-switch v-if="!isAddMode" v-model="confirmNoChange.pet" active-text="　宠物政策未变" inactive-text=""
             style="margin: 0 8px" />
         </el-form-item>
 
@@ -853,7 +850,8 @@ onMounted(() => {
         <el-form-item label="停车费/车库" prop="parking">
           <el-input v-model="form.parking" placeholder="停车信息" data-marker="parking" style="flex: 1"
             :disabled="confirmNoChange.parking" />
-          <el-switch v-if="!isAddMode" v-model="confirmNoChange.parking" active-text="停车费未变" inactive-text="" style="margin: 0 8px" />
+          <el-switch v-if="!isAddMode" v-model="confirmNoChange.parking" active-text="停车费未变" inactive-text=""
+            style="margin: 0 8px" />
         </el-form-item>
 
         <!-- 公共设施 -->
@@ -1053,8 +1051,8 @@ onMounted(() => {
             <div class="facility-list">
               <span v-if="!recordDetail.amenities" class="facility-item">无</span>
               <span v-for="item in recordDetail.amenities
-                  ? JSON.parse(recordDetail.amenities)
-                  : []" :key="item" class="facility-item">{{ item }}</span>
+                ? JSON.parse(recordDetail.amenities)
+                : []" :key="item" class="facility-item">{{ item }}</span>
             </div>
           </div>
           <div class="facility-category">
@@ -1062,8 +1060,8 @@ onMounted(() => {
             <div class="facility-list">
               <span v-if="!recordDetail.room_amenities" class="facility-item">无</span>
               <span v-for="item in recordDetail.room_amenities
-                  ? JSON.parse(recordDetail.room_amenities)
-                  : []" :key="item" class="facility-item">{{ item }}</span>
+                ? JSON.parse(recordDetail.room_amenities)
+                : []" :key="item" class="facility-item">{{ item }}</span>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { http } from "@/utils/http"; // 根据你的路径调整
+import { http } from "@/utils/http"; 
 import { message } from "@/utils/message";
 
 export interface FetchAreasResponse {
