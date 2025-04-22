@@ -9,9 +9,7 @@ defineOptions({
   name: "CardList"
 });
 
-defineProps<{
-  buildingName?: any;
-}>();
+const props = defineProps<{ buildingName?: string }>();
 
 const svg = `
         <path class="path" d="
@@ -23,14 +21,6 @@ const svg = `
           L 15 15
         " style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>
       `;
-
-const INITIAL_DATA = {
-  name: "",
-  status: "",
-  description: "",
-  type: "",
-  mark: ""
-};
 
 const pagination = ref({ current: 1, pageSize: 12, total: 0 });
 
@@ -72,7 +62,6 @@ onMounted(() => {
   getCardListData();
 });
 
-const formData = ref({ ...INITIAL_DATA });
 const searchValue = ref("");
 
 const onPageSizeChange = (size: number) => {
@@ -89,6 +78,12 @@ onMounted(async () => {
   dataList.value = data.list;
   pagination.value.total = dataList.value.length;
   dataLoading.value = false;
+  // 如果传入了 buildingName，就直接填入并搜索
+  if (props.buildingName) {
+    searchValue.value = String(props.buildingName).slice(0, 10);
+    // pagination 回到第一页
+    pagination.value.current = 1;
+  }
 });
 
 // 过滤列表：apartment 或 area 匹配都算
