@@ -2,7 +2,7 @@ import { ref, reactive, computed, onMounted } from "vue";
 import { http } from "@/utils/http";
 import { message } from "@/utils/message";
 import { ElMessageBox } from "element-plus";
-
+import { fetchAreas } from "@/api/fechAreas";
 export interface AptRecord {
   id: number | null;
   userAgentName: string;
@@ -47,10 +47,6 @@ interface FetchRecordsResponse {
   lastRecordCount?: number;
   totalCount?: number;
   message?: string;
-}
-
-interface FetcAreasResponse {
-  areas?: string[];
 }
 
 // const backendFilters = reactive<Record<string, string[]>>({});
@@ -277,20 +273,6 @@ export function useGjgyRecords() {
       });
   }
 
-  async function fetchAreas() {
-    try {
-      const res = await http.request<FetcAreasResponse>(
-        "get",
-        "/portalapi/bos_public/areas.json"
-      );
-      if (res.areas && Array.isArray(res.areas)) {
-        areas.value = res.areas;
-      }
-    } catch {
-      message("获取区域数据异常", { type: "warning" });
-    }
-  }
-
   async function saveRecord(rec: Partial<AptRecord>) {
     const action = rec.id ? "update" : "add";
     const params: any = { action };
@@ -301,7 +283,7 @@ export function useGjgyRecords() {
 
   onMounted(() => {
     fetchRecords();
-    fetchAreas();
+    fetchAreas(areas);
   });
 
   return {

@@ -14,7 +14,7 @@ export default {
       name: "drive-index",
       component: () => import("@/views/drive/index.vue"),
       meta: {
-        title: $t("menus.pureShowing")
+        title: $t("menus.driveUpload")
       }
     },
     {
