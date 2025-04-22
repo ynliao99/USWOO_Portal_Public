@@ -80,7 +80,7 @@ onMounted(async () => {
   dataLoading.value = false;
   // 如果传入了 buildingName，就直接填入并搜索
   if (props.buildingName) {
-    searchValue.value = String(props.buildingName).slice(0, 10);
+    searchValue.value = String(props.buildingName).slice(0, 20);
     // pagination 回到第一页
     pagination.value.current = 1;
   }
