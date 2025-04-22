@@ -1,11 +1,5 @@
 <script setup lang="ts">
 import { computed, PropType } from "vue";
-import shopIcon from "@/assets/svg/shop.svg?component";
-import laptopIcon from "@/assets/svg/laptop.svg?component";
-import serviceIcon from "@/assets/svg/service.svg?component";
-import calendarIcon from "@/assets/svg/calendar.svg?component";
-import userAvatarIcon from "@/assets/svg/user_avatar.svg?component";
-import More2Fill from "~icons/ri/more-2-fill";
 
 import AIcon from "~icons/emojione-monotone/letter-a";
 import BIcon from "~icons/emojione-monotone/letter-b";
@@ -84,6 +78,80 @@ const letterIcons: Record<string, any> = {
   0: ZeroIcon
 };
 
+// 主题配色数组
+const themes = [
+  {
+    name: "豆沙绿",
+    cardBg: "rgba(168, 192, 160, 0.2)",
+    iconColor: "#4F6B45",
+    iconBg: "rgba(186, 201, 181, 1)"
+  },
+  {
+    name: "杏仁黄",
+    cardBg: "rgba(244, 225, 161, 0.2)",
+    iconColor: "#A57C1F",
+    iconBg: "rgba(230, 220, 180, 1)"
+  },
+  {
+    name: "藕荷粉",
+    cardBg: "rgba(232, 192, 196, 0.2)",
+    iconColor: "#A85B66",
+    iconBg: "rgba(224, 203, 205, 1)"
+  },
+  {
+    name: "薰衣草紫",
+    cardBg: "rgba(215, 198, 229, 0.2)",
+    iconColor: "#6A478E",
+    iconBg: "rgba(210, 200, 220, 1)"
+  },
+  {
+    name: "蔚蓝",
+    cardBg: "rgba(192, 216, 232, 0.2)",
+    iconColor: "#265D7A",
+    iconBg: "rgba(200, 220, 230, 1)"
+  },
+  {
+    name: "珊瑚橘",
+    cardBg: "rgba(255, 209, 178, 0.2)",
+    iconColor: "#C65C2B",
+    iconBg: "rgba(245, 220, 200, 1)"
+  },
+  {
+    name: "冰湖蓝",
+    cardBg: "rgba(178, 229, 229, 0.2)",
+    iconColor: "#2B7F7F",
+    iconBg: "rgba(200, 224, 224, 1)"
+  },
+  {
+    name: "蜜桃粉",
+    cardBg: "rgba(255, 217, 225, 0.2)",
+    iconColor: "#A63950",
+    iconBg: "rgba(240, 215, 225, 1)"
+  },
+  {
+    name: "雾霭灰",
+    cardBg: "rgba(218, 218, 218, 0.2)",
+    iconColor: "#646464",
+    iconBg: "rgba(210, 210, 210, 1)"
+  }
+];
+
+interface CardProductType {
+  id: number;
+  apartment?: string;
+  area?: string;
+  videoDriveLink?: string;
+}
+
+// 接收 video 和 index
+const props = defineProps({
+  video: { type: Object as PropType<CardProductType>, required: true },
+  index: { type: Number, required: true }
+});
+
+// 根据 index 取主题
+const theme = computed(() => themes[props.index % themes.length]);
+
 // 取首字母并转大写
 const firstLetter = computed(() => {
   const n = props.video.apartment?.trim() || "";
@@ -95,42 +163,25 @@ const LetterIcon = computed(
   () => letterIcons[firstLetter.value] || letterIcons["Y"]
 );
 
-defineOptions({
-  name: "ReCard"
-});
+defineOptions({ name: "ReCard" });
 
-interface CardProductType {
-  id: number;
-  apartment?: string;
-  area?: string;
-  videoDriveLink?: string;
-}
-
-const props = defineProps({
-  video: {
-    type: Object as PropType<CardProductType>
-  }
-});
-
+// 样式类
 const cardClass = computed(() => ["list-card-item"]);
-
 const cardLogoClass = computed(() => ["list-card-item_detail--logo"]);
-
-// 浅色列表，可按需替换
-const colors = ["#FFFAE5", "#E8F8FF", "#E8FFE8", "#FFE8F4", "#F5E8FF"];
-
-let globalBgIndex = 0;
-const bgColorClass = colors[globalBgIndex++ % colors.length];
 
 function go() {
   window.open(props.video.videoDriveLink, "_blank");
 }
 </script>
+
 <template>
-  <div :class="cardClass" :style="{ backgroundColor: bgColorClass }">
+  <div :class="cardClass" :style="{ backgroundColor: theme.cardBg }">
     <div class="list-card-item_detail">
       <el-row justify="space-between">
-        <div :class="cardLogoClass">
+        <div
+          :class="cardLogoClass"
+          :style="{ color: theme.iconColor, backgroundColor: theme.iconBg }"
+        >
           <component :is="LetterIcon" />
         </div>
         <div class="list-card-item_detail--operation">
@@ -174,9 +225,9 @@ function go() {
       width: 46px;
       height: 46px;
       font-size: 26px;
-      color: #0052d9;
-      background: #e0ebff;
       border-radius: 50%;
+
+      /* color 和 background-color 由 inline style 注入 */
 
       &__disabled {
         color: #a1c4ff;
@@ -193,9 +244,11 @@ function go() {
     }
 
     &--name {
-      margin: 24px 0 8px;
-      font-size: 16px;
-      font-weight: 400;
+      margin: 20px 0 6px;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--el-text-color-primary);
+      letter-spacing: 0.5px;
     }
 
     &--desc {
@@ -205,9 +258,10 @@ function go() {
       text-overflow: ellipsis;
       -webkit-line-clamp: 2;
       line-clamp: 2;
-      font-size: 12px;
-      line-height: 20px;
+      font-size: 16px;
+      line-height: 1.4;
       -webkit-box-orient: vertical;
+      color: var(--el-text-color-regular);
     }
   }
 

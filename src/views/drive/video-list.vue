@@ -36,18 +36,32 @@ const pagination = ref({ current: 1, pageSize: 12, total: 0 });
 
 const dataList = ref([]);
 const dataLoading = ref(true);
-
+const auth_url = ref("");
 const getCardListData = async () => {
+  dataLoading.value = true;
   try {
     const { data } = await getCardList();
+
+    // 先校验 status
+    if (data.status !== "success") {
+      // 接口返回的错误信息弹窗提示
+      message("加载失败，请稍后重试" + data.message, { type: "warning" });
+      console.error("接口返回的错误信息", data);
+      return;
+    }
+
+    // status === 'success' 再赋值
     dataList.value = data.list;
+    auth_url.value = data.token;
     pagination.value = {
       ...pagination.value,
       total: data.list.length
     };
   } catch (e) {
-    console.log(e);
+    console.error(e);
+    message("加载失败，请稍后重试" + e, { type: "warning" });
   } finally {
+    // 保证 loading 最少持续 500ms
     setTimeout(() => {
       dataLoading.value = false;
     }, 500);
@@ -140,7 +154,10 @@ watch([filteredList], ([list]) => {
             :lg="6"
             :xl="4"
           >
-            <ListCard :video="video" />
+            <ListCard
+              :video="video"
+              :index="(pagination.current - 1) * pagination.pageSize + i"
+            />
           </el-col>
         </el-row>
 
@@ -149,7 +166,7 @@ watch([filteredList], ([list]) => {
           class="float-right"
           :page-size="pagination.pageSize"
           :total="pagination.total"
-          :page-sizes="[12, 24, 36]"
+          :page-sizes="[12, 16, 24, 36]"
           :background="true"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="onPageSizeChange"
