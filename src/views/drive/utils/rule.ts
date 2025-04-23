@@ -4,13 +4,12 @@ import { reactive } from "vue";
 import type { FormRules } from "element-plus";
 import { $t, transformI18n } from "@/plugins/i18n";
 
-/** 看房表单校验 */
-const showingFormRules: FormRules = reactive({
+/** 表单校验 */
+const driveViewFormRules: FormRules = reactive({
   location: [
     {
       validator: (rule, value, callback) => {
         if (value === "") {
-          // 使用国际化，如无对应 key 可直接写提示文本
           callback(new Error(transformI18n($t("schedule.requiredLocation"))));
         } else {
           callback();
@@ -57,4 +56,4 @@ const showingFormRules: FormRules = reactive({
   ]
 });
 
-export { showingFormRules };
+export { driveViewFormRules };

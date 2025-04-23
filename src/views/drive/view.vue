@@ -6,8 +6,8 @@ import AddIcon from "~icons/ri/add-circle-line";
 import EditIcon from "~icons/ri/edit-circle-line";
 import DeleteIcon from "~icons/ri/delete-bin-2-line";
 import ShareIcon from "~icons/ri/share-forward-2-fill";
-import { useSchedules } from "./utils/getViewRecord";
-import { showingFormRules } from "./utils/rule";
+import { useRecords } from "./utils/getViewRecord";
+import { driveViewFormRules } from "./utils/rule";
 import { message } from "@/utils/message";
 import type { FormInstance } from "element-plus";
 
@@ -24,16 +24,17 @@ const {
   loading,
   pagination,
   currentUserAgentId,
-  fetchSchedules,
+  fetchRecords,
   dialogVisible,
   dialogTitle,
   form,
   openDialog,
   handleSave,
   handleDelete,
+  columns,
   // 新增，更新排序和筛选条件状态的方法
   updateQueryParams
-} = useSchedules();
+} = useRecords();
 
 // 新增：保存排序和筛选条件（根据需要可以额外维护多个变量）
 const sortField = ref("");
@@ -44,37 +45,7 @@ const filters = reactive({
 });
 
 // 表格列定义，同时设置 sortable 和 filters（初始过滤选项为空，稍后从 API 赋值）
-const columns = [
-  {
-    label: "操作",
-    prop: "operation",
-    slot: "operation",
-    width: "150px"
-  },
-  {
-    label: "公寓/地点",
-    prop: "location",
-    sortable: true
-  },
-  {
-    label: "经纪人",
-    prop: "agentName",
-    sortable: true
-  },
-  {
-    label: "开始时间",
-    prop: "startTime",
-    sortable: true
-  },
-  { label: "详细地址", prop: "address" },
-  { label: "房型/Unit", prop: "unit" },
-  {
-    label: "客户信息",
-    prop: "customerInfo",
-    slot: "customerInfo"
-  },
-  { label: "备注", prop: "note" }
-];
+
 
 // 定义一个状态标识，记录是否已初始化自动补全
 const autoCompleteInitialized = ref(false);
@@ -131,19 +102,19 @@ function onOnlyMineChange(checked: boolean) {
     sortOrder: sortOrder.value,
     filters
   });
-  fetchSchedules();
+  fetchRecords();
 }
 
 // 分页切换时重新加载数据
 function handleSizeChange(val: number) {
   pagination.pageSize = val;
   pagination.currentPage = 1;
-  fetchSchedules();
+  fetchRecords();
 }
 
 function handleCurrentChange(val: number) {
   pagination.currentPage = val;
-  fetchSchedules();
+  fetchRecords();
 }
 
 // 处理排序变更（具体事件名称请参考 pure-table 文档）
@@ -158,7 +129,7 @@ function handleSortChange({ prop, order }: { prop: string; order: string }) {
     sortOrder: sortOrder.value,
     filters
   });
-  fetchSchedules();
+  fetchRecords();
 }
 
 // 处理筛选变更（pure-table 触发 filter-change 事件）
@@ -175,11 +146,11 @@ function handleFilterChange(newFilters: Record<string, string[]>) {
     sortOrder: sortOrder.value,
     filters
   });
-  fetchSchedules();
+  fetchRecords();
 }
 
 onMounted(() => {
-  fetchSchedules();
+  fetchRecords();
   // 监听 autocomplete-selected 事件，更新表单数据
   document.addEventListener("autocomplete-selected", (e: CustomEvent) => {
     const { marker, value } = e.detail;
@@ -215,69 +186,11 @@ watch(dialogVisible, newVal => {
   }
 });
 
-// --------------------- 限制时间可选范围 ---------------------
-// 1. 限制开始时间的可选范围（若结束时间已设定，则开始时间不能大于等于结束时间）
-const startPickerOptions = computed(() => ({
-  disabledDate: (time: Date) => {
-    if (form.endTime) {
-      return time.getTime() >= new Date(form.endTime).getTime();
-    }
-    return false;
-  }
-}));
-
-// 2. 限制结束时间的可选范围（若开始时间已设定，则结束时间不能小于等于开始时间）
-const endPickerOptions = computed(() => ({
-  disabledDate: (time: Date) => {
-    if (form.startTime) {
-      return time.getTime() <= new Date(form.startTime).getTime();
-    }
-    return false;
-  }
-}));
-
-// 3. 监听开始时间变化
-watch(
-  () => form.startTime,
-  newVal => {
-    if (newVal && !form.endTime) {
-      const startDate = new Date(newVal);
-      // 自动将结束时间设为开始时间后30分钟，并转换为 "YYYY-MM-DD HH:mm:ss" 格式
-      form.endTime = formatDate(new Date(startDate.getTime() + 30 * 60 * 1000));
-    }
-    if (form.startTime && form.endTime) {
-      const start = new Date(form.startTime);
-      const end = new Date(form.endTime);
-      if (end.getTime() <= start.getTime()) {
-        form.endTime = "";
-      }
-    }
-  }
-);
-
-// 4. 监听结束时间变化
-watch(
-  () => form.endTime,
-  newVal => {
-    if (form.startTime && newVal) {
-      const start = new Date(form.startTime);
-      const end = new Date(newVal);
-      if (end.getTime() <= start.getTime()) {
-        // 如果结束时间不大于开始时间，结束时间设置到开始时间并通知用户
-        form.endTime = formatDate(
-          new Date(new Date(form.startTime).getTime() + 60 * 1000)
-        );
-        message("结束时间必须晚于开始时间。", { type: "warning" });
-      }
-    }
-  }
-);
-// --------------------- 新增代码结束 ---------------------
 </script>
 
 <template>
   <div>
-    <PureTableBar title="看房登记" :columns="columns" @refresh="fetchSchedules">
+    <PureTableBar title="我上传的视频" :columns="columns" @refresh="fetchRecords">
       <!-- 按钮区域 -->
       <template #buttons>
         <el-button type="primary" :icon="useRenderIcon(AddIcon)" @click="openDialog('add')">
@@ -303,13 +216,15 @@ watch(
           <!-- 操作列插槽：仅当记录的 userAgentId 与 currentUserAgentId 相同时显示编辑和删除按钮 -->
           <template #operation="{ row }">
             <template v-if="String(row.userAgentId) === String(currentUserAgentId)">
-              <el-button color="#557DED" size="default" :icon="useRenderIcon(EditIcon)"
-                @click="openDialog('edit', row)" />
-              <el-popconfirm title="确定删除此看房记录？删除后不可恢复！" @confirm="handleDelete(row)">
-                <template #reference>
-                  <el-button type="danger" size="default" :icon="useRenderIcon(DeleteIcon)" />
-                </template>
-              </el-popconfirm>
+              <div style="white-space: nowrap" class="opt-buttons">
+                <el-button class="icon-button" color="#557DED" size="default" :icon="useRenderIcon(EditIcon)"
+                  @click="openDialog('edit', row)" />
+                <el-popconfirm title="确定删除此看房记录？删除后不可恢复！" @confirm="handleDelete(row)">
+                  <template #reference>
+                    <el-button class="icon-button" type="danger" size="default" :icon="useRenderIcon(DeleteIcon)" />
+                  </template>
+                </el-popconfirm>
+              </div>
             </template>
           </template>
           <!-- 客户信息列插槽 -->
@@ -326,60 +241,50 @@ watch(
     </PureTableBar>
 
     <!-- 新增/编辑看房记录模态框 -->
-    <el-dialog v-model="dialogVisible" class="showing-dialog" :title="dialogTitle">
-      <el-form ref="ruleFormRef" :model="form" :rules="showingFormRules" class="dialog-form">
-        <el-form-item label="公寓/见面地点" prop="location">
-          <el-input v-model="form.location" placeholder="输入地点开始搜索" required data-marker="location" />
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" class="custom-dialog">
+      <el-form ref="ruleFormRef" :model="form" :rules="driveViewFormRules" label-width="6em">
+        
+        <el-form-item label="公寓名称" required prop="placeName">
+          <el-input v-model="form.placeName" placeholder="地点名称" required data-marker="placeName" />
+        </el-form-item>
+        <el-form-item label="Unit/APT" prop="unit">
+          <el-input v-model="form.unit" />
+        </el-form-item>
+        <el-form-item label="详细地址" required prop="address">
+          <el-input v-model="form.address" placeholder="详细地址" required data-marker="location" />
+        </el-form-item>
+        <el-form-item label="区域" required prop="area">
+          <el-select v-model="form.area" placeholder="请选择" required>
+            <el-option v-for="area in areas" :key="area" :label="area" :value="area" />
+          </el-select>
+        </el-form-item>
+        
+        <el-form-item label="房型" required prop="roomType">
+          <el-checkbox-group v-model="form.roomType as string[]" required>
+            <el-checkbox-button value="Studio">Studio</el-checkbox-button>
+            <el-checkbox-button value="1B1B">1B1B</el-checkbox-button>
+            <el-checkbox-button value="1B Den">1B+Den</el-checkbox-button>
+            <el-checkbox-button value="2B1B">2B1B</el-checkbox-button>
+            <el-checkbox-button value="2B2B">2B2B</el-checkbox-button>
+            <el-checkbox-button value="3B1B">3B1B</el-checkbox-button>
+            <el-checkbox-button value="3B2B">3B2B</el-checkbox-button>
+            <el-checkbox-button value="3B3B">3B3B</el-checkbox-button>
+            <el-checkbox-button value="4B2B">4B2B</el-checkbox-button>
+            <el-checkbox-button value="4B3B">4B3B</el-checkbox-button>
+            <el-checkbox-button value="4B4B">4B4B</el-checkbox-button>
+            <el-checkbox-button value="5B+">5B+</el-checkbox-button>
+          </el-checkbox-group>
         </el-form-item>
 
-        <el-form-item label="看房开始时间" prop="startTime">
-          <el-date-picker v-model="form.startTime" type="datetime" placeholder="选择开始时间"
-            :picker-options="startPickerOptions" style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" required />
-        </el-form-item>
-        <el-form-item label="看房结束时间" prop="endTime">
-          <el-date-picker v-model="form.endTime" type="datetime" placeholder="选择结束时间" :picker-options="endPickerOptions"
-            style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" required />
-        </el-form-item>
-        <el-form-item label="详细地址" prop="address">
-          <el-input v-model="form.address" placeholder="输入详细地址" required data-marker="address" />
-        </el-form-item>
-        <el-form-item label="房型/Unit">
-          <el-input v-model="form.unit" placeholder="列出要看的Unit和房型" />
-        </el-form-item>
-        <div style="margin: 20px 0; text-align: center">
-          <i>只有持证经纪人或组长可以领取钥匙</i>
-        </div>
-        <el-form-item label="客户性别">
-          <el-radio-group v-model="form.customerSex" :size="dynamicSize" :disabled="size === 'disabled'">
-            <el-radio-button value="男">男</el-radio-button>
-            <el-radio-button value="女">女</el-radio-button>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="身份">
-          <el-radio-group v-model="form.customerIdentity" :size="dynamicSize" :disabled="size === 'disabled'">
-            <el-radio-button value="本科">本科</el-radio-button>
-            <el-radio-button value="研究生">研究生</el-radio-button>
-            <el-radio-button value="工作">工作</el-radio-button>
-            <el-radio-button value="访问学者">访问学者</el-radio-button>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="通勤地点">
-          <el-input v-model="form.customerTarget" placeholder="上学/工作地点" />
-        </el-form-item>
-        <el-form-item label="客户需求">
-          <el-input v-model="form.customerNeed" placeholder="需求信息" />
-        </el-form-item>
-        <el-form-item label="备注">
-          <el-input v-model="form.note" type="textarea" placeholder="备注（如同一客户多个看房，可在此添加更多房源）" />
-        </el-form-item>
+        
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">关闭</el-button>
-        <el-button type="primary" @click="onSubmit(ruleFormRef)">
-          保存
-        </el-button>
+        <el-button type="primary" @click="onSubmit(ruleFormRef)">保存</el-button>
       </template>
     </el-dialog>
+
+  
   </div>
 </template>
 
@@ -398,10 +303,6 @@ watch(
   }
 }
 
-.showing-dialog .el-dialog {
-  /* 默认宽度为600px */
-  width: 600px !important;
-}
 
 /* 针对 .dialog-form 中的 label 进行调整 */
 .dialog-form .el-form-item__label {
@@ -484,5 +385,11 @@ watch(
   max-width: 400px;
   word-break: break-word;
   white-space: normal;
+}
+
+.opt-buttons .el-button,
+.el-button.is-round {
+  padding: 8px;
+  margin-left: 6px;
 }
 </style>

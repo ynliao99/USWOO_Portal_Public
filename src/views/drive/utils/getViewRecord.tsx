@@ -1,9 +1,9 @@
-// useSchedules.ts
+// getViewRecord.tsx
 import { ref, reactive } from "vue";
 import { http } from "@/utils/http";
 import { message } from "@/utils/message";
 
-export function useSchedules() {
+export function useRecords() {
   const dataList = ref<any[]>([]);
   const loading = ref(false);
   const pagination = reactive({
@@ -14,7 +14,7 @@ export function useSchedules() {
   });
   const currentUserAgentId = ref<string>("");
   const dialogVisible = ref(false);
-  const dialogTitle = ref("新增看房");
+  const dialogTitle = ref("编辑视频信息");
   const form = reactive({
     id: null,
     location: "",
@@ -50,7 +50,7 @@ export function useSchedules() {
     queryParams.filters = newParams.filters;
   }
 
-  function fetchSchedules() {
+  function fetchRecords() {
     loading.value = true;
     // 构造请求参数（分页 + 排序 + 筛选）
     const params: any = {
@@ -97,20 +97,7 @@ export function useSchedules() {
 
   // 以下保持 openDialog、handleSave、handleDelete 实现不变
   function openDialog(mode: string, row: any = null) {
-    if (mode === "add") {
-      dialogTitle.value = "新增看房";
-      form.id = null;
-      form.location = "";
-      form.startTime = null;
-      form.endTime = null;
-      form.address = "";
-      form.unit = "";
-      form.customerSex = "";
-      form.customerIdentity = "";
-      form.customerTarget = "";
-      form.customerNeed = "";
-      form.note = "";
-    } else if (mode === "edit" && row) {
+    
       dialogTitle.value = "编辑看房";
       form.id = row.id;
       form.location = row.location || "";
@@ -123,7 +110,7 @@ export function useSchedules() {
       form.customerTarget = row.customerTarget || "";
       form.customerNeed = row.customerNeed || "";
       form.note = row.note || "";
-    }
+    
     dialogVisible.value = true;
   }
 
@@ -136,7 +123,7 @@ export function useSchedules() {
       .then((res: any) => {
         if (res.status === "success") {
           dialogVisible.value = false;
-          fetchSchedules();
+          fetchRecords();
           message(`${action === "add" ? "添加" : "保存"}成功`, {
             type: "success"
           });
@@ -158,7 +145,7 @@ export function useSchedules() {
       })
       .then((res: any) => {
         if (res.status === "success") {
-          fetchSchedules();
+          fetchRecords();
           message("删除成功", { type: "success" });
         } else {
           console.error("删除失败：", res.message);
@@ -171,6 +158,40 @@ export function useSchedules() {
       });
   }
 
+  const columns = [
+  {
+    label: "操作",
+    prop: "operation",
+    slot: "operation",
+    width: "150px"
+  },
+  {
+    label: "公寓",
+    prop: "location",
+    sortable: true
+  },
+  {
+    label: "房型",
+    prop: "agentName",
+    sortable: true
+  },
+  {
+    label: "Unit",
+    prop: "startTime",
+    sortable: true
+  },
+  { label: "地区", prop: "address" },
+  { label: "下载", prop: "unit" },
+  {
+    label: "原大小",
+    prop: "customerInfo",
+    slot: "customerInfo"
+  },
+  { label: "状态", prop: "note" },
+  { label: "上传用户", prop: "note" },
+  { label: "存储源", prop: "note" }
+  ];
+  
   return {
     dataList,
     loading,
@@ -179,11 +200,12 @@ export function useSchedules() {
     dialogVisible,
     dialogTitle,
     form,
-    fetchSchedules,
+    fetchRecords,
     openDialog,
     handleSave,
     handleDelete,
     distinctAgents,
+    columns,
     distinctLocations,
     updateQueryParams
   };
