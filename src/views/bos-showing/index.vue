@@ -275,11 +275,7 @@ watch(
     <PureTableBar title="看房登记" :columns="columns" @refresh="fetchSchedules">
       <!-- 按钮区域 -->
       <template #buttons>
-        <el-button
-          type="primary"
-          :icon="useRenderIcon(AddIcon)"
-          @click="openDialog('add')"
-        >
+        <el-button type="primary" :icon="useRenderIcon(AddIcon)" @click="openDialog('add')">
           新增看房
         </el-button>
       </template>
@@ -287,52 +283,26 @@ watch(
       <template #default="{ size, dynamicColumns }">
         <!-- 添加“只看我的”按钮 -->
         <div style="margin: 0 16px">
-          <el-check-tag
-            :class="[
+          <el-check-tag :class="[
               'select-none',
               size === 'disabled' && 'tag-disabled',
               onlyMine && 'is-active'
-            ]"
-            :checked="onlyMine"
-            @change="onOnlyMineChange"
-          >
+            ]" :checked="onlyMine" @change="onOnlyMineChange">
             {{ onlyMine ? "✅ 只看我的" : "只看我的" }}
           </el-check-tag>
         </div>
-        <pure-table
-          :data="dataList"
-          :columns="dynamicColumns"
-          :loading="loading"
-          :pagination="{ ...pagination, size }"
-          table-layout="auto"
-          stripe
-          :size="size"
-          @sort-change="handleSortChange"
-          @filter-change="handleFilterChange"
-          @page-size-change="handleSizeChange"
-          @page-current-change="handleCurrentChange"
-        >
+        <pure-table :data="dataList" :columns="dynamicColumns" showOverflowTooltip :loading="loading"
+          :pagination="{ ...pagination, size }" table-layout="fixed" stripe :size="size" @sort-change="handleSortChange"
+          @filter-change="handleFilterChange" @page-size-change="handleSizeChange"
+          @page-current-change="handleCurrentChange">
           <!-- 操作列插槽：仅当记录的 userAgentId 与 currentUserAgentId 相同时显示编辑和删除按钮 -->
           <template #operation="{ row }">
-            <template
-              v-if="String(row.userAgentId) === String(currentUserAgentId)"
-            >
-              <el-button
-                color="#557DED"
-                size="default"
-                :icon="useRenderIcon(EditIcon)"
-                @click="openDialog('edit', row)"
-              />
-              <el-popconfirm
-                title="确定删除此看房记录？删除后不可恢复！"
-                @confirm="handleDelete(row)"
-              >
+            <template v-if="String(row.userAgentId) === String(currentUserAgentId)">
+              <el-button color="#557DED" size="default" :icon="useRenderIcon(EditIcon)"
+                @click="openDialog('edit', row)" />
+              <el-popconfirm title="确定删除此看房记录？删除后不可恢复！" @confirm="handleDelete(row)">
                 <template #reference>
-                  <el-button
-                    type="danger"
-                    size="default"
-                    :icon="useRenderIcon(DeleteIcon)"
-                  />
+                  <el-button type="danger" size="default" :icon="useRenderIcon(DeleteIcon)" />
                 </template>
               </el-popconfirm>
             </template>
@@ -351,55 +321,22 @@ watch(
     </PureTableBar>
 
     <!-- 新增/编辑看房记录模态框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      class="showing-dialog"
-      :title="dialogTitle"
-    >
-      <el-form
-        ref="ruleFormRef"
-        :model="form"
-        :rules="showingFormRules"
-        class="dialog-form"
-      >
+    <el-dialog v-model="dialogVisible" class="showing-dialog" :title="dialogTitle">
+      <el-form ref="ruleFormRef" :model="form" :rules="showingFormRules" class="dialog-form">
         <el-form-item label="公寓/见面地点" prop="location">
-          <el-input
-            v-model="form.location"
-            placeholder="输入地点开始搜索"
-            required
-            data-marker="location"
-          />
+          <el-input v-model="form.location" placeholder="输入地点开始搜索" required data-marker="location" />
         </el-form-item>
 
         <el-form-item label="看房开始时间" prop="startTime">
-          <el-date-picker
-            v-model="form.startTime"
-            type="datetime"
-            placeholder="选择开始时间"
-            :picker-options="startPickerOptions"
-            style="width: 100%"
-            value-format="YYYY-MM-DD HH:mm:ss"
-            required
-          />
+          <el-date-picker v-model="form.startTime" type="datetime" placeholder="选择开始时间"
+            :picker-options="startPickerOptions" style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" required />
         </el-form-item>
         <el-form-item label="看房结束时间" prop="endTime">
-          <el-date-picker
-            v-model="form.endTime"
-            type="datetime"
-            placeholder="选择结束时间"
-            :picker-options="endPickerOptions"
-            style="width: 100%"
-            value-format="YYYY-MM-DD HH:mm:ss"
-            required
-          />
+          <el-date-picker v-model="form.endTime" type="datetime" placeholder="选择结束时间" :picker-options="endPickerOptions"
+            style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" required />
         </el-form-item>
         <el-form-item label="详细地址" prop="address">
-          <el-input
-            v-model="form.address"
-            placeholder="输入详细地址"
-            required
-            data-marker="address"
-          />
+          <el-input v-model="form.address" placeholder="输入详细地址" required data-marker="address" />
         </el-form-item>
         <el-form-item label="房型/Unit">
           <el-input v-model="form.unit" placeholder="列出要看的Unit和房型" />
@@ -408,21 +345,13 @@ watch(
           <i>只有持证经纪人或组长可以领取钥匙</i>
         </div>
         <el-form-item label="客户性别">
-          <el-radio-group
-            v-model="form.customerSex"
-            :size="dynamicSize"
-            :disabled="size === 'disabled'"
-          >
+          <el-radio-group v-model="form.customerSex" :size="dynamicSize" :disabled="size === 'disabled'">
             <el-radio-button value="男">男</el-radio-button>
             <el-radio-button value="女">女</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="身份">
-          <el-radio-group
-            v-model="form.customerIdentity"
-            :size="dynamicSize"
-            :disabled="size === 'disabled'"
-          >
+          <el-radio-group v-model="form.customerIdentity" :size="dynamicSize" :disabled="size === 'disabled'">
             <el-radio-button value="本科">本科</el-radio-button>
             <el-radio-button value="研究生">研究生</el-radio-button>
             <el-radio-button value="工作">工作</el-radio-button>
@@ -436,11 +365,7 @@ watch(
           <el-input v-model="form.customerNeed" placeholder="需求信息" />
         </el-form-item>
         <el-form-item label="备注">
-          <el-input
-            v-model="form.note"
-            type="textarea"
-            placeholder="备注（如同一客户多个看房，可在此添加更多房源）"
-          />
+          <el-input v-model="form.note" type="textarea" placeholder="备注（如同一客户多个看房，可在此添加更多房源）" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -501,5 +426,55 @@ watch(
   border-color: var(--el-color-primary, #409eff);
 }
 
-/* 通过 Tailwind 和媒体查询，调整对话框宽度 */
+.pure-table .el-table__header-wrapper th {
+  white-space: nowrap;
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-item {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.el-dialog {
+  max-height: 80vh;
+  padding-right: 12px;
+  margin-top: 10vh;
+  overflow-y: auto;
+}
+
+.detail-label {
+  margin-right: 8px;
+  font-weight: bold;
+  color: #606266;
+}
+
+.detail-value {
+  color: #303133;
+}
+
+.cell {
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  word-break: break-word;
+  -webkit-box-orient: vertical;
+}
+
+.el-table .cell.el-tooltip {
+  white-space: normal;
+}
+
+.el-table--fit .el-popper {
+  max-width: 400px;
+  word-break: break-word;
+  white-space: normal;
+}
 </style>
