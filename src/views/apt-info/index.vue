@@ -304,93 +304,92 @@ async function onSubmit() {
   try {
     // 第一次校验
     await f.validate();
-
-    // 拿到原始 & 当前快照
-    const current = { ...form } as AptRecord;
-    const original = originalForm.value as AptRecord;
-
-    // 组装 payload
-    const payload: any = { ...toRaw(form) };
-
-    // 单字段相似度收集（完全一致也收集）
-    if (!isAddMode) {
-      // 要比对的字段列表
-      const fields: (keyof AptRecord)[] = [
-        "broker_fee",
-        "broker_fee_desc",
-        "concessions",
-        "contact",
-        "intl_student",
-        "intl_student_desc",
-        "note",
-        "pet",
-        "pet_desc",
-        "undergrad",
-        "undergrad_desc",
-        "ut"
-      ];
-      const sims: number[] = [];
-      for (const key of fields) {
-        const a = original[key],
-          b = current[key];
-        if (a == null && b == null) {
-          sims.push(1);
-          continue;
-        }
-        if (a != null && b != null) sims.push(similarity(String(a), String(b)));
-      }
-      const avgSim = sims.length
-        ? sims.reduce((s, v) => s + v, 0) / sims.length
-        : 1;
-      if (avgSim > 0.95) {
-        try {
-          await ElMessageBox.confirm(
-            `检测到您此次提交与原始数据总体相似度高达 ${(avgSim * 100).toFixed(2)}%。\n 恶意套刷更新次数将导致不良后果，是否继续提交？`,
-            "高相似度提示",
-            {
-              confirmButtonText: "继续提交",
-              cancelButtonText: "取消",
-              type: "warning"
-            }
-          );
-        } catch {
-          message("已取消，请更新政策后再试", { type: "warning" });
-          return;
-        }
-      }
-      // percent 字段
-      payload.percent = (avgSim * 100).toFixed(2);
-    }
-
-    // 删字段
-    delete payload.created_at;
-    delete payload.updated_at;
-    delete payload.userAgentId;
-    delete payload.userAgentName;
-
-    // 处理数组字段为 JSON 字符串
-    payload.amenities = JSON.stringify(payload.amenities || []);
-    payload.room_amenities = JSON.stringify(payload.room_amenities || []);
-    // current 字段
-    payload.current = computeCurrent();
-
-    payload.pid = form.pid ?? null;
-
-    // 保存
-    try {
-      await saveRecord(payload);
-    } catch (saveErr) {
-      console.error("保存记录失败：", saveErr);
-      message("保存失败：网络错误，请稍后重试", { type: "error" });
-      return; // 保存失败就不往下执行
-    }
-
-    dialogVisible.value = false;
-    console.log("提交成功");
-    message("提交成功", { type: "success" });
   } catch (err) {
     message("请填写所有的必填项目", { type: "warning" });
     console.warn("提交被拦截：", err);
+  }
+  // 拿到原始 & 当前快照
+  const current = { ...form } as AptRecord;
+  const original = originalForm.value as AptRecord;
+
+  // 组装 payload
+  const payload: any = { ...toRaw(form) };
+
+  // 单字段相似度收集（完全一致也收集）
+  if (!isAddMode) {
+    // 要比对的字段列表
+    const fields: (keyof AptRecord)[] = [
+      "broker_fee",
+      "broker_fee_desc",
+      "concessions",
+      "contact",
+      "intl_student",
+      "intl_student_desc",
+      "note",
+      "pet",
+      "pet_desc",
+      "undergrad",
+      "undergrad_desc",
+      "ut"
+    ];
+    const sims: number[] = [];
+    for (const key of fields) {
+      const a = original[key],
+        b = current[key];
+      if (a == null && b == null) {
+        sims.push(1);
+        continue;
+      }
+      if (typeof a === "string" && typeof b === "string")
+        sims.push(similarity(a, b));
+    }
+    const avgSim = sims.length
+      ? sims.reduce((s, v) => s + v, 0) / sims.length
+      : 1;
+    if (avgSim > 0.95) {
+      try {
+        await ElMessageBox.confirm(
+          `检测到您此次提交与原始数据总体相似度高达 ${(avgSim * 100).toFixed(2)}%。\n 恶意套刷更新次数将导致不良后果，是否继续提交？`,
+          "高相似度提示",
+          {
+            confirmButtonText: "继续提交",
+            cancelButtonText: "取消",
+            type: "warning"
+          }
+        );
+      } catch {
+        message("已取消，请更新政策后再试", { type: "warning" });
+        return;
+      }
+    }
+    // percent 字段
+    payload.percent = (avgSim * 100).toFixed(2);
+  }
+
+  // 删字段
+  delete payload.created_at;
+  delete payload.updated_at;
+  delete payload.userAgentId;
+  delete payload.userAgentName;
+
+  // 处理数组字段为 JSON 字符串
+  payload.amenities = JSON.stringify(payload.amenities || []);
+  payload.room_amenities = JSON.stringify(payload.room_amenities || []);
+  // current 字段
+  payload.current = computeCurrent();
+
+  payload.pid = form.pid ?? null;
+
+  // 保存
+  try {
+    await saveRecord(payload);
+    dialogVisible.value = false;
+    console.log("提交成功");
+    message("提交成功", { type: "success" });
+  } catch (saveErr) {
+    console.error("保存记录失败：", saveErr);
+    message("保存失败：网络错误，请稍后重试", { type: "error" });
+    return; // 保存失败就不往下执行
   }
 }
 
