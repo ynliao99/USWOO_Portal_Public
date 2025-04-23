@@ -188,14 +188,14 @@ function openDialog(mode: "add" | "edit", record?: AptRecord) {
     if (typeof record.amenities === "string") {
       try {
         form.amenities = JSON.parse(record.amenities);
-      } catch { }
+      } catch {}
     } else {
       form.amenities = record.amenities as any;
     }
     if (typeof record.room_amenities === "string") {
       try {
         form.room_amenities = JSON.parse(record.room_amenities);
-      } catch { }
+      } catch {}
     } else {
       form.room_amenities = record.room_amenities as any;
     }
@@ -309,99 +309,87 @@ async function onSubmit() {
     const current = { ...form } as AptRecord;
     const original = originalForm.value as AptRecord;
 
-    // 要比对的字段列表
-    const fields: (keyof AptRecord)[] = [
-      "broker_fee",
-      "broker_fee_desc",
-      "concessions",
-      "contact",
-      "intl_student",
-      "intl_student_desc",
-      "note",
-      "pet",
-      "pet_desc",
-      "undergrad",
-      "undergrad_desc",
-      "ut"
-    ];
-
-    // 单字段相似度收集（完全一致也收集）
-    const sims: number[] = [];
-    for (const key of fields) {
-      const origVal = original[key];
-      const currVal = current[key];
-      // 如果你想把“原来和现在都没填”也算作 1，可以改成：
-      if (origVal == null && currVal == null) {
-        sims.push(1);
-        continue;
-      }
-      if (origVal == null || currVal == null) {
-        // 值缺失就跳过
-        continue;
-      }
-      const s = similarity(String(origVal), String(currVal));
-      sims.push(s);
-    }
-
-    // 平均相似度
-    const avgSim =
-      sims.length > 0 ? sims.reduce((sum, v) => sum + v, 0) / sims.length : 1;
-    console.log("新表单：", current);
-    console.log("比对字段：", fields);
-    console.log(
-      "原始表单片段：",
-      fields.map(k => original[k])
-    );
-    console.log(
-      "当前表单片段：",
-      fields.map(k => current[k])
-    );
-    console.log("平均相似度：", avgSim);
-    // —— 新增这段：高相似度确认 ——
-    if (avgSim > 0.95) {
-      try {
-        await ElMessageBox.confirm(
-          `检测到您此次提交与原始数据总体相似度高达 ${(avgSim * 100).toFixed(2)}%。\n` +
-          `恶意套刷更新次数将导致不良后果，是否确认继续提交？`,
-          "高相似度提示",
-          {
-            confirmButtonText: "继续提交",
-            cancelButtonText: "取消",
-            type: "warning"
-          }
-        );
-      } catch {
-        // 用户取消，就不继续提交
-        return;
-      }
-    }
-    // —— 确认框结束 ——
-
     // 组装 payload
     const payload: any = { ...toRaw(form) };
+
+    // 单字段相似度收集（完全一致也收集）
+    if (!isAddMode) {
+      // 要比对的字段列表
+      const fields: (keyof AptRecord)[] = [
+        "broker_fee",
+        "broker_fee_desc",
+        "concessions",
+        "contact",
+        "intl_student",
+        "intl_student_desc",
+        "note",
+        "pet",
+        "pet_desc",
+        "undergrad",
+        "undergrad_desc",
+        "ut"
+      ];
+      const sims: number[] = [];
+      for (const key of fields) {
+        const a = original[key],
+          b = current[key];
+        if (a == null && b == null) {
+          sims.push(1);
+          continue;
+        }
+        if (a != null && b != null) sims.push(similarity(String(a), String(b)));
+      }
+      const avgSim = sims.length
+        ? sims.reduce((s, v) => s + v, 0) / sims.length
+        : 1;
+      if (avgSim > 0.95) {
+        try {
+          await ElMessageBox.confirm(
+            `检测到您此次提交与原始数据总体相似度高达 ${(avgSim * 100).toFixed(2)}%。\n 恶意套刷更新次数将导致不良后果，是否继续提交？`,
+            "高相似度提示",
+            {
+              confirmButtonText: "继续提交",
+              cancelButtonText: "取消",
+              type: "warning"
+            }
+          );
+        } catch {
+          message("已取消，请更新政策后再试", { type: "warning" });
+          return;
+        }
+      }
+      // percent 字段
+      payload.percent = (avgSim * 100).toFixed(2);
+    }
+
     // 删字段
     delete payload.created_at;
     delete payload.updated_at;
     delete payload.userAgentId;
     delete payload.userAgentName;
-    // percent 字段
-    payload.percent = (avgSim * 100).toFixed(2);
+
     // 处理数组字段为 JSON 字符串
     payload.amenities = JSON.stringify(payload.amenities || []);
     payload.room_amenities = JSON.stringify(payload.room_amenities || []);
     // current 字段
     payload.current = computeCurrent();
-    // 保存
-    await saveRecord(payload);
-    dialogVisible.value = false;
+
+    payload.pid = form.pid ?? null;
 
     // 保存
-    await saveRecord(form.value as AptRecord);
+    try {
+      await saveRecord(payload);
+    } catch (saveErr) {
+      console.error("保存记录失败：", saveErr);
+      message("保存失败：网络错误，请稍后重试", { type: "error" });
+      return; // 保存失败就不往下执行
+    }
+
     dialogVisible.value = false;
     console.log("提交成功");
     message("提交成功", { type: "success" });
   } catch (err) {
-    message("请填写所有的必填项目。", { type: "warning" });
+    message("请填写所有的必填项目", { type: "warning" });
     console.warn("提交被拦截：", err);
   }
 }
@@ -587,58 +575,118 @@ const isRecent = (input: string): boolean => {
 onMounted(() => {
   // 自动补全同步信息
   document.addEventListener("autocomplete-selected", (e: CustomEvent) => {
-    const { marker, value } = e.detail as {
+    const { marker, value, pid } = e.detail as {
       marker: keyof AptRecord;
       value: any;
+      pid?: string;
     };
+    console.log("autocomplete-selected", marker, value, pid);
     form[marker] = value; // 直接写就行了
+    if (marker === "building_name") {
+      form.pid = pid; // <— 这里就拿到了 place_id
+    }
   });
 });
 </script>
 
 <template>
   <div>
-    <el-input v-model="searchTermLocal" placeholder="全能搜索..." clearable style="margin: 0" @input="handleSearch" />
+    <el-input
+      v-model="searchTermLocal"
+      placeholder="全能搜索..."
+      clearable
+      style="margin: 0"
+      @input="handleSearch"
+    />
 
-    <PureTableBar title="查实时房源、约看房" :columns="columns" @refresh="fetchRecords">
+    <PureTableBar
+      title="查实时房源、约看房"
+      :columns="columns"
+      @refresh="fetchRecords"
+    >
       <template #buttons>
-        <el-button type="primary" :icon="useRenderIcon(AddIcon)" @click="openDialog('add')">
+        <el-button
+          type="primary"
+          :icon="useRenderIcon(AddIcon)"
+          @click="openDialog('add')"
+        >
           新增房源
         </el-button>
       </template>
 
       <template #default="{ size, dynamicColumns }">
         <div style="margin: 0 16px">
-          <el-button type="primary" @click="openFilterDialog">筛选<span v-if="filterCount">（{{ filterCount
-          }}）</span></el-button>
+          <el-button type="primary" @click="openFilterDialog"
+            >筛选<span v-if="filterCount"
+              >（{{ filterCount }}）</span
+            ></el-button
+          >
           <el-button @click="clearFilters">重置筛选</el-button>
         </div>
 
-        <pure-table ref="tableRef" row-key="id" showOverflowTooltip :data="paginatedRecords" :columns="dynamicColumns"
-          :loading="loading" :pagination="pagination" table-layout="auto" adaptive stripe :size="size"
-          @sort-change="handleSortChange" @page-size-change="handlePageSizeChange"
-          @page-current-change="handlePageChange">
+        <pure-table
+          ref="tableRef"
+          row-key="id"
+          showOverflowTooltip
+          :data="paginatedRecords"
+          :columns="dynamicColumns"
+          :loading="loading"
+          :pagination="pagination"
+          table-layout="auto"
+          adaptive
+          stripe
+          :size="size"
+          @sort-change="handleSortChange"
+          @page-size-change="handlePageSizeChange"
+          @page-current-change="handlePageChange"
+        >
           <template #operation="{ row }">
             <div style="white-space: nowrap" class="opt-buttons">
-              <el-button class="icon-button" color="#557DED" :icon="useRenderIcon(EditIcon)" size="default"
-                @click="openDialog('edit', row)" />
-              <el-button class="icon-button" type="primary" :icon="useRenderIcon(ViewIcon)" size="default"
-                @click="showDetails(row)" />
+              <el-button
+                class="icon-button"
+                color="#557DED"
+                :icon="useRenderIcon(EditIcon)"
+                size="default"
+                @click="openDialog('edit', row)"
+              />
+              <el-button
+                class="icon-button"
+                type="primary"
+                :icon="useRenderIcon(ViewIcon)"
+                size="default"
+                @click="showDetails(row)"
+              />
 
-              <el-button v-if="row.sightmap_id" class="icon-button" color="#8f16f3" size="default"
-                :icon="useRenderIcon(BuildingIcon)" @click="
+              <el-button
+                v-if="row.sightmap_id"
+                class="icon-button"
+                color="#8f16f3"
+                size="default"
+                :icon="useRenderIcon(BuildingIcon)"
+                @click="
                   openDialogTWithOptions({
                     url: `https://sightmap.com/embed/${row.sightmap_id}?enable_api=1`,
                     title: '实时房源预览'
                   })
-                  " />
+                "
+              />
 
-              <el-button v-if="row.tour_url" class="icon-button" :icon="useRenderIcon(CalendarIcon)"
-                :type="isTourDialog(row) ? 'success' : undefined" :color="!isTourDialog(row) ? '#0045f3' : undefined"
-                @click="handleTourClick(row)" />
+              <el-button
+                v-if="row.tour_url"
+                class="icon-button"
+                :icon="useRenderIcon(CalendarIcon)"
+                :type="isTourDialog(row) ? 'success' : undefined"
+                :color="!isTourDialog(row) ? '#0045f3' : undefined"
+                @click="handleTourClick(row)"
+              />
 
-              <el-button class="icon-button" color="#557DED" :icon="useRenderIcon(VideoIcon)" size="default"
-                @click="showVideoDialog(row)" />
+              <el-button
+                class="icon-button"
+                color="#557DED"
+                :icon="useRenderIcon(VideoIcon)"
+                size="default"
+                @click="showVideoDialog(row)"
+              />
             </div>
           </template>
           <template #building_name="{ row }">
@@ -647,9 +695,11 @@ onMounted(() => {
             </a>
           </template>
           <template #last_edited="{ row }">
-            <span :style="{
-              color: isRecent(row.last_edited) ? '#008a17' : '#ca0000'
-            }">
+            <span
+              :style="{
+                color: isRecent(row.last_edited) ? '#008a17' : '#ca0000'
+              }"
+            >
               {{ formatDate(row.last_edited) }}
             </span>
           </template>
@@ -690,7 +740,8 @@ onMounted(() => {
               </template>
 
               <span v-if="row.intl_student_desc">
-                {{ row.intl_student_desc }}</span>
+                {{ row.intl_student_desc }}</span
+              >
             </span>
           </template>
 
@@ -708,13 +759,21 @@ onMounted(() => {
           </template>
 
           <template #address="{ row }">
-            <a :href="`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(row.address)}`"
-              target="_blank" style="color: #409eff">
+            <a
+              :href="`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(row.address)}`"
+              target="_blank"
+              style="color: #409eff"
+            >
               {{ row.address }}
             </a>
           </template>
           <template #cell="{ row, column }">
-            <el-tooltip effect="dark" :content="row[column.prop]" class="limit-tooltip" placement="top">
+            <el-tooltip
+              effect="dark"
+              :content="row[column.prop]"
+              class="limit-tooltip"
+              placement="top"
+            >
               <div class="multiline-ellipsis">{{ row[column.prop] }}</div>
             </el-tooltip>
           </template>
@@ -724,19 +783,39 @@ onMounted(() => {
     <!-- iFrame对话框 -->
     <IframeDialog ref="iframeDialog" v-bind="iframeDialogOptions" />
     <!-- 视频列表 -->
-    <el-dialog v-model="videoDialogVisible" title="查看视频" top="5vh" destroy-on-close>
+    <el-dialog
+      v-model="videoDialogVisible"
+      title="查看视频"
+      top="5vh"
+      destroy-on-close
+    >
       <div style="padding: 10px">
         <VideoList :building-name="selectedBuildingName" />
       </div>
     </el-dialog>
     <!-- 编辑公寓 -->
     <el-dialog v-model="dialogVisible" :title="dialogTitle">
-      <el-form ref="formRef" :model="form" :rules="aptFormRules" label-width="120px" label-position="left"
-        class="detail-content">
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="aptFormRules"
+        label-width="120px"
+        label-position="left"
+        class="detail-content"
+      >
         <!-- 区域 -->
         <el-form-item label="区域" prop="area" required>
-          <el-select v-model="form.area" placeholder="请选择区域" data-marker="area">
-            <el-option v-for="area in areas" :key="area" :label="area" :value="area" />
+          <el-select
+            v-model="form.area"
+            placeholder="请选择区域"
+            data-marker="area"
+          >
+            <el-option
+              v-for="area in areas"
+              :key="area"
+              :label="area"
+              :value="area"
+            />
           </el-select>
         </el-form-item>
 
@@ -759,38 +838,75 @@ onMounted(() => {
           <el-input v-model="form.tour_url" data-marker="tour_url" />
         </el-form-item>
         <!-- 看房链接类型 -->
-        <el-form-item v-if="hasAdminPermission" label="看房链接类型" prop="tour_url_type">
-          <el-input v-model="form.tour_url_type" data-marker="tour_url_type"
-            placeholder="1=跨域限制，直接跳转；2=需要加padding；3=doorway组件；4=悬浮日历，通常底部有按钮；5=udr；6=equity；7=tour24（含bldg89等不提供自助的）；8=类indie，日历形式拒绝跨域；" />
+        <el-form-item
+          v-if="hasAdminPermission"
+          label="看房链接类型"
+          prop="tour_url_type"
+        >
+          <el-input
+            v-model="form.tour_url_type"
+            data-marker="tour_url_type"
+            placeholder="1=跨域限制，直接跳转；2=需要加padding；3=doorway组件；4=悬浮日历，通常底部有按钮；5=udr；6=equity；7=tour24（含bldg89等不提供自助的）；8=类indie，日历形式拒绝跨域；"
+          />
         </el-form-item>
 
         <!-- Sightmap ID -->
         <el-form-item label="Sightmap ID" prop="sightmap_id">
-          <el-input v-model="form.sightmap_id" data-marker="sightmap_id" placeholder="不知道请留空" />
+          <el-input
+            v-model="form.sightmap_id"
+            data-marker="sightmap_id"
+            placeholder="不知道请留空"
+          />
         </el-form-item>
 
         <hr />
         <!-- 优惠 -->
         <el-form-item label="优惠" prop="concessions" required>
-          <el-input v-model="form.concessions" type="textarea" placeholder="请输入优惠信息" data-marker="concessions"
-            :disabled="confirmNoChange.concessions" style="flex: 1" />
-          <el-switch v-if="!isAddMode" v-model="confirmNoChange.concessions" active-text="优惠未变" inactive-text=""
-            style="margin: 0 8px" />
+          <el-input
+            v-model="form.concessions"
+            type="textarea"
+            placeholder="请输入优惠信息"
+            data-marker="concessions"
+            :disabled="confirmNoChange.concessions"
+            style="flex: 1"
+          />
+          <el-switch
+            v-if="!isAddMode"
+            v-model="confirmNoChange.concessions"
+            active-text="优惠未变"
+            inactive-text=""
+            style="margin: 0 8px"
+          />
         </el-form-item>
 
         <!-- 杂费 -->
         <el-form-item label="杂费" prop="ut">
-          <el-input v-model="form.ut" placeholder="水、电、网、暖、垃圾费" data-marker="ut" :disabled="confirmNoChange.ut"
-            style="flex: 1" />
-          <el-switch v-if="!isAddMode" v-model="confirmNoChange.ut" active-text="杂费未变" inactive-text=""
-            style="margin: 0 8px" />
+          <el-input
+            v-model="form.ut"
+            placeholder="水、电、网、暖、垃圾费"
+            data-marker="ut"
+            :disabled="confirmNoChange.ut"
+            style="flex: 1"
+          />
+          <el-switch
+            v-if="!isAddMode"
+            v-model="confirmNoChange.ut"
+            active-text="杂费未变"
+            inactive-text=""
+            style="margin: 0 8px"
+          />
         </el-form-item>
 
         <!-- 中介费 -->
         <el-form-item label="中介费" prop="broker_fee" required>
           <!-- 先放 select -->
-          <el-select v-model="form.broker_fee" placeholder="请选择" :disabled="confirmNoChange.broker_fee"
-            data-marker="broker_fee" style="flex-shrink: 0; width: 160px">
+          <el-select
+            v-model="form.broker_fee"
+            placeholder="请选择"
+            :disabled="confirmNoChange.broker_fee"
+            data-marker="broker_fee"
+            style="flex-shrink: 0; width: 160px"
+          >
             <el-option label="Full" value="Full" />
             <el-option label="Half" value="Half" />
             <el-option label="None" value="None" />
@@ -798,84 +914,174 @@ onMounted(() => {
             <el-option label="Unknown" value="Unknown" />
           </el-select>
           <!-- 再放说明 input -->
-          <el-input v-model="form.broker_fee_desc" :disabled="confirmNoChange.broker_fee" placeholder="说明"
-            data-marker="broker_fee_desc" style="flex: 1; min-width: 0; margin: 0 12px" />
+          <el-input
+            v-model="form.broker_fee_desc"
+            :disabled="confirmNoChange.broker_fee"
+            placeholder="说明"
+            data-marker="broker_fee_desc"
+            style="flex: 1; min-width: 0; margin: 0 12px"
+          />
           <!-- 最后放开关 -->
-          <el-switch v-if="!isAddMode" v-model="confirmNoChange.broker_fee" active-text="中介费未变" inactive-text=""
-            style="white-space: nowrap" />
+          <el-switch
+            v-if="!isAddMode"
+            v-model="confirmNoChange.broker_fee"
+            active-text="中介费未变"
+            inactive-text=""
+            style="white-space: nowrap"
+          />
         </el-form-item>
 
         <hr />
         <!-- 本科生 -->
         <el-form-item label="本科生" prop="undergrad" required>
-          <el-radio-group v-model="form.undergrad" data-marker="undergrad" :disabled="confirmNoChange.undergrad">
+          <el-radio-group
+            v-model="form.undergrad"
+            data-marker="undergrad"
+            :disabled="confirmNoChange.undergrad"
+          >
             <el-radio value="YES">是</el-radio>
             <el-radio value="NO">否</el-radio>
             <el-radio value="DK">未知</el-radio>
           </el-radio-group>
-          <el-input v-model="form.undergrad_desc" placeholder="说明" style="flex: 1; margin: 0 8px"
-            data-marker="undergrad_desc" :disabled="confirmNoChange.undergrad" />
-          <el-switch v-if="!isAddMode" v-model="confirmNoChange.undergrad" active-text="本科生政策未变" inactive-text=""
-            style="margin: 0 8px" />
+          <el-input
+            v-model="form.undergrad_desc"
+            placeholder="说明"
+            style="flex: 1; margin: 0 8px"
+            data-marker="undergrad_desc"
+            :disabled="confirmNoChange.undergrad"
+          />
+          <el-switch
+            v-if="!isAddMode"
+            v-model="confirmNoChange.undergrad"
+            active-text="本科生政策未变"
+            inactive-text=""
+            style="margin: 0 8px"
+          />
         </el-form-item>
 
         <!-- 国际学生 -->
         <el-form-item label="国际学生" prop="intl_student" required>
-          <el-radio-group v-model="form.intl_student" data-marker="intl_student"
-            :disabled="confirmNoChange.intl_student">
+          <el-radio-group
+            v-model="form.intl_student"
+            data-marker="intl_student"
+            :disabled="confirmNoChange.intl_student"
+          >
             <el-radio value="YES">是</el-radio>
             <el-radio value="NO">否</el-radio>
             <el-radio value="DK">未知</el-radio>
           </el-radio-group>
-          <el-input v-model="form.intl_student_desc" placeholder="说明" style="flex: 1; margin: 0 8px"
-            :disabled="confirmNoChange.intl_student" data-marker="intl_student_desc" />
-          <el-switch v-if="!isAddMode" v-model="confirmNoChange.intl_student" active-text="国际生政策未变" inactive-text=""
-            style="margin: 0 8px" />
+          <el-input
+            v-model="form.intl_student_desc"
+            placeholder="说明"
+            style="flex: 1; margin: 0 8px"
+            :disabled="confirmNoChange.intl_student"
+            data-marker="intl_student_desc"
+          />
+          <el-switch
+            v-if="!isAddMode"
+            v-model="confirmNoChange.intl_student"
+            active-text="国际生政策未变"
+            inactive-text=""
+            style="margin: 0 8px"
+          />
         </el-form-item>
 
         <!-- 宠物 -->
         <el-form-item label="宠物" prop="pet" required>
-          <el-radio-group v-model="form.pet" data-marker="pet" :disabled="confirmNoChange.pet">
+          <el-radio-group
+            v-model="form.pet"
+            data-marker="pet"
+            :disabled="confirmNoChange.pet"
+          >
             <el-radio value="YES">允许</el-radio>
             <el-radio value="NO">不允许</el-radio>
             <el-radio value="DK">未知</el-radio>
           </el-radio-group>
-          <el-input v-model="form.pet_desc" placeholder="说明" style="flex: 1; margin: 0 8px"
-            :disabled="confirmNoChange.pet" data-marker="pet_desc" />
-          <el-switch v-if="!isAddMode" v-model="confirmNoChange.pet" active-text="　宠物政策未变" inactive-text=""
-            style="margin: 0 8px" />
+          <el-input
+            v-model="form.pet_desc"
+            placeholder="说明"
+            style="flex: 1; margin: 0 8px"
+            :disabled="confirmNoChange.pet"
+            data-marker="pet_desc"
+          />
+          <el-switch
+            v-if="!isAddMode"
+            v-model="confirmNoChange.pet"
+            active-text="　宠物政策未变"
+            inactive-text=""
+            style="margin: 0 8px"
+          />
         </el-form-item>
 
         <!-- 停车费/车库 -->
         <el-form-item label="停车费/车库" prop="parking">
-          <el-input v-model="form.parking" placeholder="停车信息" data-marker="parking" style="flex: 1"
-            :disabled="confirmNoChange.parking" />
-          <el-switch v-if="!isAddMode" v-model="confirmNoChange.parking" active-text="停车费未变" inactive-text=""
-            style="margin: 0 8px" />
+          <el-input
+            v-model="form.parking"
+            placeholder="停车信息"
+            data-marker="parking"
+            style="flex: 1"
+            :disabled="confirmNoChange.parking"
+          />
+          <el-switch
+            v-if="!isAddMode"
+            v-model="confirmNoChange.parking"
+            active-text="停车费未变"
+            inactive-text=""
+            style="margin: 0 8px"
+          />
         </el-form-item>
 
         <!-- 公共设施 -->
         <el-form-item label="公共设施" prop="amenities" required>
-          <el-select v-model="form.amenities" multiple placeholder="请选择公共设施" data-marker="amenities">
-            <el-option v-for="item in amenitiesOptions" :key="item" :label="item" :value="item" />
+          <el-select
+            v-model="form.amenities"
+            multiple
+            placeholder="请选择公共设施"
+            data-marker="amenities"
+          >
+            <el-option
+              v-for="item in amenitiesOptions"
+              :key="item"
+              :label="item"
+              :value="item"
+            />
           </el-select>
         </el-form-item>
 
         <!-- 套内设施 -->
         <el-form-item label="套内设施" prop="room_amenities" required>
-          <el-select v-model="form.room_amenities" multiple placeholder="请选择套内设施" data-marker="room_amenities">
-            <el-option v-for="item in roomAmenitiesOptions" :key="item" :label="item" :value="item" />
+          <el-select
+            v-model="form.room_amenities"
+            multiple
+            placeholder="请选择套内设施"
+            data-marker="room_amenities"
+          >
+            <el-option
+              v-for="item in roomAmenitiesOptions"
+              :key="item"
+              :label="item"
+              :value="item"
+            />
           </el-select>
         </el-form-item>
 
         <!-- 联系方式 -->
         <el-form-item label="联系方式" prop="contact">
-          <el-input v-model="form.contact" placeholder="联系方式" data-marker="contact" />
+          <el-input
+            v-model="form.contact"
+            placeholder="联系方式"
+            data-marker="contact"
+          />
         </el-form-item>
 
         <!-- 备注 -->
         <el-form-item label="备注" prop="note">
-          <el-input v-model="form.note" type="textarea" placeholder="备注信息" data-marker="note" />
+          <el-input
+            v-model="form.note"
+            type="textarea"
+            placeholder="备注信息"
+            data-marker="note"
+          />
         </el-form-item>
       </el-form>
 
@@ -887,11 +1093,22 @@ onMounted(() => {
     </el-dialog>
 
     <!-- 筛选对话框 -->
-    <el-dialog v-model="filterDialogVisible" title="筛选条件" style="margin-top: 15vh" destroy-on-close>
+    <el-dialog
+      v-model="filterDialogVisible"
+      title="筛选条件"
+      style="margin-top: 15vh"
+      destroy-on-close
+    >
       <el-form :model="filterForm" label-width="100px">
         <el-form-item label="区域">
-          <el-select v-model="filterForm.area" multiple placeholder="请选择区域" style="width: 100%"
-            popper-class="filter-dropdown" popper-append-to-body="false">
+          <el-select
+            v-model="filterForm.area"
+            multiple
+            placeholder="请选择区域"
+            style="width: 100%"
+            popper-class="filter-dropdown"
+            popper-append-to-body="false"
+          >
             <el-option v-for="a in areas" :key="a" :label="a" :value="a" />
           </el-select>
         </el-form-item>
@@ -932,80 +1149,144 @@ onMounted(() => {
       </template>
     </el-dialog>
 
-    <el-dialog v-model="detailDialogVisible" title="公寓详情" destroy-on-close
-      :before-close="() => (detailDialogVisible = false)">
+    <el-dialog
+      v-model="detailDialogVisible"
+      title="公寓详情"
+      destroy-on-close
+      :before-close="() => (detailDialogVisible = false)"
+    >
       <div class="detail-content">
         <!-- 基本信息 -->
-        <div class="detail-item" :class="{ highlight: currentFields.includes('last_edited') }">
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('last_edited') }"
+        >
           <span class="detail-label">更新时间：</span>
           <span class="detail-value">{{ recordDetail.last_edited }}</span>
         </div>
-        <div class="detail-item" :class="{ highlight: currentFields.includes('userAgentName') }">
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('userAgentName') }"
+        >
           <span class="detail-label">更新人：</span>
           <span class="detail-value">{{ recordDetail.userAgentName }}</span>
         </div>
-        <div class="detail-item" :class="{ highlight: currentFields.includes('id') }">
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('id') }"
+        >
           <span class="detail-label">数据 ID：</span>
           <span class="detail-value">{{ recordDetail.id }}</span>
         </div>
-        <div v-if="recordDetail.website" class="detail-item" :class="{ highlight: currentFields.includes('website') }">
+        <div
+          v-if="recordDetail.website"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('website') }"
+        >
           <span class="detail-label">网站：</span>
           <span class="detail-value">
-            <a :href="recordDetail.website" target="_blank" class="detail-link">{{ recordDetail.website }}</a>
+            <a
+              :href="recordDetail.website"
+              target="_blank"
+              class="detail-link"
+              >{{ recordDetail.website }}</a
+            >
           </span>
         </div>
-        <div v-if="recordDetail.tour_url" class="detail-item"
-          :class="{ highlight: currentFields.includes('tour_url') }">
+        <div
+          v-if="recordDetail.tour_url"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('tour_url') }"
+        >
           <span class="detail-label">Tour：</span>
           <span class="detail-value">
-            <a :href="recordDetail.tour_url" target="_blank" class="detail-link">{{ recordDetail.tour_url }}</a>
+            <a
+              :href="recordDetail.tour_url"
+              target="_blank"
+              class="detail-link"
+              >{{ recordDetail.tour_url }}</a
+            >
           </span>
         </div>
 
         <hr />
 
         <!-- 核心字段 -->
-        <div class="detail-item" :class="{ highlight: currentFields.includes('area') }">
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('area') }"
+        >
           <span class="detail-label">区域：</span>
           <span class="detail-value">{{ recordDetail.area }}</span>
         </div>
-        <div class="detail-item" :class="{ highlight: currentFields.includes('building_name') }">
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('building_name') }"
+        >
           <span class="detail-label">公寓名称：</span>
           <span class="detail-value">
-            <a v-if="recordDetail.website" :href="recordDetail.website" target="_blank" class="detail-link">{{
-              recordDetail.building_name }}</a>
+            <a
+              v-if="recordDetail.website"
+              :href="recordDetail.website"
+              target="_blank"
+              class="detail-link"
+              >{{ recordDetail.building_name }}</a
+            >
             <span v-else>{{ recordDetail.building_name }}</span>
           </span>
         </div>
-        <div class="detail-item" :class="{ highlight: currentFields.includes('address') }">
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('address') }"
+        >
           <span class="detail-label">地址：</span>
           <span class="detail-value">
-            <a :href="`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(recordDetail.address)}`"
-              target="_blank" class="detail-link">{{ recordDetail.address }}</a>
+            <a
+              :href="`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(recordDetail.address)}`"
+              target="_blank"
+              class="detail-link"
+              >{{ recordDetail.address }}</a
+            >
           </span>
         </div>
 
         <hr />
 
         <!-- 其它信息 -->
-        <div v-if="recordDetail.concessions" class="detail-item"
-          :class="{ highlight: currentFields.includes('concessions') }">
+        <div
+          v-if="recordDetail.concessions"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('concessions') }"
+        >
           <span class="detail-label">优惠：</span>
           <span class="detail-value">{{ recordDetail.concessions }}</span>
         </div>
-        <div v-if="recordDetail.broker_fee || recordDetail.broker_fee_desc" class="detail-item"
-          :class="{ highlight: currentFields.includes('broker_fee') }">
+        <div
+          v-if="recordDetail.broker_fee || recordDetail.broker_fee_desc"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('broker_fee') }"
+        >
           <span class="detail-label">中介费：</span>
           <span class="detail-value">
             <component :is="replaceBrokerFee(recordDetail.broker_fee)" />
-            <span v-if="recordDetail.broker_fee_desc">｜{{ recordDetail.broker_fee_desc }}</span>
+            <span v-if="recordDetail.broker_fee_desc"
+              >｜{{ recordDetail.broker_fee_desc }}</span
+            >
           </span>
         </div>
-        <div v-if="recordDetail.ut" class="detail-item" :class="{ highlight: currentFields.includes('ut') }">
+        <div
+          v-if="recordDetail.ut"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('ut') }"
+        >
           <span class="detail-label">杂费：</span>
           <span class="detail-value">{{ recordDetail.ut }}</span>
         </div>
-        <div v-if="recordDetail.note" class="detail-item" :class="{ highlight: currentFields.includes('note') }">
+        <div
+          v-if="recordDetail.note"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('note') }"
+        >
           <span class="detail-label">备注：</span>
           <span class="detail-value">{{ recordDetail.note }}</span>
         </div>
@@ -1013,32 +1294,55 @@ onMounted(() => {
         <hr />
 
         <!-- 字段图标展示 -->
-        <div class="detail-item" :class="{ highlight: currentFields.includes('undergrad') }">
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('undergrad') }"
+        >
           <span class="detail-label">本科生：</span>
           <span class="detail-value">
             <component :is="replaceYesNo(recordDetail.undergrad)" />
-            <span v-if="recordDetail.undergrad_desc">｜{{ recordDetail.undergrad_desc }}</span>
+            <span v-if="recordDetail.undergrad_desc"
+              >｜{{ recordDetail.undergrad_desc }}</span
+            >
           </span>
         </div>
-        <div class="detail-item" :class="{ highlight: currentFields.includes('intl_student') }">
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('intl_student') }"
+        >
           <span class="detail-label">国际学生：</span>
           <span class="detail-value">
             <component :is="replaceYesNo(recordDetail.intl_student)" />
-            <span v-if="recordDetail.intl_student_desc">｜{{ recordDetail.intl_student_desc }}</span>
+            <span v-if="recordDetail.intl_student_desc"
+              >｜{{ recordDetail.intl_student_desc }}</span
+            >
           </span>
         </div>
-        <div class="detail-item" :class="{ highlight: currentFields.includes('pet') }">
+        <div
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('pet') }"
+        >
           <span class="detail-label">宠物：</span>
           <span class="detail-value">
             <component :is="replaceYesNo(recordDetail.pet)" />
-            <span v-if="recordDetail.pet_desc">｜{{ recordDetail.pet_desc }}</span>
+            <span v-if="recordDetail.pet_desc"
+              >｜{{ recordDetail.pet_desc }}</span
+            >
           </span>
         </div>
-        <div v-if="recordDetail.parking" class="detail-item" :class="{ highlight: currentFields.includes('parking') }">
+        <div
+          v-if="recordDetail.parking"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('parking') }"
+        >
           <span class="detail-label">停车：</span>
           <span class="detail-value">{{ recordDetail.parking }}</span>
         </div>
-        <div v-if="recordDetail.contact" class="detail-item" :class="{ highlight: currentFields.includes('contact') }">
+        <div
+          v-if="recordDetail.contact"
+          class="detail-item"
+          :class="{ highlight: currentFields.includes('contact') }"
+        >
           <span class="detail-label">联系方式：</span>
           <span class="detail-value">{{ recordDetail.contact }}</span>
         </div>
@@ -1049,19 +1353,33 @@ onMounted(() => {
           <div class="facility-category">
             <h4>公共设施</h4>
             <div class="facility-list">
-              <span v-if="!recordDetail.amenities" class="facility-item">无</span>
-              <span v-for="item in recordDetail.amenities
-                ? JSON.parse(recordDetail.amenities)
-                : []" :key="item" class="facility-item">{{ item }}</span>
+              <span v-if="!recordDetail.amenities" class="facility-item"
+                >无</span
+              >
+              <span
+                v-for="item in recordDetail.amenities
+                  ? JSON.parse(recordDetail.amenities)
+                  : []"
+                :key="item"
+                class="facility-item"
+                >{{ item }}</span
+              >
             </div>
           </div>
           <div class="facility-category">
             <h4>套内设施</h4>
             <div class="facility-list">
-              <span v-if="!recordDetail.room_amenities" class="facility-item">无</span>
-              <span v-for="item in recordDetail.room_amenities
-                ? JSON.parse(recordDetail.room_amenities)
-                : []" :key="item" class="facility-item">{{ item }}</span>
+              <span v-if="!recordDetail.room_amenities" class="facility-item"
+                >无</span
+              >
+              <span
+                v-for="item in recordDetail.room_amenities
+                  ? JSON.parse(recordDetail.room_amenities)
+                  : []"
+                :key="item"
+                class="facility-item"
+                >{{ item }}</span
+              >
             </div>
           </div>
         </div>
