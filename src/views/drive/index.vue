@@ -1,70 +1,140 @@
 <template>
-  <el-form ref="formRef" :model="validateForm" :rules="rules" label-width="120px" class="p-4 bg-white rounded">
+  <el-form
+    ref="formRef"
+    :model="validateForm"
+    :rules="rules"
+    label-width="120px"
+    class="p-4 bg-white"
+  >
     <!-- 视频上传 -->
-    <el-form-item label="选择视频" prop="fileList" :rules="[{ required: true, message: '附件不能为空' }]">
-      <el-upload ref="uploadRef" v-model:file-list="validateForm.fileList" drag multiple action="#" class="w-[200px]!"
-        :auto-upload="false" accept="video/*" :limit="1" :on-exceed="handleExceed" :before-upload="beforeUpload">
+    <el-form-item
+      label="选择视频"
+      prop="fileList"
+      :rules="[{ required: true, message: '附件不能为空' }]"
+    >
+      <el-upload
+        ref="uploadRef"
+        v-model:file-list="validateForm.fileList"
+        drag
+        action="#"
+        class="w-[200px]!"
+        :auto-upload="false"
+        accept="video/*"
+        :limit="1"
+        :on-exceed="onExceed"
+        @change="(uploadFile, uploadFiles) => handleSelect(uploadFiles)"
+        @remove="(_, files) => handleSelect(files)"
+      >
         <div class="el-upload__text">
           <UploadIcon class="m-auto mb-2" />
           可点击或拖拽上传
         </div>
       </el-upload>
-      <el-progress v-if="uploading" :percentage="percent" style="margin-top:8px" />
     </el-form-item>
 
     <!-- 公寓名称及地址 -->
     <el-form-item label="公寓名称" prop="apartmentName">
-      <el-input data-marker="apartmentName" v-model="validateForm.apartmentName" placeholder="请输入公寓名称" />
+      <el-input
+        ref="nameInputRef"
+        v-model="validateForm.apartmentName"
+        data-marker="apartmentName"
+        placeholder="请输入公寓名称"
+        @blur="onApartmentNameBlur"
+      />
     </el-form-item>
     <el-form-item label="公寓地址" prop="apartmentAddress">
-      <el-input data-marker="apartmentAddress" v-model="validateForm.apartmentAddress" placeholder="请输入公寓地址" />
+      <el-input
+        v-model="validateForm.apartmentAddress"
+        data-marker="apartmentAddress"
+        placeholder="请输入公寓地址"
+      />
     </el-form-item>
 
     <!-- Unit / APT -->
     <el-form-item label="Unit/APT" prop="unit">
-      <el-input v-model="validateForm.unit"
-        placeholder="请输入房间号                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  " />
+      <el-input
+        v-model="validateForm.unit"
+        placeholder="请输入房间号                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  "
+      />
     </el-form-item>
 
     <!-- 房间类型 -->
     <el-form-item label="房间类型" prop="roomType">
       <el-select v-model="validateForm.roomType" placeholder="请选择房间类型">
-        <el-option v-for="opt in roomOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+        <el-option
+          v-for="opt in roomOptions"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
+        />
       </el-select>
     </el-form-item>
 
     <!-- 区域 -->
     <el-form-item label="区域" prop="area">
-      <el-select v-model="validateForm.area" placeholder="请选择区域" class="w-[200px]">
+      <el-select
+        v-model="validateForm.area"
+        placeholder="请选择区域"
+        class="w-[200px]"
+      >
         <el-option v-for="a in areas" :key="a" :label="a" :value="a" />
       </el-select>
     </el-form-item>
 
     <!-- 上传目的地 -->
     <el-form-item label="上传到" prop="targetSource">
-      <el-select v-model="validateForm.targetSource" placeholder="请选择上传目的地" class="w-[200px]">
-        <el-option v-for="opt in targetSources" :key="opt.value" :label="opt.label" :value="opt.value" />
+      <el-select
+        v-model="validateForm.targetSource"
+        placeholder="请选择上传目的地"
+        class="w-[200px]"
+      >
+        <el-option
+          v-for="opt in targetSources"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
+        />
       </el-select>
     </el-form-item>
 
     <!-- 提交按钮 -->
     <el-form-item>
-      <el-button type="primary" @click="submitForm(formRef)">开始上传</el-button>
+      <el-button type="primary" @click="submit()">开始上传</el-button>
       <el-button @click="resetForm(formRef)">重置</el-button>
     </el-form-item>
+
+    <el-form-item>
+      <span class="inline-flex items-center mb-2">
+        你上传的视频将被传输至位于
+        <LocationIcon class="w-[1em] h-[1em] align-middle" />
+        中国香港的数据中心保存
+      </span>
+    </el-form-item>
+
+    <!-- 上传进度 -->
+    <el-progress
+      v-if="uploading"
+      :text-inside="true"
+      :stroke-width="20"
+      :percentage="percent"
+      status="exception"
+      striped
+      striped-flow
+      class="mb-2"
+    />
   </el-form>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from "vue";
+import { ref, reactive, onMounted, watch, nextTick } from "vue";
 import { UploadFile } from "element-plus";
 import { message } from "@/utils/message";
-import { createFormData } from "@pureadmin/utils";
 import UploadIcon from "~icons/ri/upload-2-line?width=26&height=26";
+import LocationIcon from "~icons/ri/map-pin-2-line?width=26&height=26";
 import { fetchAreas } from "@/api/fechAreas";
-import { http } from "@/utils/http";
-import { formUpload } from "@/api/formUpload";
-
+import { formUpload, UploadMeta } from "@/api/formUpload";
+import type { UploadUserFile } from "element-plus";
+import { useApartmentLookup } from "@/api/driveFecthApartmentAI";
 
 import {
   loadTargetSources,
@@ -74,6 +144,77 @@ import {
 
 const formRef = ref();
 const uploadRef = ref();
+const percent = ref(0);
+const uploading = ref(false);
+const selectedFile = ref<File | null>(null);
+const fileNameForAIProcess = ref<string | null>(null);
+const nameInputRef = ref(); // for el-input
+defineOptions({
+  name: "driveUpload"
+});
+const {
+  info: aptInfo,
+  loading: aptLoading,
+  error: aptError,
+  lookup: fetchApartment,
+  checkApartmentName
+} = useApartmentLookup();
+
+function handleSelect(uploadFiles: UploadFile[]) {
+  const file = uploadFiles[0]?.raw as File;
+  selectedFile.value = file;
+  if (!file) return;
+  fileNameForAIProcess.value = file.name;
+  console.log("文件名称", selectedFile.value?.name);
+  console.log("文件大小", selectedFile.value?.size);
+  console.log("文件类型", selectedFile.value?.type);
+  fileNameForAIProcess.value = file.name;
+  // 去掉后缀
+  const baseName = file.name.replace(/\.[^/.]+$/, "");
+  fetchApartment(baseName).then(() => {
+    // 拿到接口返回的公寓信息，填到表单
+    if (aptInfo.unit) validateForm.unit = aptInfo.unit;
+    if (aptInfo.area) validateForm.area = aptInfo.area;
+    if (aptInfo.type) validateForm.roomType = aptInfo.type;
+    if (aptInfo.name) {
+      validateForm.apartmentName = aptInfo.name;
+
+      // 2. 等 DOM 更新后，模拟一次“空格+删掉”来触发自动补全
+      nextTick(() => {
+        const inputEl = (nameInputRef.value as any).$el.querySelector(
+          "input"
+        ) as HTMLInputElement;
+        if (!inputEl) return;
+        inputEl.focus();
+        // 加个空格
+        inputEl.value = aptInfo.name + " ";
+        inputEl.dispatchEvent(new Event("input"));
+        // 立刻删掉
+        setTimeout(() => {
+          inputEl.value = aptInfo.name;
+          inputEl.dispatchEvent(new Event("input"));
+        }, 50);
+      });
+    }
+  });
+}
+
+function onExceed(files: File[], uploadFiles: UploadUserFile[]) {
+  message("只能选择一个视频文件，请先删除其他文件再上传", { type: "warning" });
+}
+
+async function onApartmentNameBlur() {
+  if (!validateForm.apartmentName) return;
+
+  await new Promise(resolve => setTimeout(resolve, 1000)); // 延迟1秒
+
+  await checkApartmentName(validateForm.apartmentName);
+
+  if (aptInfo.area) {
+    validateForm.area = aptInfo.area;
+    formRef.value?.validateField("area");
+  }
+}
 
 const validateForm = reactive({
   fileList: [] as UploadFile[],
@@ -93,9 +234,7 @@ const rules = {
   apartmentAddress: [
     { required: true, message: "请输入公寓地址", trigger: "blur" }
   ],
-  roomType: [
-    { required: true, message: "请选择房间类型", trigger: "change" }
-  ],
+  roomType: [{ required: true, message: "请选择房间类型", trigger: "change" }],
   area: [{ required: true, message: "请选择区域", trigger: "change" }],
   targetSource: [
     { required: true, message: "请选择上传目的地", trigger: "change" }
@@ -128,9 +267,9 @@ const areas = ref<string[]>([]);
 const privateSources = ref<SelectOption[]>([]);
 const publicSources = ref<SelectOption[]>([]);
 const targetSources = ref<SelectOption[]>([]);
-function handleExceed(overflowFiles: UploadFile[], currentFileList: UploadFile[]) {
-  message('只能上传一个视频文件', { type: 'warning' });
-}
+
+// 声明外部全局函数
+declare const initiateMapAutoComplete: (...args: any[]) => void;
 
 onMounted(async () => {
   fetchAreas(areas);
@@ -140,38 +279,35 @@ onMounted(async () => {
     targetSources.value = [...publicSources.value];
     await loadTargetSources(privateSources);
 
-    targetSources.value = [
-      ...publicSources.value,
-      ...privateSources.value
-    ]
-    
+    targetSources.value = [...publicSources.value, ...privateSources.value];
   } catch (err: any) {
-    message(err.message || '加载选项失败', { type: 'error' })
+    message(err.message || "加载选项失败", { type: "error" });
   }
 
   // 地图api自动补全
   // 监听对话框显示变化，首次打开时加载地图自动补全脚本
-  // 页面加载时初始化地图自动完成
-  const script = document.createElement('script')
+  // 页面加载时初始化地图自动完成+
+
+  const script = document.createElement("script");
   script.src =
-    'https://api.uswoo.cn/map/place-req.js?location=42.3601,-71.0589&radius=241400&strictbounds&v=' +
-    new Date().getTime()
-  script.async = true
+    "https://api.uswoo.cn/map/place-req.js?location=42.3601,-71.0589&radius=241400&strictbounds&v=" +
+    new Date().getTime();
+  script.async = true;
   script.onload = () => {
-    if (typeof initiateMapAutoComplete === 'function') {
+    if (typeof initiateMapAutoComplete === "function") {
       initiateMapAutoComplete(
-        'apartmentName, apartmentAddress',
-        'apartmentName',
-        'apartmentAddress',
-        'none',
-        'apartmentName'
-      )
+        "apartmentName, apartmentAddress",
+        "apartmentName",
+        "apartmentAddress",
+        "none",
+        "apartmentName"
+      );
     }
-  }
+  };
   document.body.appendChild(script);
 
   // 同步自动补全的值到 validateForm
-  document.addEventListener('autocomplete-selected', (e: CustomEvent) => {
+  document.addEventListener("autocomplete-selected", (e: CustomEvent) => {
     const { marker, value } = e.detail;
     if (marker in validateForm) {
       // @ts-ignore
@@ -180,121 +316,96 @@ onMounted(async () => {
       formRef.value?.validateField(marker);
     }
   });
-
-})
-
-function beforeUpload(file: UploadFile) {
-  const isVideo = file.raw.type.startsWith("video/");
-  const isLarge = file.raw.size >= 15 * 1024 * 1024;
-  if (!isVideo || !isLarge) {
-    message("不支持此格式或视频过小 (至少15MB)", { type: "warning" });
-    return false;
-  }
-  return true;
-}
-
-const submitForm = (formEl: any) => {
-  if (!formEl) return;
-  formEl.validate(async valid => {
-    if (!valid) return;
-
-    const timestamp = Date.now();
-    // 拿到 label
-    const sel = targetSources.value.find((opt: SelectOption) => opt.value === validateForm.targetSource);
-    const targetSourceLabel = sel?.label || "";
-
-    // 只取第一个文件
-    const f = validateForm.fileList[0];
-    if (!f) {
-      message("请先选择一个视频文件", { type: "warning" });
-      return;
-    }
-    const file = f.raw as File;
-    const filename = file.name;
-    const filesize = (file.size / (1024 * 1024)).toFixed(2).toString();
-    const ext = filename.slice(filename.lastIndexOf(".") + 1);
-
-    // 根据非空项拼接前缀，自动跳过空 unit
-    const nameParts = [
-      validateForm.apartmentName,
-      validateForm.roomType
-    ];
-    if (validateForm.unit) {
-      nameParts.push(validateForm.unit);
-    }
-    const prefix = nameParts.join("_");
-    const ossFileName = `${prefix}_${timestamp}.${ext}`;
-    const originalPath =
-      `未打水印房源视频/${validateForm.targetSource}/${validateForm.area}/${validateForm.apartmentName}/${ossFileName}`;
-
-    // 构造 FormData（单文件，不用数组）
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("ossFileName", ossFileName);
-    fd.append("original_oss_path", originalPath);
-    fd.append("filename", filename);
-    fd.append("filesize", filesize);
-
-    // 其它表单字段
-    fd.append("apartmentName", validateForm.apartmentName);
-    fd.append("apartmentAddress", validateForm.apartmentAddress);
-    if (validateForm.unit) {
-      fd.append("unit", validateForm.unit);
-    }
-    fd.append("roomType", validateForm.roomType);
-    fd.append("area", validateForm.area);
-    fd.append("target_source", validateForm.targetSource);
-    fd.append("target_source_label", targetSourceLabel);
-
-    try {
-      const res = await formUpload(fd);
-      if (res.success == 'success') {
-        message("上传成功", { type: "success" });
-        resetForm(formRef.value);
-      } else {
-        message("提交失败" + res.message, { type: "error" });
-      }
-    } catch (err: any) {
-      message(`提交异常：${err.message || err}`, { type: "error" });
-    }
-  });
-};
+});
 
 async function submit() {
-  await formRef.value.validate(async valid => {
-    if (!valid || !selectedFile.value) {
-      message("请补全信息并选一个视频", { type: "warning" });
+  // 手动触发 Element Plus 校验
+  formRef.value.validate((valid: boolean, fields: Record<string, any>) => {
+    // 文件相关的校验
+    const files = validateForm.fileList;
+    if (files.length === 0) {
+      message("请先选一个视频文件", { type: "warning" });
       return;
     }
+    if (files.length > 1) {
+      message("只能上传一个视频文件", { type: "warning" });
+      return;
+    }
+    const file = selectedFile.value!;
+    if (!file.type.startsWith("video/")) {
+      message("只能上传视频文件", { type: "warning" });
+      return;
+    }
+    const minSize = 15 * 1024 * 1024;
+    if (file.size < minSize) {
+      message(`视频文件太小，至少 ${Math.round(minSize / 1024 / 1024)}MB`, {
+        type: "warning"
+      });
+      return;
+    }
+
+    // 表单相关校验
+    if (valid && selectedFile.value) {
+      doUpload();
+    } else {
+      // 收集缺失项
+      const missing: string[] = [];
+
+      // 视频
+      if (!selectedFile.value) missing.push("视频文件");
+
+      // 下面对照你的表单字段和 rules 来检查
+      if (!validateForm.apartmentName) missing.push("公寓名称");
+      if (!validateForm.apartmentAddress) missing.push("公寓地址");
+      if (!validateForm.roomType) missing.push("房间类型");
+      if (!validateForm.area) missing.push("区域");
+      if (!validateForm.targetSource) missing.push("上传到");
+
+      // 如果 fields 参数里也带了校验结果，你也可以用 fields 来看哪些没过
+      // const failedFields = Object.keys(fields);
+
+      message(`以下字段未填写或不合法：${missing.join("、")}`, {
+        type: "warning"
+      });
+    }
+  });
+
+  async function doUpload() {
     uploading.value = true;
     percent.value = 0;
 
-    // 构建 meta
+    // 构造 targetSourceLabel
+    const sel = targetSources.value.find(
+      o => o.value === validateForm.targetSource
+    );
+    const targetSourceLabel = sel?.label || "";
+
     const meta: UploadMeta = {
       apartmentName: validateForm.apartmentName,
-      roomType: validateForm.apartmentType,
+      roomType: validateForm.roomType,
       unit: validateForm.unit,
       area: validateForm.area,
       target_source: validateForm.targetSource,
-      target_source_label: validateForm.targetSourceLabel,
+      target_source_label: targetSourceLabel,
       filename: selectedFile.value.name,
-      filesize: selectedFile.value.size
+      filesize: parseFloat((selectedFile.value.size / (1024 * 1024)).toFixed(2))
     };
 
     try {
       await formUpload({
         file: selectedFile.value,
         meta,
-        onProgress: p => percent.value = p
+        onProgress: p => (percent.value = p)
       });
       message("上传并保存成功", { type: "success" });
       formRef.value.resetFields();
+      selectedFile.value = undefined;
     } catch (err: any) {
       message("上传失败：" + err.message, { type: "error" });
     } finally {
       uploading.value = false;
     }
-  });
+  }
 }
 
 const resetForm = (formEl: any) => {
@@ -302,6 +413,4 @@ const resetForm = (formEl: any) => {
   formEl.resetFields();
   validateForm.fileList = [];
 };
-
-
 </script>

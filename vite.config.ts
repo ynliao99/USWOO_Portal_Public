@@ -23,18 +23,18 @@ export default ({ mode }: ConfigEnv): UserConfigExport => {
       // 端口号
       port: VITE_PORT,
       host: "0.0.0.0",
-      allowedHosts: ['devportal.uswoo.cn'], // ← 要允许的域名
-      // 本地跨域代理 
+      allowedHosts: ["devportal.uswoo.cn"], // ← 要允许的域名
+      // 本地跨域代理
       proxy: {
         "/portalapi": {
           target: "https://portal.uswoo.cn/agent/api", // api服务地址
           changeOrigin: true,
-          rewrite: path => path.replace(/^\/portalapi/, "") 
+          rewrite: path => path.replace(/^\/portalapi/, "")
         },
         "/uswooapi": {
-          target: "https://api.uswoo.cn/", // api服务地址
+          target: "https://api.uswoo.cn", // api服务地址
           changeOrigin: true,
-          rewrite: path => path.replace(/^\/portalapi/, "") 
+          rewrite: path => path.replace(/^\/uswooapi/, "")
         }
       },
       // 预热文件以提前转换和缓存结果，降低启动期间的初始页面加载时长并防止转换瀑布
