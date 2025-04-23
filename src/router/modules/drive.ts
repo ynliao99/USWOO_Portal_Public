@@ -24,6 +24,14 @@ export default {
       meta: {
         title: $t("menus.driveList")
       }
+    },
+    {
+      path: "/drive/view",
+      name: "video-view",
+      component: () => import("@/views/drive/view.vue"),
+      meta: {
+        title: $t("menus.driveView")
+      }
     }
   ]
 } satisfies RouteConfigsTable;
