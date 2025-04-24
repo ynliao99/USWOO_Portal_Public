@@ -6,10 +6,13 @@ import AddIcon from "~icons/ri/add-circle-line";
 import EditIcon from "~icons/ri/edit-circle-line";
 import DeleteIcon from "~icons/ri/delete-bin-2-line";
 import ShareIcon from "~icons/ri/share-forward-2-fill";
+import DownloadIcon from "~icons/ri/download-2-fill";
 import { useRecords } from "./utils/getViewRecord";
 import { driveViewFormRules } from "./utils/rule";
 import { message } from "@/utils/message";
 import type { FormInstance } from "element-plus";
+import { generateShortLink } from "@/utils/shortLink";
+import { downloadByUrl } from "@pureadmin/utils";
 
 // 声明外部全局函数
 declare const initiateMapAutoComplete: (...args: any[]) => void;
@@ -34,7 +37,9 @@ const {
   handleDelete,
   searchTerm,
   columns,
-  setSearchTerm
+  setSearchTerm,
+  share_link_prefix,
+  download_link_prefix
 } = useRecords();
 
 // 本地搜索输入
@@ -44,8 +49,6 @@ console.log(currentUserAgentId.value);
 // 定义一个状态标识，记录是否已初始化自动补全
 const autoCompleteInitialized = ref(false);
 const size = ref("default");
-const dynamicSize = ref();
-const onlyMine = ref(false);
 
 // 表单 ref，用于校验
 const ruleFormRef = ref<FormInstance>();
@@ -154,6 +157,7 @@ watch(dialogVisible, newVal => {
           :pagination="{ ...pagination, size }"
           table-layout="fixed"
           stripe
+          adaptive
           :size="size"
           @page-size-change="handleSizeChange"
           @page-current-change="handleCurrentChange"
@@ -168,15 +172,18 @@ watch(dialogVisible, newVal => {
                     currentUserAgentId === '649u54989'
                   "
                 >
-                  <el-button
-                    class="icon-button"
-                    color="#557DED"
-                    size="default"
-                    :icon="useRenderIcon(EditIcon)"
-                    @click="openDialog('edit', row)"
-                  />
+                  <el-tooltip content="编辑" placement="top" effect="dark">
+                    <el-button
+                      class="icon-button"
+                      color="#557DED"
+                      size="default"
+                      :icon="useRenderIcon(EditIcon)"
+                      @click="openDialog('edit', row)"
+                    />
+                  </el-tooltip>
+
                   <el-popconfirm
-                    title="确定删除此视频？删除后不可恢复且当月上传次数-1！"
+                    title="删除后不可恢复且当月上传次数-1！确定删除吗？"
                     @confirm="handleDelete(row)"
                   >
                     <template #reference>
@@ -192,16 +199,82 @@ watch(dialogVisible, newVal => {
 
                 <!-- 其余按钮正常显示 -->
                 <template v-if="String(row.status) === 'Done'">
-                  <el-button
-                    class="icon-button"
-                    type="success"
-                    size="default"
-                    :icon="useRenderIcon(ShareIcon)"
-                    @click="openDialog('share', row)"
-                  />
+                  <el-tooltip
+                    content="生成分享链接"
+                    placement="top"
+                    effect="dark"
+                  >
+                    <el-button
+                      class="icon-button"
+                      type="success"
+                      size="default"
+                      :icon="useRenderIcon(ShareIcon)"
+                      @click="
+                        () =>
+                          generateShortLink(
+                            share_link_prefix + row.processed_oss_path
+                          )
+                      "
+                    />
+                  </el-tooltip>
                 </template>
               </div>
             </template>
+          </template>
+          <template #download="{ row }">
+            <div style="white-space: nowrap" class="opt-buttons">
+              <el-tooltip
+                content="下载可分享的带水印视频"
+                placement="top"
+                effect="dark"
+              >
+                <el-button
+                  v-if="String(row.status) === 'Done'"
+                  class="icon-button"
+                  type="danger"
+                  size="default"
+                  :icon="useRenderIcon(DownloadIcon)"
+                  @click="
+                    () => {
+                      const url = download_link_prefix + row.processed_oss_path;
+                      message('正在启动下载带水印视频，请稍等...', {
+                        type: 'info'
+                      });
+                      downloadByUrl(
+                        url,
+                        (row.processed_oss_path.split('/').pop() || '').trim()
+                      );
+                    }
+                  "
+                />
+              </el-tooltip>
+
+              <el-tooltip
+                content="下载无水印的原视频"
+                placement="top"
+                effect="dark"
+              >
+                <el-button
+                  v-if="String(row.status) === 'Done'"
+                  class="icon-button"
+                  type="warning"
+                  size="default"
+                  :icon="useRenderIcon(DownloadIcon)"
+                  @click="
+                    () => {
+                      const url = download_link_prefix + row.original_oss_path;
+                      const name = row.o_filename;
+                      message(
+                        '正在启动原视频' + row.o_filename + '下载，请稍等...',
+                        { type: 'info' }
+                      );
+                      console.log('name', name);
+                      downloadByUrl(url, row.o_filename);
+                    }
+                  "
+                />
+              </el-tooltip>
+            </div>
           </template>
         </pure-table>
       </template>

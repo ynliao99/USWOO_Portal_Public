@@ -14,9 +14,11 @@ export function useRecords() {
     currentPage: 1,
     pageSize: 10,
     total: 0,
-    pageSizes: [10, 20, 40, 60]
+    pageSizes: [10, 15, 20, 50, 100]
   });
   const currentUserAgentId = ref<string>("");
+  const download_link_prefix = ref<string>("");
+  const share_link_prefix = ref<string>("");
   const dialogVisible = ref(false);
   const dialogTitle = ref("编辑视频信息");
   const form = reactive({
@@ -56,9 +58,20 @@ export function useRecords() {
         if (res.status === "success" && Array.isArray(res.data.content)) {
           dataList.value = res.data.content;
           pagination.total = res.data.totalCount;
+
           if (res.data.currentUserId) {
             currentUserAgentId.value = res.data.currentUserId;
             console.log("当前用户ID:", currentUserAgentId.value);
+          }
+
+          if (res.data.download_link_prefix) {
+            download_link_prefix.value = res.data.download_link_prefix;
+            console.log("下载链接前缀:", download_link_prefix.value);
+          }
+
+          if (res.data.share_link_prefix) {
+            share_link_prefix.value = res.data.share_link_prefix;
+            console.log("分享链接前缀:", share_link_prefix.value);
           }
         } else {
           console.error("数据格式错误：", res.data);
@@ -159,7 +172,8 @@ export function useRecords() {
       label: "下载",
       prop: "download",
       slot: "download",
-      columnKey: "download"
+      columnKey: "download",
+      width: "110px"
     },
     {
       label: "原大小",
@@ -191,6 +205,8 @@ export function useRecords() {
     columns,
     areas,
     searchTerm,
-    setSearchTerm
+    setSearchTerm,
+    download_link_prefix,
+    share_link_prefix
   };
 }
