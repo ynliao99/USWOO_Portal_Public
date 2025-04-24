@@ -257,7 +257,7 @@ watch(dialogVisible, newVal => {
                 <el-button
                   v-if="String(row.status) === 'Done'"
                   class="icon-button"
-                  type="warning"
+                  type="default"
                   size="default"
                   :icon="useRenderIcon(DownloadIcon)"
                   @click="
