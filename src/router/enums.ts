@@ -32,6 +32,7 @@ const home = 0, // 平台规定只有 home 路由的 rank 才能为 0 ，所以�
   co = 28,
   aptInfo = 29,
   drive = 30,
+  dashboard = 34,
   waitlist = 39;
 
 export {
@@ -67,5 +68,5 @@ export {
   co,
   aptInfo,
   drive,
-  waitlist
+  waitlist, dashboard
 };

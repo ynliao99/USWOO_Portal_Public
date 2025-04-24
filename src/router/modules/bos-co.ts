@@ -1,10 +1,11 @@
 import { $t } from "@/plugins/i18n";
 import { co } from "@/router/enums";
+import Icon from "~icons/mdi/account-supervisor";
 
 export default {
   path: "/bos-co/index",
   meta: {
-    icon: "ep/lollipop",
+    icon: Icon,
     title: $t("menus.co"),
     rank: co
   },

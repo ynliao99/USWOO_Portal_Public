@@ -1,6 +1,6 @@
 import { $t } from "@/plugins/i18n";
 const Layout = () => import("@/layout/index.vue");
-
+import DashBoardIcon from "~icons/mdi/view-dashboard";
 export default [
   {
     path: "/login",
@@ -38,6 +38,26 @@ export default [
       showLink: false,
       rank: 103
     }
+  },
+  {
+    path: "/anythingtodashboard",
+    name: "http://localhost:8848/#/dashboard/index",
+    meta: {
+      title: $t("menus.dashboard"),
+      icon: DashBoardIcon,
+      rank: 36
+    }
+  },
+  {
+    path: "/dashboard/index",
+    name: "dashboard",
+    component: () => import("@/views/dashboard/index.vue"),
+    meta: {
+      title: $t("menus.dashboard"),
+      rank: 114,
+      icon: DashBoardIcon,
+      showLink: false,
+      }
   },
   {
     path: "/account-settings",

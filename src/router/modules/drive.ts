@@ -1,10 +1,15 @@
 import { $t } from "@/plugins/i18n";
 import { drive } from "@/router/enums";
+import UploadIcon from "~icons/mdi/cloud-upload-outline";
+import MenuIcon from "~icons/ri/hard-drive-3-line";
+import DriveIcon from "~icons/mdi/movie-open-play-outline";
+
+import MyIcon from "~icons/material-symbols/drive-file-move-outline-rounded";
 
 export default {
   path: "/drive",
   meta: {
-    icon: "ep/lollipop",
+    icon: MenuIcon,
     title: $t("menus.drive"),
     rank: drive
   },
@@ -14,6 +19,7 @@ export default {
       name: "drive-index",
       component: () => import("@/views/drive/index.vue"),
       meta: {
+        icon: UploadIcon,
         title: $t("menus.driveUpload")
       }
     },
@@ -22,6 +28,7 @@ export default {
       name: "video-list",
       component: () => import("@/views/drive/video-list.vue"),
       meta: {
+        icon: DriveIcon,
         title: $t("menus.driveList")
       }
     },
@@ -30,6 +37,7 @@ export default {
       name: "video-view",
       component: () => import("@/views/drive/view.vue"),
       meta: {
+        icon: MyIcon,
         title: $t("menus.driveView")
       }
     }

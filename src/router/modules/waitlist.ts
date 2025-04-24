@@ -1,11 +1,11 @@
 import { $t } from "@/plugins/i18n";
 import { waitlist } from "@/router/enums";
-
+import Icon from "~icons/ic/outline-monitor-heart"
 export default {
   path: "/waitlist",
   redirect: "/waitlist/index",
   meta: {
-    icon: "ep/monitor",
+    icon: Icon,
     title: $t("menus.pureWaitlist"),
     rank: waitlist
   },

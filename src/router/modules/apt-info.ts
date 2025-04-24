@@ -1,10 +1,11 @@
 import { $t } from "@/plugins/i18n";
 import { aptInfo } from "@/router/enums";
+import Icon from "~icons/mdi/office-building-marker-outline";
 
 export default {
   path: "/apt-info/index",
   meta: {
-    icon: "ep/lollipop",
+    icon: Icon,
     title: $t("menus.apt-info"),
     rank: aptInfo
   },
