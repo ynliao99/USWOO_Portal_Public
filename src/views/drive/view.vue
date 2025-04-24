@@ -15,8 +15,8 @@ import type { FormInstance } from "element-plus";
 declare const initiateMapAutoComplete: (...args: any[]) => void;
 
 defineOptions({
-  name: 'driveView'
-})
+  name: "driveView"
+});
 
 // 从 hook 中获取状态和操作方法
 const {
@@ -28,25 +28,19 @@ const {
   dialogVisible,
   dialogTitle,
   form,
+  areas,
   openDialog,
   handleSave,
   handleDelete,
+  searchTerm,
   columns,
-  // 新增，更新排序和筛选条件状态的方法
-  updateQueryParams
+  setSearchTerm
 } = useRecords();
 
-// 新增：保存排序和筛选条件（根据需要可以额外维护多个变量）
-const sortField = ref("");
-const sortOrder = ref(""); // "asc" 或 "desc"
-const filters = reactive({
-  agentName: [] as string[],
-  location: [] as string[]
-});
+// 本地搜索输入
+const searchTermLocal = ref(searchTerm.value);
 
-// 表格列定义，同时设置 sortable 和 filters（初始过滤选项为空，稍后从 API 赋值）
-
-
+console.log(currentUserAgentId.value);
 // 定义一个状态标识，记录是否已初始化自动补全
 const autoCompleteInitialized = ref(false);
 const size = ref("default");
@@ -71,40 +65,6 @@ function pad(num: number): string {
   return num < 10 ? "0" + num : num.toString();
 }
 
-function formatDate(date: Date): string {
-  return (
-    date.getFullYear() +
-    "-" +
-    pad(date.getMonth() + 1) +
-    "-" +
-    pad(date.getDate()) +
-    " " +
-    pad(date.getHours()) +
-    ":" +
-    pad(date.getMinutes()) +
-    ":" +
-    pad(date.getSeconds())
-  );
-}
-
-// “只看我的”按钮事件处理
-function onOnlyMineChange(checked: boolean) {
-  onlyMine.value = checked;
-  // 当选中时，强制 agentName 筛选为当前用户的ID，否则清空 agent 筛选
-  if (checked && currentUserAgentId.value) {
-    filters.agentName = [currentUserAgentId.value];
-  } else {
-    filters.agentName = [];
-  }
-  pagination.currentPage = 1;
-  updateQueryParams({
-    sortField: sortField.value,
-    sortOrder: sortOrder.value,
-    filters
-  });
-  fetchRecords();
-}
-
 // 分页切换时重新加载数据
 function handleSizeChange(val: number) {
   pagination.pageSize = val;
@@ -117,36 +77,8 @@ function handleCurrentChange(val: number) {
   fetchRecords();
 }
 
-// 处理排序变更（具体事件名称请参考 pure-table 文档）
-function handleSortChange({ prop, order }: { prop: string; order: string }) {
-  sortField.value = prop;
-  sortOrder.value =
-    order === "ascending" ? "asc" : order === "descending" ? "desc" : "";
-  // 重置当前页为1，然后重新加载数据
-  pagination.currentPage = 1;
-  updateQueryParams({
-    sortField: sortField.value,
-    sortOrder: sortOrder.value,
-    filters
-  });
-  fetchRecords();
-}
-
-// 处理筛选变更（pure-table 触发 filter-change 事件）
-function handleFilterChange(newFilters: Record<string, string[]>) {
-  filters.agentName = newFilters.agentName || [];
-  filters.location = newFilters.location || [];
-  // 如果“只看我的”已选中，则覆盖 agentName 筛选为当前用户ID
-  if (onlyMine.value && currentUserAgentId.value) {
-    filters.agentName = [currentUserAgentId.value];
-  }
-  pagination.currentPage = 1;
-  updateQueryParams({
-    sortField: sortField.value,
-    sortOrder: sortOrder.value,
-    filters
-  });
-  fetchRecords();
+function handleSearch(val: string) {
+  setSearchTerm(val);
 }
 
 onMounted(() => {
@@ -172,11 +104,11 @@ watch(dialogVisible, newVal => {
       script.onload = () => {
         if (typeof initiateMapAutoComplete === "function") {
           initiateMapAutoComplete(
-            "location,address",
-            "location",
+            "apartmentName,address",
+            "apartmentName",
             "address",
             "none",
-            "location"
+            "apartmentName"
           );
           autoCompleteInitialized.value = true;
         }
@@ -185,106 +117,145 @@ watch(dialogVisible, newVal => {
     });
   }
 });
-
 </script>
 
 <template>
   <div>
-    <PureTableBar title="我上传的视频" :columns="columns" @refresh="fetchRecords">
+    <el-input
+      v-model="searchTermLocal"
+      placeholder="全能搜索..."
+      clearable
+      style="margin: 0"
+      @input="handleSearch"
+    />
+
+    <PureTableBar
+      title="我上传的视频"
+      :columns="columns"
+      @refresh="fetchRecords"
+    >
       <!-- 按钮区域 -->
       <template #buttons>
-        <el-button type="primary" :icon="useRenderIcon(AddIcon)" @click="openDialog('add')">
+        <el-button
+          type="primary"
+          :icon="useRenderIcon(AddIcon)"
+          @click="openDialog('add')"
+        >
           新增看房
         </el-button>
       </template>
 
       <template #default="{ size, dynamicColumns }">
-        <!-- 添加“只看我的”按钮 -->
-        <div style="margin: 0 16px">
-          <el-check-tag :class="[
-            'select-none',
-            size === 'disabled' && 'tag-disabled',
-            onlyMine && 'is-active'
-          ]" :checked="onlyMine" @change="onOnlyMineChange">
-            {{ onlyMine ? "✅ 只看我的" : "只看我的" }}
-          </el-check-tag>
-        </div>
-        <pure-table :data="dataList" :columns="dynamicColumns" showOverflowTooltip :loading="loading"
-          :pagination="{ ...pagination, size }" table-layout="fixed" stripe :size="size" @sort-change="handleSortChange"
-          @filter-change="handleFilterChange" @page-size-change="handleSizeChange"
-          @page-current-change="handleCurrentChange">
-          <!-- 操作列插槽：仅当记录的 userAgentId 与 currentUserAgentId 相同时显示编辑和删除按钮 -->
+        <pure-table
+          :data="dataList"
+          :columns="dynamicColumns"
+          showOverflowTooltip
+          :loading="loading"
+          :pagination="{ ...pagination, size }"
+          table-layout="fixed"
+          stripe
+          :size="size"
+          @page-size-change="handleSizeChange"
+          @page-current-change="handleCurrentChange"
+        >
           <template #operation="{ row }">
-            <template v-if="String(row.userAgentId) === String(currentUserAgentId)">
+            <template v-if="row">
               <div style="white-space: nowrap" class="opt-buttons">
-                <el-button class="icon-button" color="#557DED" size="default" :icon="useRenderIcon(EditIcon)"
-                  @click="openDialog('edit', row)" />
-                <el-popconfirm title="确定删除此看房记录？删除后不可恢复！" @confirm="handleDelete(row)">
-                  <template #reference>
-                    <el-button class="icon-button" type="danger" size="default" :icon="useRenderIcon(DeleteIcon)" />
-                  </template>
-                </el-popconfirm>
+                <!-- 只有自己或者ID为 649u54989 的人才看得到编辑/删除 -->
+                <template
+                  v-if="
+                    String(row.userID) === String(currentUserAgentId) ||
+                    currentUserAgentId === '649u54989'
+                  "
+                >
+                  <el-button
+                    class="icon-button"
+                    color="#557DED"
+                    size="default"
+                    :icon="useRenderIcon(EditIcon)"
+                    @click="openDialog('edit', row)"
+                  />
+                  <el-popconfirm
+                    title="确定删除此视频？删除后不可恢复且当月上传次数-1！"
+                    @confirm="handleDelete(row)"
+                  >
+                    <template #reference>
+                      <el-button
+                        class="icon-button"
+                        type="danger"
+                        size="default"
+                        :icon="useRenderIcon(DeleteIcon)"
+                      />
+                    </template>
+                  </el-popconfirm>
+                </template>
+
+                <!-- 其余按钮正常显示 -->
+                <template v-if="String(row.status) === 'Done'">
+                  <el-button
+                    class="icon-button"
+                    type="success"
+                    size="default"
+                    :icon="useRenderIcon(ShareIcon)"
+                    @click="openDialog('share', row)"
+                  />
+                </template>
               </div>
             </template>
-          </template>
-          <!-- 客户信息列插槽 -->
-          <template #customerInfo="{ row }">
-            <span>
-              {{ row.customerSex || "" }}
-              {{ row.customerIdentity || "" }}
-              {{ row.customerTarget || "" }}
-              {{ row.customerNeed || "" }}
-            </span>
           </template>
         </pure-table>
       </template>
     </PureTableBar>
 
     <!-- 新增/编辑看房记录模态框 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" class="custom-dialog">
-      <el-form ref="ruleFormRef" :model="form" :rules="driveViewFormRules" label-width="6em">
-        
-        <el-form-item label="公寓名称" required prop="placeName">
-          <el-input v-model="form.placeName" placeholder="地点名称" required data-marker="placeName" />
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogTitle"
+      class="custom-dialog"
+    >
+      <el-form
+        ref="ruleFormRef"
+        :model="form"
+        :rules="driveViewFormRules"
+        label-width="6em"
+      >
+        <el-form-item label="公寓名称" required prop="apartmentName">
+          <el-input
+            v-model="form.apartmentName"
+            placeholder="地点名称"
+            required
+            data-marker="apartmentName"
+          />
         </el-form-item>
         <el-form-item label="Unit/APT" prop="unit">
           <el-input v-model="form.unit" />
         </el-form-item>
         <el-form-item label="详细地址" required prop="address">
-          <el-input v-model="form.address" placeholder="详细地址" required data-marker="location" />
+          <el-input
+            v-model="form.address"
+            placeholder="address"
+            required
+            data-marker="address"
+          />
         </el-form-item>
         <el-form-item label="区域" required prop="area">
           <el-select v-model="form.area" placeholder="请选择" required>
-            <el-option v-for="area in areas" :key="area" :label="area" :value="area" />
+            <el-option
+              v-for="area in areas"
+              :key="area"
+              :label="area"
+              :value="area"
+            />
           </el-select>
         </el-form-item>
-        
-        <el-form-item label="房型" required prop="roomType">
-          <el-checkbox-group v-model="form.roomType as string[]" required>
-            <el-checkbox-button value="Studio">Studio</el-checkbox-button>
-            <el-checkbox-button value="1B1B">1B1B</el-checkbox-button>
-            <el-checkbox-button value="1B Den">1B+Den</el-checkbox-button>
-            <el-checkbox-button value="2B1B">2B1B</el-checkbox-button>
-            <el-checkbox-button value="2B2B">2B2B</el-checkbox-button>
-            <el-checkbox-button value="3B1B">3B1B</el-checkbox-button>
-            <el-checkbox-button value="3B2B">3B2B</el-checkbox-button>
-            <el-checkbox-button value="3B3B">3B3B</el-checkbox-button>
-            <el-checkbox-button value="4B2B">4B2B</el-checkbox-button>
-            <el-checkbox-button value="4B3B">4B3B</el-checkbox-button>
-            <el-checkbox-button value="4B4B">4B4B</el-checkbox-button>
-            <el-checkbox-button value="5B+">5B+</el-checkbox-button>
-          </el-checkbox-group>
-        </el-form-item>
-
-        
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">关闭</el-button>
-        <el-button type="primary" @click="onSubmit(ruleFormRef)">保存</el-button>
+        <el-button type="primary" @click="onSubmit(ruleFormRef)"
+          >保存</el-button
+        >
       </template>
     </el-dialog>
-
-  
   </div>
 </template>
 
@@ -303,7 +274,6 @@ watch(dialogVisible, newVal => {
   }
 }
 
-
 /* 针对 .dialog-form 中的 label 进行调整 */
 .dialog-form .el-form-item__label {
   text-align: right;
@@ -317,9 +287,11 @@ watch(dialogVisible, newVal => {
   display: inline-block;
   padding: 4px 8px;
   color: #606266;
+
   /* 未选中时文字颜色 */
   cursor: pointer;
   border: 1px solid #dcdfe6;
+
   /* 未选中时边框颜色 */
   border-radius: 4px;
   transition:
@@ -331,6 +303,7 @@ watch(dialogVisible, newVal => {
 .only-mine-tag.active {
   color: #fff;
   background-color: var(--el-color-primary, #409eff);
+
   /* Element Plus 主色 */
   border-color: var(--el-color-primary, #409eff);
 }

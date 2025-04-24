@@ -2,8 +2,12 @@
 import { ref, reactive } from "vue";
 import { http } from "@/utils/http";
 import { message } from "@/utils/message";
+import { fetchAreas } from "@/api/fechAreas";
 
 export function useRecords() {
+  const areas = ref<string[]>([]);
+  fetchAreas(areas);
+  const searchTerm = ref("");
   const dataList = ref<any[]>([]);
   const loading = ref(false);
   const pagination = reactive({
@@ -16,68 +20,45 @@ export function useRecords() {
   const dialogVisible = ref(false);
   const dialogTitle = ref("编辑视频信息");
   const form = reactive({
-    id: null,
-    location: "",
-    startTime: "" as string,
-    endTime: "" as string,
-
+    vid: null,
+    apartmentName: "",
     address: "",
     unit: "",
-    customerSex: "",
-    customerIdentity: "",
-    customerTarget: "",
-    customerNeed: "",
-    note: ""
+    area: ""
   });
-  // 新增：保存 API 返回的经纪人与地点列表，用于筛选项
-  const distinctAgents = ref<string[]>([]);
-  const distinctLocations = ref<string[]>([]);
+
   // 新增：保存排序、筛选参数
   const queryParams = reactive({
     sortField: "",
     sortOrder: "",
+    source: "",
+    search: "",
     filters: {} as Record<string, string[]>
   });
 
-  // 用于外部更新查询条件
-  function updateQueryParams(newParams: {
-    sortField: string;
-    sortOrder: string;
-    filters: Record<string, string[]>;
-  }) {
-    queryParams.sortField = newParams.sortField;
-    queryParams.sortOrder = newParams.sortOrder;
-    queryParams.filters = newParams.filters;
+  //生成搜索条件
+  function setSearchTerm(value: string) {
+    searchTerm.value = value;
   }
 
   function fetchRecords() {
     loading.value = true;
     // 构造请求参数（分页 + 排序 + 筛选）
     const params: any = {
-      action: "view",
       page: pagination.currentPage,
-      pageSize: pagination.pageSize,
-      sortField: queryParams.sortField,
-      sortOrder: queryParams.sortOrder,
-      // 示例：假设后端支持 filterAgent 与 filterLocation 参数，取数组第一个值（或根据需求传递全部）
-      filterAgent: queryParams.filters.agentName?.[0] || "",
-      filterLocation: queryParams.filters.location?.[0] || ""
+      per_page: pagination.pageSize,
+      source: queryParams.source,
+      search: queryParams.search
     };
     http
-      .request("get", "/portalapi/calendar/", { params })
+      .request("get", "/portalapi/upload/", { params })
       .then((res: any) => {
-        if (res.status === "success" && Array.isArray(res.data)) {
-          dataList.value = res.data;
-          pagination.total = res.total;
-          if (res.currentUserAgentId) {
-            currentUserAgentId.value = res.currentUserAgentId;
-          }
-          // 更新 distinctAgents 与 distinctLocations（后端返回单独的列表）
-          if (res.agents) {
-            distinctAgents.value = res.agents;
-          }
-          if (res.locations) {
-            distinctLocations.value = res.locations;
+        if (res.status === "success" && Array.isArray(res.data.content)) {
+          dataList.value = res.data.content;
+          pagination.total = res.data.totalCount;
+          if (res.data.currentUserId) {
+            currentUserAgentId.value = res.data.currentUserId;
+            console.log("当前用户ID:", currentUserAgentId.value);
           }
         } else {
           console.error("数据格式错误：", res.data);
@@ -97,34 +78,27 @@ export function useRecords() {
 
   // 以下保持 openDialog、handleSave、handleDelete 实现不变
   function openDialog(mode: string, row: any = null) {
-    
-      dialogTitle.value = "编辑看房";
-      form.id = row.id;
-      form.location = row.location || "";
-      form.startTime = row.startTime;
-      form.endTime = row.endTime;
-      form.address = row.address || "";
-      form.unit = row.unit || "";
-      form.customerSex = row.customerSex || "";
-      form.customerIdentity = row.customerIdentity || "";
-      form.customerTarget = row.customerTarget || "";
-      form.customerNeed = row.customerNeed || "";
-      form.note = row.note || "";
-    
+    dialogTitle.value = "编辑看房";
+    form.vid = row.vid;
+    form.area = row.area || "";
+    form.address = row.address || "";
+    form.unit = row.unit || "";
+    form.apartmentName = row.apartmentName || "";
+
     dialogVisible.value = true;
   }
 
   function handleSave() {
-    const action = form.id ? "edit" : "add";
+    const action = "edit";
     http
-      .request("post", `/portalapi/calendar/?action=${action}`, {
+      .request("post", `/portalapi/upload1/?action=${action}`, {
         data: { ...form }
       })
       .then((res: any) => {
         if (res.status === "success") {
           dialogVisible.value = false;
           fetchRecords();
-          message(`${action === "add" ? "添加" : "保存"}成功`, {
+          message(`保存成功`, {
             type: "success"
           });
         } else {
@@ -140,8 +114,8 @@ export function useRecords() {
 
   function handleDelete(row: any) {
     http
-      .request("post", `/portalapi/calendar/?action=delete`, {
-        data: { id: row.id }
+      .request("post", `/portalapi/upload1/?action=delete`, {
+        data: { id: row.vid }
       })
       .then((res: any) => {
         if (res.status === "success") {
@@ -159,39 +133,49 @@ export function useRecords() {
   }
 
   const columns = [
-  {
-    label: "操作",
-    prop: "operation",
-    slot: "operation",
-    width: "150px"
-  },
-  {
-    label: "公寓",
-    prop: "location",
-    sortable: true
-  },
-  {
-    label: "房型",
-    prop: "agentName",
-    sortable: true
-  },
-  {
-    label: "Unit",
-    prop: "startTime",
-    sortable: true
-  },
-  { label: "地区", prop: "address" },
-  { label: "下载", prop: "unit" },
-  {
-    label: "原大小",
-    prop: "customerInfo",
-    slot: "customerInfo"
-  },
-  { label: "状态", prop: "note" },
-  { label: "上传用户", prop: "note" },
-  { label: "存储源", prop: "note" }
+    {
+      label: "操作",
+      prop: "operation",
+      slot: "operation",
+      width: "150px"
+    },
+    {
+      label: "公寓",
+      prop: "apartmentName",
+      columnKey: "apartmentName"
+    },
+    {
+      label: "房型",
+      prop: "roomType",
+      columnKey: "roomType"
+    },
+    {
+      label: "Unit",
+      prop: "unit",
+      columnKey: "unit"
+    },
+    { label: "地区", columnKey: "area", prop: "area" },
+    {
+      label: "下载",
+      prop: "download",
+      slot: "download",
+      columnKey: "download"
+    },
+    {
+      label: "原大小",
+      prop: "filesize",
+      slot: "filesize",
+      columnKey: "filesize"
+    },
+    { label: "状态", prop: "status", columnKey: "status" },
+    { label: "上传用户", prop: "userName", columnKey: "userName" },
+    {
+      label: "存储源",
+      prop: "target_source_label",
+      columnKey: "target_source_label"
+    }
   ];
-  
+
   return {
     dataList,
     loading,
@@ -204,9 +188,9 @@ export function useRecords() {
     openDialog,
     handleSave,
     handleDelete,
-    distinctAgents,
     columns,
-    distinctLocations,
-    updateQueryParams
+    areas,
+    searchTerm,
+    setSearchTerm
   };
 }
