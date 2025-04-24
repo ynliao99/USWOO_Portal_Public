@@ -1,5 +1,5 @@
 // getViewRecord.tsx
-import { ref, reactive } from "vue";
+import { ref, reactive, computed } from "vue";
 import { http } from "@/utils/http";
 import { message } from "@/utils/message";
 import { fetchAreas } from "@/api/fechAreas";
@@ -278,5 +278,128 @@ function handleSearch(val: string) {
     areas,
     download_link_prefix,
     share_link_prefix
+  };
+}
+
+export function usePermissionManagement() {
+  // 对话框显隐与标题
+  const permissionDialogVisible = ref(false);
+  const permissionDialogTitle = ref('');
+  // 区分 personal/team
+  const permissionType = ref<'personal' | 'team'>('personal');
+  const currentSource = ref('');
+
+  // 用户列表及加载状态
+  const nameList = ref<Array<{ hid: string; userAgentName: string }>>([]);
+  const whiteListNameList = ref<Array<{ hid: string; userAgentName: string }>>([]);
+  const blackListNameList = ref<Array<{ hid: string; userAgentName: string }>>([]);
+  const permissionLoading = ref(false);
+  const searchQuery = ref('');
+
+  // 表单数据
+  const permissionForm = reactive({
+    whiteList: [] as string[],
+    blackList: [] as string[],
+  });
+
+  // 白名单搜索结果
+  const filteredWhiteListNameList = computed(() => {
+    if (!searchQuery.value) return whiteListNameList.value;
+    return whiteListNameList.value.filter(u =>
+      u.userAgentName.toLowerCase().includes(searchQuery.value.toLowerCase())
+    );
+  });
+  // 黑名单搜索结果
+  const filteredBlackListNameList = computed(() => {
+    if (!searchQuery.value) return blackListNameList.value;
+    return blackListNameList.value.filter(u =>
+      u.userAgentName.toLowerCase().includes(searchQuery.value.toLowerCase())
+    );
+  });
+
+  // 搜索回调
+  function handleRemoteSearch(query: string) {
+    searchQuery.value = query;
+  }
+
+  // 加载名单并预设
+  async function loadUserList() {
+    permissionLoading.value = true;
+    try {
+      const res: any = await http.request('get', '/portalapi/upload/', {
+        params: { action: 'getNameList', inquiry_source: currentSource.value }
+      });
+      if (res.success) {
+        
+        whiteListNameList.value = res.whiteListNameList || [];
+        
+        permissionForm.whiteList = res.white_list || [];
+        if (permissionType.value === 'team') {
+          permissionForm.blackList = res.black_list || [];
+          blackListNameList.value = res.blackListNameList || [];
+        }
+        
+      } else {
+        message(`获取名单失败：${res.message}`, { type: "warning" });
+      }
+    } catch {
+      message('请求失败，请稍后重试', { type: "warning" });
+    } finally {
+      permissionLoading.value = false;
+    }
+  }
+
+  // 打开对话框
+  function openPermissionDialog(source: string) {
+    currentSource.value = source;
+    if (source.endsWith('personal')) {
+      permissionType.value = 'personal';
+      permissionDialogTitle.value = '编辑我的个人盘权限';
+    } else {
+      permissionType.value = 'team';
+      permissionDialogTitle.value = '编辑我的团队盘权限';
+    }
+    permissionForm.whiteList = [];
+    permissionForm.blackList = [];
+    searchQuery.value = '';
+    loadUserList();
+    permissionDialogVisible.value = true;
+  }
+
+  // 保存权限
+  async function savePermission() {
+    try {
+      const payload: any = {
+        target_source: currentSource.value,
+        white_list: permissionForm.whiteList
+      };
+      if (permissionType.value === 'team') {
+        payload.black_list = permissionForm.blackList;
+      }
+      const res: any = await http.request('post', '/portalapi/upload/?action=savePermission', {
+        data: payload
+      });
+      if (res.success) {
+        message('保存成功', { type: "success" });
+        permissionDialogVisible.value = false;
+      } else {
+        message(`失败：${res.message}`, { type: "warning" });
+      }
+    } catch {
+      message('请求失败，请稍后重试', { type: "warning" });
+    }
+  }
+
+  return {
+    permissionDialogVisible,
+    permissionDialogTitle,
+    permissionType,
+    permissionForm,
+    permissionLoading,
+    filteredBlackListNameList,
+    filteredWhiteListNameList,
+    handleRemoteSearch,
+    openPermissionDialog,
+    savePermission,
   };
 }

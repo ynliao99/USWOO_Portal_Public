@@ -8,7 +8,7 @@ import DeleteIcon from "~icons/ri/delete-bin-2-line";
 import ShareIcon from "~icons/ri/share-forward-2-fill";
 import DownloadIcon from "~icons/ri/download-2-fill";
 import LockIcon from "~icons/ri/lock-2-fill"
-import { useRecords, useSourceOptions } from "./utils/getViewRecord";
+import { useRecords, useSourceOptions, usePermissionManagement } from "./utils/getViewRecord";
 import { driveViewFormRules } from "./utils/rule";
 import { message } from "@/utils/message";
 import type { FormInstance } from "element-plus";
@@ -57,10 +57,24 @@ const sourceOptions = ref<SelectOption[]>([
   { label: '我上传的', value: 'self' }
 ])
 
-// 点击权限管理按钮时的处理
-function openPermissionManagement() {
-  // TODO: 跳转到权限管理页 / 弹窗 / whatever
-  console.log('打开权限管理，source =', selectedSource.value)
+const {
+  permissionDialogVisible,
+  permissionDialogTitle,
+  permissionType,
+  permissionForm,
+  permissionLoading,
+  filteredBlackListNameList,
+  filteredWhiteListNameList,
+  handleRemoteSearch,
+  openPermissionDialog,
+  savePermission,
+} = usePermissionManagement();
+
+
+function onOpenPermission() {
+  openPermissionDialog(selectedSource.value);
+
+  console.log(filteredWhiteListNameList);
 }
 
 useSourceOptions()
@@ -148,8 +162,8 @@ watch(dialogVisible, newVal => {
 
       <template #buttons>
         <!-- 只有 owner === 当前用户时才显示 -->
-        <el-button v-if="hasPermissionManagement" type="default" style="margin-right: 1rem;" :icon="useRenderIcon(LockIcon)"
-          @click="openPermissionManagement">
+        <el-button v-if="hasPermissionManagement" type="default" style="margin-right: 1rem;"
+          :icon="useRenderIcon(LockIcon)" @click="onOpenPermission">
           权限
         </el-button>
 
@@ -261,6 +275,32 @@ watch(dialogVisible, newVal => {
         <el-button type="primary" @click="onSubmit(ruleFormRef)">保存</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="permissionDialogVisible" :title="permissionDialogTitle" width="600px">
+      <el-form :model="permissionForm">
+        <!-- 个人盘白名单 | 团队盘白名单 -->
+        <el-form-item label="白名单" prop="whiteList">
+          <el-select v-model="permissionForm.whiteList" multiple filterable remote reserve-keyword placeholder="请输入用户名称"
+            :remote-method="handleRemoteSearch" :loading="permissionLoading">
+            <el-option v-for="user in filteredWhiteListNameList" :key="user.hid" :label="user.userAgentName" :value="user.hid" />
+          </el-select>
+        </el-form-item>
+
+        <!-- 团队盘黑名单 -->
+        <el-form-item v-if="permissionType === 'team'" label="黑名单" prop="blackList">
+          <el-select v-model="permissionForm.blackList" multiple filterable remote reserve-keyword placeholder="请输入用户名称"
+            :remote-method="handleRemoteSearch" :loading="permissionLoading">
+            <el-option v-for="user in filteredBlackListNameList" :key="user.hid" :label="user.userAgentName" :value="user.hid" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="permissionDialogVisible = false">关闭</el-button>
+        <el-button type="primary" @click="savePermission">保存</el-button>
+      </template>
+    </el-dialog>
+
   </div>
 </template>
 
