@@ -337,6 +337,9 @@ export function usePermissionManagement() {
         if (permissionType.value === 'team') {
           permissionForm.blackList = res.black_list || [];
           blackListNameList.value = res.blackListNameList || [];
+          // 从白名单列表中过滤掉属于黑名单的项
+          const blackHids = new Set(blackListNameList.value.map(b => b.hid));
+          whiteListNameList.value = whiteListNameList.value.filter(u => !blackHids.has(u.hid));
         }
         
       } else {

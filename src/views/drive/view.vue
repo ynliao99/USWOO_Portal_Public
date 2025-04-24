@@ -89,6 +89,23 @@ useSourceOptions()
     console.error('加载 sourceOptions 失败', err)
   })
 
+async function onRefresh() {
+  message("刷新中...", { type: "info" })
+  // 1. 刷新表格数据
+  await fetchRecords();
+
+  // 2. 重新加载存储源列表
+  try {
+    const { sourceOptions: so } = await useSourceOptions();
+    sourceOptions.value = [
+      { label: '我上传的', value: 'self' },
+      ...so.value
+    ];
+  } catch (err) {
+    console.error('刷新 sourceOptions 失败', err);
+  }
+}
+
 // 本地搜索输入
 const searchTermLocal = ref('');
 
@@ -110,10 +127,6 @@ const onSubmit = async (formEl: FormInstance | undefined) => {
     }
   });
 };
-
-function pad(num: number): string {
-  return num < 10 ? "0" + num : num.toString();
-}
 
 
 onMounted(() => {
@@ -158,7 +171,7 @@ watch(dialogVisible, newVal => {
   <div>
     <el-input v-model="searchTermLocal" placeholder="全能搜索..." clearable style="margin: 0" @input="handleSearch" />
 
-    <PureTableBar title="我上传的视频" :columns="columns" @refresh="fetchRecords">
+    <PureTableBar title="我上传的视频" :columns="columns" @refresh="onRefresh">
 
       <template #buttons>
         <!-- 只有 owner === 当前用户时才显示 -->
@@ -282,7 +295,8 @@ watch(dialogVisible, newVal => {
         <el-form-item label="白名单" prop="whiteList">
           <el-select v-model="permissionForm.whiteList" multiple filterable remote reserve-keyword placeholder="请输入用户名称"
             :remote-method="handleRemoteSearch" :loading="permissionLoading">
-            <el-option v-for="user in filteredWhiteListNameList" :key="user.hid" :label="user.userAgentName" :value="user.hid" />
+            <el-option v-for="user in filteredWhiteListNameList" :key="user.hid" :label="user.userAgentName"
+              :value="user.hid" />
           </el-select>
         </el-form-item>
 
@@ -290,7 +304,8 @@ watch(dialogVisible, newVal => {
         <el-form-item v-if="permissionType === 'team'" label="黑名单" prop="blackList">
           <el-select v-model="permissionForm.blackList" multiple filterable remote reserve-keyword placeholder="请输入用户名称"
             :remote-method="handleRemoteSearch" :loading="permissionLoading">
-            <el-option v-for="user in filteredBlackListNameList" :key="user.hid" :label="user.userAgentName" :value="user.hid" />
+            <el-option v-for="user in filteredBlackListNameList" :key="user.hid" :label="user.userAgentName"
+              :value="user.hid" />
           </el-select>
         </el-form-item>
       </el-form>
