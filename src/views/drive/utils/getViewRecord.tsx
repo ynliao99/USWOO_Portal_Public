@@ -5,7 +5,6 @@ import { message } from "@/utils/message";
 import { fetchAreas } from "@/api/fechAreas";
 import {
   loadTargetSources,
-  loadPublicTargetSources,
   SelectOption,
   loadWhiteListTargetSources
 } from "@/api/drivePathList";
@@ -291,7 +290,6 @@ export function usePermissionManagement() {
   const currentSource = ref('');
 
   // 用户列表及加载状态
-  const nameList = ref<Array<{ hid: string; userAgentName: string }>>([]);
   const whiteListNameList = ref<Array<{ hid: string; userAgentName: string }>>([]);
   const blackListNameList = ref<Array<{ hid: string; userAgentName: string }>>([]);
   const permissionLoading = ref(false);
