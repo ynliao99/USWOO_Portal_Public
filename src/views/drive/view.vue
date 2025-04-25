@@ -81,7 +81,7 @@ useSourceOptions()
   .then(({ sourceOptions: so }) => {
     // 把后端选项追加到默认选项之后
     sourceOptions.value = [
-      { label: '我上传的', value: 'self' },
+      { label: '我的云盘', value: 'self' },
       ...so.value
     ]
   })
@@ -98,7 +98,7 @@ async function onRefresh() {
   try {
     const { sourceOptions: so } = await useSourceOptions();
     sourceOptions.value = [
-      { label: '我上传的', value: 'self' },
+      { label: '我的云盘', value: 'self' },
       ...so.value
     ];
   } catch (err) {

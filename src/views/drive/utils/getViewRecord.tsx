@@ -140,7 +140,7 @@ function fetchRecords() {
 
   // 以下保持 openDialog、handleSave、handleDelete 实现不变
   function openDialog(mode: string, row: any = null) {
-    dialogTitle.value = "编辑看房";
+    dialogTitle.value = "编辑视频信息";
     form.vid = row.vid;
     form.area = row.area || "";
     form.address = row.address || "";
@@ -250,6 +250,7 @@ function handleSearch(val: string) {
       columnKey: "filesize"
     },
     { label: "状态", prop: "status", columnKey: "status" },
+     { label: "上传时间", prop: "timestamp", columnKey: "timestamp" },
     { label: "上传用户", prop: "userName", columnKey: "userName" },
     {
       label: "存储源",
