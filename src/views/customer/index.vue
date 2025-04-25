@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, watch, nextTick, reactive } from "vue";
 import { ElForm, ElMessage, FormInstance, FormRules, ElAutocomplete, AutocompleteFetchSuggestionsCallback, ElMessageBox } from "element-plus";
 import { message } from "@/utils/message"; // Use project's message util
-import { useCustomerRecords, CustomerRecord, CreateOrUpdateCustomerRecord, BuildingInfo, UploadedFileInfo, availableFiles, statusMap, statusList } from "./utils/useCustomerRecords";
+import { useCustomerRecords, CustomerRecord, CreateOrUpdateCustomerRecord, BuildingInfo, UploadedFileInfo } from "./utils/useCustomerRecords";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 
@@ -50,7 +50,7 @@ const {
   toggleOnlyMine,
   setPage,
   setPageSize,
-  formatDate // Get format date function
+
 } = useCustomerRecords();
 
 // Local state for UI elements
@@ -61,20 +61,27 @@ const dialogTitle = ref(""); // Title for Add/Edit dialog
 const isEditMode = ref(false); // To track if the dialog is for editing
 
 // Form data model (using Partial for flexibility, ensure all fields exist)
-const form = ref<Partial<CreateOrUpdateCustomerRecord & { uuid?: string }>>({});
+
+const form = ref<Partial<Omit<CreateOrUpdateCustomerRecord, 'uploaded_files'> & { uploaded_files?: string | null, uuid?: string } & Record<string, string | number | boolean | null | "TBD">>>({});
 
 // Filter form data model
 const filterForm = ref<{ status: number[] }>({ status: [] });
 
-// --- Computed Properties ---
-// Check if form has unsaved changes (basic check)
-// const hasUnsavedChanges = computed(() => {
-//   // Needs a more robust implementation: store initial state and compare
-//   return dialogVisible.value; // Placeholder: always true if dialog is open
-// });
+// --- NEW: Reactive state for Checkbox Group v-model ---
+const selectedFileNames = ref<string[]>([]); // Holds ["Passport", "Visa", ...]
 
-// Define Form Rules (replace with actual rules from ./utils/rule)
-// TODO: Define comprehensive rules in ./utils/rule.ts
+// --- NEW: Helper to safely parse the JSON string ---
+function parseFilesString(jsonString: string | null | undefined): UploadedFileInfo[] {
+  if (!jsonString) return [];
+  try {
+    const parsed = JSON.parse(jsonString);
+    // Basic validation that it's an array
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error("Failed to parse uploaded_files JSON:", e);
+    return []; // Return empty array on error
+  }
+}
 
 const customerFormRules = reactive<FormRules>({
   community_name: [{ required: true, message: "请选择或输入公寓名称", trigger: "change" }],
@@ -130,6 +137,8 @@ function openDialog(mode: "add" | "edit", record?: CustomerRecord) {
   // Reset form validation and TBD states before populating
   formRef.value?.resetFields();
   form.value = {}; // Clear previous data
+  selectedFileNames.value = []; // Reset checkbox state
+  const defaultFilesJson = '[{"file_name":"Other","path":""}]';
 
   if (mode === "add") {
     isEditMode.value = false;
@@ -137,7 +146,6 @@ function openDialog(mode: "add" | "edit", record?: CustomerRecord) {
     // Initialize form with defaults for 'add' mode
     form.value = {
       id: null,
-      uuid: undefined, // Ensure uuid is not carried over
       community_name: "",
       buildingId: "",
       address: "",
@@ -153,16 +161,29 @@ function openDialog(mode: "add" | "edit", record?: CustomerRecord) {
       last_name: "",
       first_name: "",
       email: "",
-      uploaded_files: ["Other"], // Default selection?
+      uploaded_files: defaultFilesJson, 
       file_only: false,
     };
+    selectedFileNames.value = ["Other"];
+
   } else if (mode === "edit" && record) {
     isEditMode.value = true;
     dialogTitle.value = "编辑请求信息";
     // Map CustomerRecord to CreateOrUpdateCustomerRecord for the form
+    let initialJsonString = defaultFilesJson; // Fallback default
+    // Use fetched string if valid, otherwise keep default
+    if (typeof record.uploaded_files === 'string' && record.uploaded_files.trim().startsWith('[')) {
+      initialJsonString = record.uploaded_files;
+    } else if (Array.isArray(record.uploaded_files)) {
+      // If hook already parsed it, stringify back (less ideal)
+      initialJsonString = JSON.stringify(record.uploaded_files);
+    }
+    // Parse the initial JSON to set checkbox state
+    const initialFiles = parseFilesString(initialJsonString);
+    selectedFileNames.value = initialFiles.map(f => f.file_name);
+
     form.value = {
       id: record.id,
-      uuid: record.uuid, // Keep UUID for reference/backend update
       community_name: record.community_name || "",
       buildingId: record.buildingId || "",
       address: record.address || "",
@@ -179,9 +200,10 @@ function openDialog(mode: "add" | "edit", record?: CustomerRecord) {
       first_name: record.first_name || "",
       email: record.email || "",
       // Parse uploaded_files: Expecting UploadedFileInfo[] from hook's processed data
-      uploaded_files: Array.isArray(record.uploaded_files)
-        ? record.uploaded_files.map(f => f.file_name) // Extract names for checkboxes
-        : ["Other"], // Default if parsing failed or empty
+      uploaded_files: initialJsonString, // Default if parsing failed or empty
+      // uploaded_files: Array.isArray(record.uploaded_files)
+      //   ? record.uploaded_files.map(f => f.file_name) // Extract names for checkboxes
+      //   : [],
       file_only: !!record.file_only, // Ensure boolean
     };
     // Handle TBD state based on loaded data
@@ -189,6 +211,33 @@ function openDialog(mode: "add" | "edit", record?: CustomerRecord) {
   }
   dialogVisible.value = true;
 }
+
+// --- NEW: Watcher to sync checkboxes and JSON string ---
+watch(selectedFileNames, (currentlySelected) => {
+  // Only run if the dialog is open to avoid unnecessary updates
+  if (!dialogVisible.value) return;
+
+  // Get the current JSON string state (the source of truth for paths)
+  const currentJsonString = form.value.uploaded_files || '[]';
+  const existingFiles = parseFilesString(currentJsonString);
+  const existingFileMap = new Map(existingFiles.map(f => [f.file_name, f.path]));
+
+  // Build the new array based on currently selected checkboxes
+  const updatedFilesArray: UploadedFileInfo[] = currentlySelected.map(name => ({
+    file_name: name,
+    // Preserve existing path if the file was already in the JSON, otherwise use ""
+    path: existingFileMap.get(name) ?? ""
+  }));
+
+  // Update the form's JSON string state
+  // Add check to prevent infinite loop if stringify results in the same string
+  const newJsonString = JSON.stringify(updatedFilesArray);
+  if (newJsonString !== form.value.uploaded_files) {
+    form.value.uploaded_files = newJsonString;
+  }
+
+}, { deep: true }); // deep watch needed for array changes
+
 
 // Open Filter Dialog
 function openFilterDialog() {
@@ -199,15 +248,14 @@ function openFilterDialog() {
 
 // Apply Filters from Dialog
 function applyFilters() {
-  setStatusFilter(filterForm.value.status); // Update hook state
-  filterDialogVisible.value = false; // Close dialog
+  setStatusFilter(filterForm.value.status);
+  filterDialogVisible.value = false;
 }
 
 // Reset Filters in Dialog
 function resetFilters() {
-  filterForm.value.status = []; // Clear local dialog state
-  // Optionally: Apply immediately or wait for 'Apply' button
-  // setStatusFilter([]);
+  filterForm.value.status = []; 
+  
 }
 
 // Handle Form Submission
@@ -227,21 +275,21 @@ async function handleSubmit() {
 // Handle Save Logic (called after validation)
 async function handleSave() {
   // Prepare data, potentially converting TBD back if needed, although saving 'TBD' is fine
-  const payload = { ...form.value } as CreateOrUpdateCustomerRecord;
+  const payload = { ...form.value } as unknown as CreateOrUpdateCustomerRecord;
 
   // Ensure buildingId is set if community_name exists
   if (payload.community_name && !payload.buildingId) {
-    message("请从列表中选择一个有效的公寓，以获取其ID。", { type: "warning" });
+    message("请从列表中选择一个有效的公寓。", { type: "warning" });
     return;
   }
 
   // Convert file_only to boolean if it's somehow not
   payload.file_only = !!payload.file_only;
 
-  // Ensure uploaded_files is an array of strings
-  if (!Array.isArray(payload.uploaded_files)) {
-    payload.uploaded_files = [];
-  }
+  // // Ensure uploaded_files is an array of strings
+  // if (!Array.isArray(payload.uploaded_files)) {
+  //   payload.uploaded_files = [];
+  // }
   // Ensure 'Other' is included if needed? Or handle based on selection.
   // The current setup assumes the checkbox group handles the array correctly.
 
@@ -297,19 +345,32 @@ const handleApartmentBlur = () => {
 
 // TBD Logic: Add helper functions or use watchers
 function handleTbdChange(field: keyof CreateOrUpdateCustomerRecord, isTbd: boolean) {
-  const fieldName = field as string;
+  if (!form.value) return;
+
+  // Use a safe key type for indexing
+  const key = field as keyof typeof form.value;
+
   if (isTbd) {
-    form.value[field] = 'TBD';
-    // Find the corresponding input ref and potentially disable it (more complex)
-    // Or rely on the :disabled binding in the template
+    // Set the value to 'TBD'
+    (form.value as any)[key] = 'TBD'; // Using 'as any' as discussed before
+
+    // --- ADD THIS LINE ---
+    // Manually clear the validation message for the specific field
+    // Pass the field name (key) to clearValidate
+    formRef.value?.clearValidate(field as string | string[]);
+    // --------------------
+
   } else {
-    // If unchecking TBD, clear the field if it was 'TBD'
-    if (form.value[field] === 'TBD') {
-      form.value[field] = '';
+    // If unchecking TBD, clear the field ONLY if it was 'TBD'
+    if (form.value[key] === 'TBD') {
+      (form.value as any)[key] = '';
     }
-    // Enable input via :disabled binding
+    // Optional: If you want the validation to re-run immediately
+    // when unchecking and the field might be required, you could add:
+    // formRef.value?.validateField(field as string | string[]);
   }
 }
+
 
 // Helper to check initial TBD state when loading edit form
 function checkAndSetTbdState() {
@@ -426,9 +487,10 @@ watch(searchTermLocal, (newValue) => {
                   @click="openDialog('edit', row)" :disabled="row.is_completed === 4" />
               </el-tooltip>
               <el-tooltip content="查看客户填写页面" placement="top">
-                <el-button circle size="small" type="success" :icon="useRenderIcon(EyeIcon)"
-                  :disabled="row.is_completed === 4" tag="a" :href="`/application/applicant_view.php?token=${row.uuid}`"
+                <el-button v-if="row.is_completed !== 4" circle size="small" type="success"
+                  :icon="useRenderIcon(EyeIcon)" tag="a" :href="`/application/applicant_view.php?token=${row.uuid}`"
                   target="_blank" />
+                <el-button v-else circle size="small" type="success" :icon="useRenderIcon(EyeIcon)" disabled />
               </el-tooltip>
               <el-tooltip content="作废" placement="top">
                 <el-button circle size="small" type="danger" :icon="useRenderIcon(DeleteBinIcon)"
@@ -498,7 +560,8 @@ watch(searchTermLocal, (newValue) => {
               <el-autocomplete v-model="form.community_name" :fetch-suggestions="queryApartmentSearch"
                 placeholder="搜索或选择公寓..." clearable style="width: 100%;" @select="handleApartmentSelect"
                 @blur="handleApartmentBlur" value-key="name">
-                <template #default="{ item }: { item: BuildingInfo }">
+
+                <template #default="{ item }">
                   <div class="autocomplete-item">
                     <span class="name">{{ item.name }}</span>
                     <span class="addr">{{ item.address }}</span>
@@ -508,11 +571,13 @@ watch(searchTermLocal, (newValue) => {
               <input type="hidden" v-model="form.buildingId" />
             </el-form-item>
           </el-col>
+
           <el-col :span="12">
             <el-form-item label="地址" prop="address">
-              <el-input v-model="form.address" placeholder="选择公寓后自动填充或手动输入" />
+              <el-input v-model="form.address" placeholder="选择公寓后自动填充" readonly />
             </el-form-item>
           </el-col>
+
         </el-row>
 
         <el-row :gutter="20">
@@ -608,15 +673,18 @@ watch(searchTermLocal, (newValue) => {
 
         <el-divider content-position="left">所需文件</el-divider>
 
-        <el-form-item label="" label-width="0px"> <el-checkbox v-model="form.file_only" style="margin-right: 20px;">
+        <el-form-item label="">
+          <el-checkbox v-model="form.file_only">
             仅上传文件 (客户无需填写其他信息)
           </el-checkbox>
         </el-form-item>
 
         <el-form-item label="勾选所需文件" prop="uploaded_files">
-          <el-checkbox-group v-model="form.uploaded_files">
-            <el-checkbox v-for="file in availableFiles" :key="file" :label="file" :disabled="file === 'Other'">
-              {{ file.replace('_', ' ') }} </el-checkbox>
+          <el-checkbox-group v-model="selectedFileNames">
+            <el-checkbox v-for="file in availableFiles" :key="file" :label="file"
+              :disabled="file === 'Other' && selectedFileNames.includes('Other')">
+              {{ file.replace('_', ' ') }}
+            </el-checkbox>
           </el-checkbox-group>
         </el-form-item>
 

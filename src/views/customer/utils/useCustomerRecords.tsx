@@ -48,8 +48,6 @@ export interface CustomerRecord {
   last_name?: string;
   first_name?: string;
   email?: string;
-  // uploaded_files is expected as a JSON string from backend, parsed into UploadedFileInfo[]
-  // Or if backend sends array directly, adjust parsing in fetchRecords
   uploaded_files?: string | UploadedFileInfo[];
   created_at: string; // Timestamp YYYY-MM-DD HH:MM:SS
   updated_at?: string; // Timestamp YYYY-MM-DD HH:MM:SS
@@ -62,7 +60,6 @@ export interface CustomerRecord {
 // Data structure for Creating/Updating a record
 export interface CreateOrUpdateCustomerRecord {
   id?: number | null; // Include ID for updates
-  uuid?: string; // Include UUID for updates if backend uses it
   userAgentId?: string; // Automatically set for new records? Backend should handle.
   community_name: string;
   buildingId: string;
@@ -80,7 +77,7 @@ export interface CreateOrUpdateCustomerRecord {
   first_name: string;
   email: string;
   // Send selected file names as an array of strings
-  uploaded_files?: string[];
+  uploaded_files?: string | null;
   file_only?: boolean;
 }
 
@@ -97,9 +94,13 @@ interface FetchCustomerRecordsResponse {
 // Building List API Response structure
 interface FetchBuildingListResponse {
     status: "success" | "error";
-    content: BuildingInfo[]; // Assuming 'content' holds the array
+    data: {
+        content: BuildingInfo[];
+        status: number;
+    };
     message?: string;
 }
+
 
 
 // List of files that can be requested
@@ -149,7 +150,7 @@ export function useCustomerRecords() {
       prop: "operation",
       slot: "operation",
       fixed: "left",
-      width: 160 // Increased width for more buttons
+      width: 154 // Increased width for more buttons
     },
     {
       label: "客户链接",
@@ -199,6 +200,7 @@ export function useCustomerRecords() {
       label: "文件",
       prop: "uploaded_files",
       slot: "files",
+      minWidth: 200,
 
     },
     {
@@ -261,75 +263,68 @@ export function useCustomerRecords() {
   // Fetch building list for autocomplete
   async function fetchBuildings() {
     try {
-        // Adjust endpoint as necessary
-        const res = await http.request<FetchBuildingListResponse>("get", "/api/get_building_list");
-        if (res.status === 'success' && Array.isArray(res.content)) {
-            buildings.value = res.content.map(b => ({
+        const res = await http.request<FetchBuildingListResponse>("get", "/portalapi/portal_support/get_building_list.php");
+        if (res.status === 'success' && res.data.status === 200 && Array.isArray(res.data?.content)) {
+            buildings.value = res.data.content.map(b => ({
                 ...b,
                 value: b.name, // for autocomplete display
                 label: b.name  // for autocomplete display
             }));
         } else {
-             message(res.message || "加载公寓列表失败", { type: "warning" });
+            message(res.message || "加载公寓列表失败", { type: "warning" });
         }
     } catch (err) {
         console.error("Fetch Buildings Error:", err);
         message("加载公寓列表失败", { type: "error" });
     }
-  }
+}
 
   // --- Save/Update Record ---
-  async function saveRecord(recordData: CreateOrUpdateCustomerRecord) {
+async function saveRecord(recordData: CreateOrUpdateCustomerRecord) {
     const action = recordData.id ? "update" : "add";
-    loading.value = true; // Show loading state during save
+    loading.value = true;
 
-    // Prepare payload: ensure file_only is boolean, uploaded_files is array of strings
-    const payload: any = {
+    // Payload already contains the JSON string in recordData.uploaded_files
+    const payload = {
         ...recordData,
-        file_only: !!recordData.file_only, // Ensure boolean
-        // Assuming uploaded_files in the form is already string[]
-        uploaded_files: recordData.uploaded_files || []
+        // Ensure it's a valid string or default to empty array string
+        uploaded_files: recordData.uploaded_files || '[]',
+        file_only: !!recordData.file_only
     };
 
-    // Backend might expect UUID or ID for updates
+    // Prepare parameters (action, id/uuid) - same as before
     const params: any = { action };
     if (action === 'update') {
-        // Send whichever identifier the backend expects for updates
-        if (payload.uuid) params.uuid = payload.uuid;
-        else if (payload.id) params.caseID = payload.id; // Match legacy? Check backend needs
+      if ((payload as any).uuid) params.uuid = (payload as any).uuid;
+      else if (payload.id) params.caseID = payload.id;
     }
-
 
     try {
-      // Adjust endpoint if needed (e.g., legacy used applictaion_process.php)
-      // Using /portalapi/co/ assuming it handles add/update POST requests
-      const response = await http.request<{ status: string; message?: string }>("post", "/portalapi/co/", {
-          params: params, // action=add or action=update, uuid/caseID if update
-          data: payload    // The form data
-      });
+      // Make the API request - payload.uploaded_files is already the JSON string
+       const response = await http.request<{ status: string; message?: string }>("post", "/portalapi/crm1/", { // Adjust endpoint
+           params: params,
+           data: payload // Send the payload directly
+       });
 
-      if (response.status === 'success') {
-          message("保存成功！", { type: "success" });
-          fetchRecords(); // Refresh data
-          return true; // Indicate success
-      } else if (response.status === 'successNoEmail') { // Handle specific backend message
-           message(response.message || "保存成功，但邮件发送失败。", { type: "warning" });
-           fetchRecords(); // Refresh data
-           return true; // Indicate success (partial)
-      }
-      else {
-          message(response.message || "保存失败，请重试。", { type: "error" });
-          return false; // Indicate failure
-      }
+       // Handle response... (same as before)
+       if (response.status === 'success' || response.status === 'successNoEmail') {
+            message(response.message || "保存成功！", { type: response.status === 'success' ? "success" : "warning" });
+            fetchRecords();
+            return true;
+        } else {
+            message(response.message || "保存失败，请重试。", { type: "error" });
+            return false;
+        }
     } catch (error: any) {
-        console.error("Save Record Error:", error);
+        // Handle error... (same as before)
+         console.error("Save Record Error:", error);
         const errorMsg = error?.response?.data?.message || error.message || "保存请求失败";
         message(errorMsg, { type: "error" });
-        return false; // Indicate failure
+        return false;
     } finally {
-        loading.value = false; // Hide loading state
+        loading.value = false;
     }
-  }
+}
 
   // --- Void Record ---
    async function voidRecord(uuid: string) {
@@ -343,7 +338,7 @@ export function useCustomerRecords() {
             // Proceed if confirmed
             loading.value = true;
             // Adjust endpoint and params as needed, matching legacy `applictaion_process.php?action=void&type=4&uuid=`
-            const response = await http.request<{ status: string; message?: string }>("post", "/portalapi/co/", { // Assuming same endpoint handles void
+            const response = await http.request<{ status: string; message?: string }>("post", "/portalapi/crm1/", { // Assuming same endpoint handles void
                 params: {
                     action: 'void',
                     type: 4, // Legacy type for voiding
@@ -391,15 +386,6 @@ export function useCustomerRecords() {
         const filterSet = new Set(statusFilter.value);
         data = data.filter(r => r.is_completed !== undefined && filterSet.has(r.is_completed));
 
-        // --- OR --- Implement legacy logic if needed:
-        // let statusLogicFilter = (r: CustomerRecord) => r.is_completed !== undefined && filterSet.has(r.is_completed);
-        // if (filterSet.has(2)) {
-        //    const otherCompletedStatuses = [...new Set(data.map(d => d.is_completed))]
-        //                                     .filter(s => ![0, 1, 4, undefined].includes(s));
-        //    const extendedFilterSet = new Set([...filterSet, ...otherCompletedStatuses]);
-        //    statusLogicFilter = (r: CustomerRecord) => r.is_completed !== undefined && extendedFilterSet.has(r.is_completed);
-        // }
-        // data = data.filter(statusLogicFilter);
     }
 
 
