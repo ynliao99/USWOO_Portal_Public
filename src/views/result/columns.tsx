@@ -13,7 +13,7 @@ export function useColumns() {
                 width="18px"
                 height="18px"
               />
-              <span class="ml-1 mr-4">您的账户已被冻结</span>
+              <span class="ml-1 mr-4">你的账户已被冻结</span>
               <a
                 href="javascript:void(0);"
                 class="flex items-center"
@@ -35,7 +35,7 @@ export function useColumns() {
                 width="18px"
                 height="18px"
               />
-              <span class="ml-1 mr-4">您的账户还不具备申请资格</span>
+              <span class="ml-1 mr-4">你的账户还不具备申请资格</span>
               <a
                 href="javascript:void(0);"
                 class="flex items-center"

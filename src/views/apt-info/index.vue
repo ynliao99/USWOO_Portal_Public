@@ -349,7 +349,7 @@ async function onSubmit() {
     if (avgSim > 0.95) {
       try {
         await ElMessageBox.confirm(
-          `检测到您此次提交与原始数据总体相似度高达 ${(avgSim * 100).toFixed(2)}%。\n 恶意套刷更新次数将导致不良后果，是否继续提交？`,
+          `检测到你此次提交与原始数据总体相似度高达 ${(avgSim * 100).toFixed(2)}%。\n 恶意套刷更新次数将导致不良后果，是否继续提交？`,
           "高相似度提示",
           {
             confirmButtonText: "继续提交",

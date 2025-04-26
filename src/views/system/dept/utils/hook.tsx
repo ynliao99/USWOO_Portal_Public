@@ -128,7 +128,7 @@ export function useDept() {
         const FormRef = formRef.value.getRef();
         const curData = options.props.formInline as FormItemProps;
         function chores() {
-          message(`您${title}了部门名称为${curData.name}的这条数据`, {
+          message(`你${title}了部门名称为${curData.name}的这条数据`, {
             type: "success"
           });
           done(); // 关闭弹框
@@ -152,7 +152,7 @@ export function useDept() {
   }
 
   function handleDelete(row) {
-    message(`您删除了部门名称为${row.name}的这条数据`, { type: "success" });
+    message(`你删除了部门名称为${row.name}的这条数据`, { type: "success" });
     onSearch();
   }
 

@@ -32,7 +32,7 @@ const { columns } = useColumns();
     </el-result>
     <PureDescriptions
       :columns="columns"
-      title="您提交的内容有如下错误："
+      title="你提交的内容有如下错误："
       class="p-6 w-[90%] m-auto bg-[#fafafa] dark:bg-[#1d1d1d]"
     />
   </el-card>

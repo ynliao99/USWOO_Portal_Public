@@ -862,10 +862,10 @@ html {
 .footer-info img.footer-qr-code {
   width: 50px;
 
-  /* 或您希望的尺寸 */
+  /* 或你希望的尺寸 */
   height: 50px;
 
-  /* 或您希望的尺寸 */
+  /* 或你希望的尺寸 */
   margin-top: 0.5em;
 
   /* 与文本之间的间距 */

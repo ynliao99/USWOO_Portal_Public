@@ -16,7 +16,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/cloud-server.jpg",
               name: "SSL证书",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             },
             {
               index: 2,
@@ -25,7 +25,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/t-sec.jpg",
               name: "人脸识别",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             },
             {
               index: 3,
@@ -34,7 +34,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/ssl.jpg",
               name: "CVM",
               description:
-                "云硬盘为您提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
+                "云硬盘为你提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
             },
             {
               index: 4,
@@ -80,7 +80,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/t-sec.jpg",
               name: "SSL证书",
               description:
-                "云硬盘为您提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
+                "云硬盘为你提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
             },
             {
               index: 9,
@@ -107,7 +107,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/t-sec.jpg",
               name: "云数据库",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             },
             {
               index: 12,
@@ -116,7 +116,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/t-sec.jpg",
               name: "SSL证书",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             },
             {
               index: 13,
@@ -143,7 +143,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/t-sec.jpg",
               name: "云数据库",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             },
             {
               index: 16,
@@ -162,7 +162,7 @@ export default defineFakeRoute([
                 "https://tdesign.gtimg.com/tdesign-pro/face-recognition.jpg",
               name: "云数据库",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             },
             {
               index: 18,
@@ -181,7 +181,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/ssl.jpg",
               name: "CVM",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             },
             {
               index: 20,
@@ -191,7 +191,7 @@ export default defineFakeRoute([
                 "https://tdesign.gtimg.com/tdesign-pro/face-recognition.jpg",
               name: "SSL证书",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             },
             {
               index: 21,
@@ -200,7 +200,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/t-sec.jpg",
               name: "云数据库",
               description:
-                "云硬盘为您提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
+                "云硬盘为你提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
             },
             {
               index: 22,
@@ -209,7 +209,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/cloud-db.jpg",
               name: "CVM",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             },
             {
               index: 23,
@@ -237,7 +237,7 @@ export default defineFakeRoute([
                 "https://tdesign.gtimg.com/tdesign-pro/face-recognition.jpg",
               name: "CVM",
               description:
-                "云硬盘为您提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
+                "云硬盘为你提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
             },
             {
               index: 26,
@@ -246,7 +246,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/cloud-server.jpg",
               name: "SSL证书",
               description:
-                "云硬盘为您提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
+                "云硬盘为你提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
             },
             {
               index: 27,
@@ -255,7 +255,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/ssl.jpg",
               name: "CVM",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             },
             {
               index: 28,
@@ -273,7 +273,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/cloud-db.jpg",
               name: "CVM",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             },
             {
               index: 30,
@@ -282,7 +282,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/ssl.jpg",
               name: "CVM",
               description:
-                "云硬盘为您提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
+                "云硬盘为你提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
             },
             {
               index: 31,
@@ -355,7 +355,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/ssl.jpg",
               name: "云数据库",
               description:
-                "云硬盘为您提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
+                "云硬盘为你提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
             },
             {
               index: 39,
@@ -364,7 +364,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/t-sec.jpg",
               name: "人脸识别",
               description:
-                "云硬盘为您提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
+                "云硬盘为你提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
             },
             {
               index: 40,
@@ -373,7 +373,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/ssl.jpg",
               name: "CVM",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             },
             {
               index: 41,
@@ -382,7 +382,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/ssl.jpg",
               name: "T-Sec 云防火墙",
               description:
-                "云硬盘为您提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
+                "云硬盘为你提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
             },
             {
               index: 42,
@@ -391,7 +391,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/cloud-server.jpg",
               name: "T-Sec 云防火墙",
               description:
-                "云硬盘为您提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
+                "云硬盘为你提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
             },
             {
               index: 43,
@@ -400,7 +400,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/cloud-db.jpg",
               name: "SSL证书",
               description:
-                "云硬盘为您提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
+                "云硬盘为你提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
             },
             {
               index: 44,
@@ -409,7 +409,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/t-sec.jpg",
               name: "SSL证书",
               description:
-                "云硬盘为您提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
+                "云硬盘为你提供用于CVM的持久性数据块级存储服务。云硬盘中的数据自动地可用区内以多副本冗"
             },
             {
               index: 45,
@@ -418,7 +418,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/ssl.jpg",
               name: "T-Sec 云防火墙",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             },
             {
               index: 46,
@@ -427,7 +427,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/cloud-server.jpg",
               name: "SSL证书",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             },
             {
               index: 47,
@@ -445,7 +445,7 @@ export default defineFakeRoute([
               banner: "https://tdesign.gtimg.com/tdesign-pro/ssl.jpg",
               name: "T-Sec 云防火墙",
               description:
-                "SSL证书又叫服务器证书，腾讯云为您提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
+                "SSL证书又叫服务器证书，腾讯云为你提供证书的一站式服务，包括免费、付费证书的申请、管理及部"
             }
           ]
         }

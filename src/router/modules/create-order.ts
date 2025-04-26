@@ -7,7 +7,7 @@ import { getToken } from "@/utils/auth";
 const token = getToken();
 
 // 定义基础 URL
-let frameSrc = "https://portal.uswoo.cn/agent/calendar/calendar.html";
+let frameSrc = "https://bos.uswoo.com/createOrder/";
 
 // 检查 token 是否存在并且有 accessToken 属性
 if (token && token.accessToken) {

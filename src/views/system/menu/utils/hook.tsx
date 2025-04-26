@@ -171,7 +171,7 @@ export function useMenu() {
         const curData = options.props.formInline as FormItemProps;
         function chores() {
           message(
-            `您${title}了菜单名称为${transformI18n(curData.title)}的这条数据`,
+            `你${title}了菜单名称为${transformI18n(curData.title)}的这条数据`,
             {
               type: "success"
             }
@@ -197,7 +197,7 @@ export function useMenu() {
   }
 
   function handleDelete(row) {
-    message(`您删除了菜单名称为${transformI18n(row.title)}的这条数据`, {
+    message(`你删除了菜单名称为${transformI18n(row.title)}的这条数据`, {
       type: "success"
     });
     onSearch();

@@ -232,7 +232,7 @@ export function useUser(tableRef: Ref, treeRef: Ref) {
   }
 
   function handleDelete(row) {
-    message(`您删除了用户编号为${row.id}的这条数据`, { type: "success" });
+    message(`你删除了用户编号为${row.id}的这条数据`, { type: "success" });
     onSearch();
   }
 
@@ -336,7 +336,7 @@ export function useUser(tableRef: Ref, treeRef: Ref) {
         const FormRef = formRef.value.getRef();
         const curData = options.props.formInline as FormItemProps;
         function chores() {
-          message(`您${title}了用户名称为${curData.username}的这条数据`, {
+          message(`你${title}了用户名称为${curData.username}的这条数据`, {
             type: "success"
           });
           done(); // 关闭弹框

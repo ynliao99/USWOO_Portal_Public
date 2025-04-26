@@ -1,485 +1,502 @@
 @font-face {
-    font-family: 'FZQingKeBenYueSong';
-    src: url('fz.ttf') format('truetype');
+  font-family: "FZQingKeBenYueSong";
+  src: url("fz.ttf") format("truetype");
 }
 
-
-body, html {
-    -webkit-user-select: none; /* 针对Chrome、Safari等浏览器 */
-    -moz-user-select: none; /* 针对Firefox浏览器 */
-    -ms-user-select: none; /* 针对IE、Edge浏览器 */
-    user-select: none; /* 标准语法 */
-    height: 100%; /* 确保整个网页大小与浏览器窗口一致 */
-    margin: 0;
-    padding: 0;
-    /*background-image: url('bg.png');*/
-    background-image: url('cbf.webp');
-    background-size: cover;
-    overflow: hidden; /* 防止出现滚动条 */
-    font-size: 1vw; /* 基于视口宽度的相对字体大小 */
+body,
+html {
+  -webkit-user-select: none; /* 针对Chrome、Safari等浏览器 */
+  -moz-user-select: none; /* 针对Firefox浏览器 */
+  -ms-user-select: none; /* 针对IE、Edge浏览器 */
+  user-select: none; /* 标准语法 */
+  height: 100%; /* 确保整个网页大小与浏览器窗口一致 */
+  margin: 0;
+  padding: 0;
+  /*background-image: url('bg.png');*/
+  background-image: url("cbf.webp");
+  background-size: cover;
+  overflow: hidden; /* 防止出现滚动条 */
+  font-size: 1vw; /* 基于视口宽度的相对字体大小 */
 }
 
 .dashboard {
-    position: relative;
-    width: 99%;
-    height: 86%;
-    margin-top: 20px; /* 设置距离顶部30px */
-    margin-left: auto;
-    margin-right: auto;
-    display: flex;
-    gap: 0.5%;
+  position: relative;
+  width: 99%;
+  height: 86%;
+  margin-top: 20px; /* 设置距离顶部30px */
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  gap: 0.5%;
 }
 
 .left-panel {
-    width: 35%;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5%;
+  width: 35%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5%;
 }
 
 .central-panel {
-    width: 12%;
-    display: flex;
-    flex-direction: column;
-    background-color: rgba(34, 34, 34, 0.7);
-    display: flex;
-    gap: 0.5%;
-    align-items: center; /* 确保内容居中显示 */
+  width: 12%;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(34, 34, 34, 0.7);
+  display: flex;
+  gap: 0.5%;
+  align-items: center; /* 确保内容居中显示 */
 }
 
-.central-panel .title{
-    font-family: 'FZQingKeBenYueSong', sans-serif;
-    color: white; /* 标题文字颜色设置为白色 */
-    font-weight: bold;
-    font-size: 1.5em; /* 标题文字更大 */
-    padding-top: 0.5em; /* 保持边距 */
-    text-align: center;
+.central-panel .title {
+  font-family: "FZQingKeBenYueSong", sans-serif;
+  color: white; /* 标题文字颜色设置为白色 */
+  font-weight: bold;
+  font-size: 1.5em; /* 标题文字更大 */
+  padding-top: 0.5em; /* 保持边距 */
+  text-align: center;
 }
 
 .central-panel .progress-module {
-    width: 100%; /* 使模块填充整个父容器宽度 */
-    font-size: 2vh;
-    margin-top: 10px;
-    position: relative; /* 设置相对定位，便于子元素使用绝对定位 */
+  width: 100%; /* 使模块填充整个父容器宽度 */
+  font-size: 2vh;
+  margin-top: 10px;
+  position: relative; /* 设置相对定位，便于子元素使用绝对定位 */
 }
 
 .central-panel .name {
-    color: white;
-    margin-bottom: 5px; /* 名称与进度条容器之间的间隔 */
+  color: white;
+  margin-bottom: 5px; /* 名称与进度条容器之间的间隔 */
 }
 
 .central-panel .progress-container {
-    display: flex;
-    width: 100%;
-    align-items: center; /* 对齐进度条和目标数字 */
+  display: flex;
+  width: 100%;
+  align-items: center; /* 对齐进度条和目标数字 */
 }
 
 .central-panel progress {
-    flex-grow: 1;
-    height: 15px; /* 进度条的高度 */
-    -webkit-appearance: none;
-    appearance: none;
-    position: relative; /* 设置相对定位 */
+  flex-grow: 1;
+  height: 15px; /* 进度条的高度 */
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative; /* 设置相对定位 */
 }
 
 .central-panel .progress-value {
-    position: absolute;
-    left: 50%; /* 水平居中 */
-    top: 1; /* 垂直居中 */
-    transform: translateX(-50%); /* 确保完全居中 */
-    color: white;
-    font-size: 14px; /* 根据需要调整字体大小 */
-    z-index: 1; /* 确保文字显示在进度条之上 */
+  position: absolute;
+  left: 50%; /* 水平居中 */
+  top: 1; /* 垂直居中 */
+  transform: translateX(-50%); /* 确保完全居中 */
+  color: white;
+  font-size: 14px; /* 根据需要调整字体大小 */
+  z-index: 1; /* 确保文字显示在进度条之上 */
 }
 
-
 .central-panel .target {
-
-    color: white;
-    text-align: left; /* 文字向左对齐 */
-    font-size: 15px; /* 字体大小与进度条高度一致 */
-    margin-left: 5px; /* 在进度条和文字之间留出一点空间 */
+  color: white;
+  text-align: left; /* 文字向左对齐 */
+  font-size: 15px; /* 字体大小与进度条高度一致 */
+  margin-left: 5px; /* 在进度条和文字之间留出一点空间 */
 }
 
 .central-panel progress::-webkit-progress-bar {
-    background-color: #555;
+  background-color: #555;
 }
 
 .central-panel progress::-webkit-progress-value {
-    background-color: #f95865;
+  background-color: #f95865;
 }
 
 .central-panel progress::-moz-progress-bar {
-    background-color: #f95865;
+  background-color: #f95865;
 }
 
-        /* 添加一个新类用于进度条超过100% */
-        .central-panel .over-100::-webkit-progress-value {
-            background-color: #4CAF50; /* 红色表示超过100% */
-        }
+/* 添加一个新类用于进度条超过100% */
+.central-panel .over-100::-webkit-progress-value {
+  background-color: #4caf50; /* 红色表示超过100% */
+}
 
-        .central-panel .over-100::-moz-progress-bar {
-            background-color: #4CAF50; /* 红色表示超过100% */
-        }
+.central-panel .over-100::-moz-progress-bar {
+  background-color: #4caf50; /* 红色表示超过100% */
+}
 
 #progress-bulk-container {
-    width: 95%;
-    height: calc(100% - 2em);
-    overflow-y: auto;
+  width: 95%;
+  height: calc(100% - 2em);
+  overflow-y: auto;
 }
-
 
 .right-panel {
-    width: 56%;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5%;
+  width: 56%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5%;
 }
 
-.upper-left,  .upper-right, .lower-right {
-    background-color: rgba(34, 34, 34, 0.7);
+.upper-left,
+.upper-right,
+.lower-right {
+  background-color: rgba(34, 34, 34, 0.7);
 }
 
 .upper-left {
-    flex: 65%;
+  flex: 65%;
 }
 
 .lower-left {
-    flex: 35%;
-    display: flex;
-    gap: 1%;
+  flex: 35%;
+  display: flex;
+  gap: 1%;
 }
 
-.left-section, .middle-section, .right-section, .xhs-section {
-    background-color: rgba(34, 34, 34, 0.7);
-    display: flex;
-    width: 33%;
+.left-section,
+.middle-section,
+.right-section,
+.xhs-section {
+  background-color: rgba(34, 34, 34, 0.7);
+  display: flex;
+  width: 33%;
 }
 
-
-.upper-left .title{
-    font-family: 'FZQingKeBenYueSong', sans-serif;
-    color: white; /* 标题文字颜色设置为白色 */
-    font-weight: bold;
-    font-size: 1.7em; /* 标题文字更大 */
-    padding: 1em; /* 保持边距 */
-    padding-bottom: 0.5em; /* 保持边距 */
-    text-align: center;
+.upper-left .title {
+  font-family: "FZQingKeBenYueSong", sans-serif;
+  color: white; /* 标题文字颜色设置为白色 */
+  font-weight: bold;
+  font-size: 1.7em; /* 标题文字更大 */
+  padding: 1em; /* 保持边距 */
+  padding-bottom: 0.5em; /* 保持边距 */
+  text-align: center;
 }
 
-.performance-table, .central-ranking-table {
-    width: calc(100% - 1em); /* 填满模块空间，考虑到边距 */
-    height: calc(85% - 15px); /* 纵向填满模块，减去标题和间距 */
-    margin: 0 auto;
-    border-collapse: collapse;
-    background-color: transparent; /* 透明底色 */
-    font-size: 1.5em; /* 表格内的字体更大 */
-    color: white; /* 表格文字颜色设置为白色 */
-    table-layout: fixed; /* 固定表格布局 */
+.performance-table,
+.central-ranking-table {
+  width: calc(100% - 1em); /* 填满模块空间，考虑到边距 */
+  height: calc(85% - 15px); /* 纵向填满模块，减去标题和间距 */
+  margin: 0 auto;
+  border-collapse: collapse;
+  background-color: transparent; /* 透明底色 */
+  font-size: 1.5em; /* 表格内的字体更大 */
+  color: white; /* 表格文字颜色设置为白色 */
+  table-layout: fixed; /* 固定表格布局 */
 }
 
-.performance-table th, .performance-table td, .central-ranking-table th, .central-ranking-table td {
-    font-weight: bold;
-    text-align: center;
-    border-bottom: 1px solid #ddd; /* 仅横向分割线 */
-    padding: 5px;
-    vertical-align: middle; /* 垂直居中对齐 */
-    white-space: nowrap; /* 防止内容换行 */
-    overflow: hidden; /* 超出部分隐藏 */
-    text-overflow: ellipsis; /* 超出部分显示省略号 */
-    height: 16.67%;
+.performance-table th,
+.performance-table td,
+.central-ranking-table th,
+.central-ranking-table td {
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px solid #ddd; /* 仅横向分割线 */
+  padding: 5px;
+  vertical-align: middle; /* 垂直居中对齐 */
+  white-space: nowrap; /* 防止内容换行 */
+  overflow: hidden; /* 超出部分隐藏 */
+  text-overflow: ellipsis; /* 超出部分显示省略号 */
+  height: 16.67%;
 }
 
-.performance-table th, .central-ranking-table td {
-    white-space: nowrap; /* 表头不换行 */
+.performance-table th,
+.central-ranking-table td {
+  white-space: nowrap; /* 表头不换行 */
 }
 
-.performance-table tr:last-child td, .central-ranking-table tr:last-child td {
-    
-    border-bottom: none; 
+.performance-table tr:last-child td,
+.central-ranking-table tr:last-child td {
+  border-bottom: none;
 }
 
-.left-section, .middle-section, .right-section, .xhs-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: white; /* 文字颜色为白色 */
-    padding: 1em;
+.left-section,
+.middle-section,
+.right-section,
+.xhs-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white; /* 文字颜色为白色 */
+  padding: 1em;
 }
 
 .section-title {
-    height: 40%;
-    font-size: 1.5em;
-    font-weight: bold;
-    margin-bottom: 0.5em; /* 标题和数字之间的间距 */
+  height: 40%;
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-bottom: 0.5em; /* 标题和数字之间的间距 */
 }
 
 .section-number {
-    font-size: 2em;
-    font-weight: bold;
-    
+  font-size: 2em;
+  font-weight: bold;
 }
 
 .footer {
-    position: relative;
-    width: 97%;
-    height: 7%;
-    margin-left: auto;
-    margin-right: auto;
-    display: flex;
-   
-    margin-top: 0.4%;
-    margin-bottom: 0.2%;
-    color: white;
-    
+  position: relative;
+  width: 97%;
+  height: 7%;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+
+  margin-top: 0.4%;
+  margin-bottom: 0.2%;
+  color: white;
 }
 
 .footer-section {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: left;
-    text-shadow: 2px 2px 15px rgba(252, 103, 110, 0.5);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: left;
+  text-shadow: 2px 2px 15px rgba(252, 103, 110, 0.5);
 }
 
 .dashboard-text {
-    font-size: 3em;
-    font-family: 'Dancing Script', cursive; /* 使用引入的花体字 */
+  font-size: 3em;
+  font-family: "Dancing Script", cursive; /* 使用引入的花体字 */
 }
 
 .footer-logo img {
-    height: 55%;
-    margin-right: 0.5em;
-    
+  height: 55%;
+  margin-right: 0.5em;
 }
 
-
 .dashboard-text sup {
-    font-size: x-small;
+  font-size: x-small;
 }
 
 .footer-time {
-    /*color: black;*/
-    font-size: 2em;
-    
+  /*color: black;*/
+  font-size: 2em;
 }
 
 .footer-info {
-    
-    display: flex;
-    flex-direction: column; /* 设置为列方向布局 */
-    justify-content: center; /* 水平居中对齐 */
-    align-items: flex-end; /* 子项左对齐 */
-    
+  display: flex;
+  flex-direction: column; /* 设置为列方向布局 */
+  justify-content: center; /* 水平居中对齐 */
+  align-items: flex-end; /* 子项左对齐 */
 }
 
 .footer-info div {
-    font-size: 1em;
-    display: block; /* 明确设置为块级元素 */
-    text-align: left; /* 左对齐文本 */
-    margin-bottom: 0.5em; /* 添加间距 */
+  font-size: 1em;
+  display: block; /* 明确设置为块级元素 */
+  text-align: left; /* 左对齐文本 */
+  margin-bottom: 0.5em; /* 添加间距 */
 }
 
-
 .footer-info img.footer-qr-code {
-    width: 50px; /* 或您希望的尺寸 */
-    height: 50px; /* 或您希望的尺寸 */
-    margin-top: 1em; /* 与文本之间的间距 */
+  width: 50px; /* 或你希望的尺寸 */
+  height: 50px; /* 或你希望的尺寸 */
+  margin-top: 1em; /* 与文本之间的间距 */
 }
 
 .upper-right {
-    height: 55%;
+  height: 55%;
 }
 
 .lower-right {
-    height: 45%;
+  height: 45%;
 }
 
 .right-table {
-    height: calc(86% - 2em);
-    overflow-y: auto;
+  height: calc(86% - 2em);
+  overflow-y: auto;
 }
 
 .right-lower-table {
-    height: calc(85% - 2em);
-    overflow-y: auto;
+  height: calc(85% - 2em);
+  overflow-y: auto;
 }
 
-.upper-right, .lower-right {
-    overflow: hidden;
+.upper-right,
+.lower-right {
+  overflow: hidden;
 }
 
-.right-table::-webkit-scrollbar, .right-lower-table::-webkit-scrollbar, #progress-bulk-container::-webkit-scrollbar {
-    display: none; /* 隐藏滚动条 */
+.right-table::-webkit-scrollbar,
+.right-lower-table::-webkit-scrollbar,
+#progress-bulk-container::-webkit-scrollbar {
+  display: none; /* 隐藏滚动条 */
 }
-.upper-right .title, .lower-right .title {
-    font-family: 'FZQingKeBenYueSong', sans-serif;
-    color: white; /* 标题文字颜色设置为白色 */
-    font-weight: bold;
-    font-size: 1.5em; /* 标题文字更大 */
-    padding-top: 0.5em; /* 保持边距 */
-    text-align: center;
-    margin-bottom: 0px; 
-}
-
-
-.sublet-table, .viewing-table {
-
-    width: calc(100% - 1em); /* 填满模块空间，考虑到边距 */
-    
-    margin: 0 auto;
-    border-collapse: collapse;
-    background-color: transparent; /* 透明底色 */
-    font-size: 1.3em; /* 表格内的字体更大 */
-    color: white; /* 表格文字颜色设置为白色 */
-    table-layout: fixed; /* 固定表格布局 */
-     
+.upper-right .title,
+.lower-right .title {
+  font-family: "FZQingKeBenYueSong", sans-serif;
+  color: white; /* 标题文字颜色设置为白色 */
+  font-weight: bold;
+  font-size: 1.5em; /* 标题文字更大 */
+  padding-top: 0.5em; /* 保持边距 */
+  text-align: center;
+  margin-bottom: 0px;
 }
 
-.sublet-table th, .sublet-table td, .viewing-table th, .viewing-table td {
-    white-space: nowrap; /* 防止内容换行 */
-    overflow: hidden; /* 超出部分隐藏 */
-    text-overflow: ellipsis; /* 超出部分显示省略号 */
-    padding-left: 10px;
-    padding-top: 0.6em;
-    padding-bottom: 0.6em;
-    padding-right: 10px;
-    border-bottom: 1px solid #ddd; /* 仅横向分割线 */
-    text-align: center; /* 文本居中 */
-    vertical-align: middle; /* 垂直居中对齐 */
-    
+.sublet-table,
+.viewing-table {
+  width: calc(100% - 1em); /* 填满模块空间，考虑到边距 */
+
+  margin: 0 auto;
+  border-collapse: collapse;
+  background-color: transparent; /* 透明底色 */
+  font-size: 1.3em; /* 表格内的字体更大 */
+  color: white; /* 表格文字颜色设置为白色 */
+  table-layout: fixed; /* 固定表格布局 */
 }
 
-.sublet-table th:nth-child(6), .sublet-table td:nth-child(6) {
-    width: 40%; /* 主观需求列宽度设置为40% */
-    text-align: left;
+.sublet-table th,
+.sublet-table td,
+.viewing-table th,
+.viewing-table td {
+  white-space: nowrap; /* 防止内容换行 */
+  overflow: hidden; /* 超出部分隐藏 */
+  text-overflow: ellipsis; /* 超出部分显示省略号 */
+  padding-left: 10px;
+  padding-top: 0.6em;
+  padding-bottom: 0.6em;
+  padding-right: 10px;
+  border-bottom: 1px solid #ddd; /* 仅横向分割线 */
+  text-align: center; /* 文本居中 */
+  vertical-align: middle; /* 垂直居中对齐 */
 }
 
-.sublet-table th:nth-child(1), .sublet-table td:nth-child(1) {
-    width: 9%; /* 类型 */
+.sublet-table th:nth-child(6),
+.sublet-table td:nth-child(6) {
+  width: 40%; /* 主观需求列宽度设置为40% */
+  text-align: left;
 }
 
-.sublet-table th:nth-child(2), .sublet-table td:nth-child(2) {
-    width: 14%; /* 经纪人 */
+.sublet-table th:nth-child(1),
+.sublet-table td:nth-child(1) {
+  width: 9%; /* 类型 */
 }
 
-.sublet-table th:nth-child(3), .sublet-table td:nth-child(3) {
-    width: 16%; /* 地点 */
+.sublet-table th:nth-child(2),
+.sublet-table td:nth-child(2) {
+  width: 14%; /* 经纪人 */
 }
 
-.sublet-table th:nth-child(4), .sublet-table td:nth-child(4) {
-    width: 9%; /* 预算 */
+.sublet-table th:nth-child(3),
+.sublet-table td:nth-child(3) {
+  width: 16%; /* 地点 */
 }
 
-.sublet-table th:nth-child(5), .sublet-table td:nth-child(5) {
-    width: 12%; /* 租期 */
+.sublet-table th:nth-child(4),
+.sublet-table td:nth-child(4) {
+  width: 9%; /* 预算 */
 }
 
-
+.sublet-table th:nth-child(5),
+.sublet-table td:nth-child(5) {
+  width: 12%; /* 租期 */
+}
 
 /*.sublet-table tr:last-child td, .viewing-table tr:last-child td {*/
 /*    border-bottom: none; */
 /*}*/
 
-.sublet-table th:nth-child(6), .sublet-table td:nth-child(6) {
-    width: 40%; /* 主观需求列宽度设置为40% */
+.sublet-table th:nth-child(6),
+.sublet-table td:nth-child(6) {
+  width: 40%; /* 主观需求列宽度设置为40% */
 }
 
-
-.viewing-table th:nth-child(1), .viewing-table td:nth-child(1) {
-    width: 16%; /* 时间 */
+.viewing-table th:nth-child(1),
+.viewing-table td:nth-child(1) {
+  width: 16%; /* 时间 */
 }
 
-.viewing-table th:nth-child(2), .viewing-table td:nth-child(2) {
-    width: 15%; /* 经纪人 */
+.viewing-table th:nth-child(2),
+.viewing-table td:nth-child(2) {
+  width: 15%; /* 经纪人 */
 }
 
-.viewing-table th:nth-child(3), .viewing-table td:nth-child(3) {
-    width: 16%; /* 公寓名称 */
+.viewing-table th:nth-child(3),
+.viewing-table td:nth-child(3) {
+  width: 16%; /* 公寓名称 */
 }
 
-.viewing-table th:nth-child(4), .viewing-table td:nth-child(4) {
-    width: 15%; /* Unit */
+.viewing-table th:nth-child(4),
+.viewing-table td:nth-child(4) {
+  width: 15%; /* Unit */
 }
 
-.viewing-table th:nth-child(5), .viewing-table td:nth-child(5) {
-    width: 38%; /* 备注 */
-    text-align: left;
+.viewing-table th:nth-child(5),
+.viewing-table td:nth-child(5) {
+  width: 38%; /* 备注 */
+  text-align: left;
 }
 
 .notice {
-    position: relative;
-    width: 100%;
-    font-size: 2vh;
-    line-height: 100%;
-    height: 3vh;
-    margin-left: auto;
-    margin-right: auto;
-    display: flex;
-    color: white;
-    align-items: center; /* 垂直居中 */
-    background-color: rgba(34, 34, 34, 0.7);
-     overflow: hidden; /* 隐藏超出部分 */
-    margin-top: 0.4%;
+  position: relative;
+  width: 100%;
+  font-size: 2vh;
+  line-height: 100%;
+  height: 3vh;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  color: white;
+  align-items: center; /* 垂直居中 */
+  background-color: rgba(34, 34, 34, 0.7);
+  overflow: hidden; /* 隐藏超出部分 */
+  margin-top: 0.4%;
 }
 
 .scrolling-text {
-    white-space: nowrap; /* 保持文本在一行 */
-    display: flex;
-    left: 100%;
-    letter-spacing: 1px; /* 增加字间距，这里是示例值，您可以根据需要调整 */
+  white-space: nowrap; /* 保持文本在一行 */
+  display: flex;
+  left: 100%;
+  letter-spacing: 1px; /* 增加字间距，这里是示例值，你可以根据需要调整 */
 }
 
 .fas.fa-plane {
-    transform: scaleX(-1);
+  transform: scaleX(-1);
 }
 
-.scrolling-text span{
-    margin-left: 100px;
+.scrolling-text span {
+  margin-left: 100px;
 }
 
 /* Loading Overlay样式 */
 #loadingOverlay {
-    position: fixed; /* 固定位置 */
-    top: 0;
-    left: 0;
-    width: 100%; /* 全屏 */
-    height: 100%;
-    background: rgba(255, 255, 255, 0.25); /* 半透明背景 */
-    display: flex;
-    align-items: center; /* 垂直居中对齐 */
-    justify-content: center; /* 水平居中对齐 */
-    z-index: 1000; /* 确保它在页面顶层 */
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* 水平偏移，垂直偏移，模糊半径，颜色 */
+  position: fixed; /* 固定位置 */
+  top: 0;
+  left: 0;
+  width: 100%; /* 全屏 */
+  height: 100%;
+  background: rgba(255, 255, 255, 0.25); /* 半透明背景 */
+  display: flex;
+  align-items: center; /* 垂直居中对齐 */
+  justify-content: center; /* 水平居中对齐 */
+  z-index: 1000; /* 确保它在页面顶层 */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* 水平偏移，垂直偏移，模糊半径，颜色 */
 }
 
 /* 转圈动画 */
 .loader {
-    font-size: 4vh;
-    color: #3498db;
-    /*border-radius: 50%;*/
-    /*width: 70px;*/
-    /*height: 70px;*/
-    animation: spin 2s linear infinite;
+  font-size: 4vh;
+  color: #3498db;
+  /*border-radius: 50%;*/
+  /*width: 70px;*/
+  /*height: 70px;*/
+  animation: spin 2s linear infinite;
 }
 /* 动画关键帧 */
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* 文本样式 */
 .loadingText {
-    font-size: 4vh;
-    color: #ffffff;
-    
+  font-size: 4vh;
+  color: #ffffff;
 }
 
-.soulC{
-    text-decoration: line-through;
-    text-decoration-thickness: 2px; /* 设置删除线的粗细 */
-    font-style: italic;   
+.soulC {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px; /* 设置删除线的粗细 */
+  font-style: italic;
 }

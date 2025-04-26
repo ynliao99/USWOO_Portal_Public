@@ -20,13 +20,13 @@ const GUIDE_STEPS = [
       | string
       | HTMLElement,
     title: "项目名称和Logo",
-    intro: "您可以在这里设置项目名称和Logo",
+    intro: "你可以在这里设置项目名称和Logo",
     position: "left"
   },
   {
     element: document.querySelector("#header-search") as string | HTMLElement,
     title: "搜索菜单",
-    intro: "您可以在这里搜索想要查看的菜单",
+    intro: "你可以在这里搜索想要查看的菜单",
     position: "left"
   },
   {
@@ -34,31 +34,31 @@ const GUIDE_STEPS = [
       | string
       | HTMLElement,
     title: "国际化",
-    intro: "您可以在这里进行语言切换",
+    intro: "你可以在这里进行语言切换",
     position: "left"
   },
   {
     element: document.querySelector("#full-screen") as string | HTMLElement,
     title: "全屏",
-    intro: "您可以在这里进行全屏切换",
+    intro: "你可以在这里进行全屏切换",
     position: "left"
   },
   {
     element: document.querySelector("#header-notice") as string | HTMLElement,
     title: "消息通知",
-    intro: "您可以在这里查看管理员发送的消息",
+    intro: "你可以在这里查看管理员发送的消息",
     position: "left"
   },
   {
     element: document.querySelector(".set-icon") as string | HTMLElement,
     title: "系统配置",
-    intro: "您可以在这里查看系统配置",
+    intro: "你可以在这里查看系统配置",
     position: "left"
   },
   {
     element: document.querySelector(".tags-view") as string | HTMLElement,
     title: "多标签页",
-    intro: "这里是您访问过的页面的历史",
+    intro: "这里是你访问过的页面的历史",
     position: "bottom"
   }
 ] as Partial<GuideStep>[];
