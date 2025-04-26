@@ -174,7 +174,7 @@
           </div>
         </div>
         <div class="lower-right" style="background-color: rgb(34 34 34 / 0%)">
-          <CalendarComponent :showToolbar="false" maxHeight="100%" />
+          <CalendarComponent :showToolbar="false" maxheight="100%" />
         </div>
       </div>
     </div>
