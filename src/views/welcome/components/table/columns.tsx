@@ -15,11 +15,6 @@ export function useColumns(initialList: any[] = []) {
   const columns: TableColumnList = [
     {
       sortable: true,
-      label: "序号",
-      prop: "id"
-    },
-    {
-      sortable: true,
       label: "类型",
       prop: "type",
       filterMultiple: false,

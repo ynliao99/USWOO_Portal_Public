@@ -1,0 +1,363 @@
+<script setup lang="ts">
+import { ref, computed, watch, h } from "vue"; // Import h for render function
+import { useRouter } from "vue-router";
+import { useCrmOrderForm } from "./useCrmOrderForm"; // Adjust path as needed
+import "plus-pro-components/es/components/steps-form/style/css";
+// PlusForm styles might be implicitly included by PlusStepsForm, but import if needed
+// import "plus-pro-components/es/components/form/style/css";
+import { PlusStepsForm } from "plus-pro-components";
+import type { PlusColumn, PlusFormInstance } from "plus-pro-components"; // Keep types
+import { ElMessage, ElAlert, ElResult, ElButton, ElIcon } from "element-plus"; // Import necessary UI components
+// Import necessary icons
+import { Loading, User, DocumentAdd, Close } from '@element-plus/icons-vue';
+
+defineOptions({
+  name: "CrmCreateOrder" // Set a component name
+});
+
+const router = useRouter();
+
+// --- Use the Hook ---
+const {
+  isLoadingInitialData,
+  isSubmittingOrder,
+  isSubmittingClient,
+  finalStatus,
+  errorMessage,
+  orderFormData, // Reactive data model for Step 0
+  clientFormData, // Reactive data model for Step 1
+  agents,
+  buildings,
+  licenses,
+  clientResources,
+  totalCommission,
+  submitOrder,
+  submitClient,
+  resetForm,
+} = useCrmOrderForm();
+
+// --- StepsForm State ---
+const activeStep = ref(0); // Controls the current active step (0-based index)
+
+// --- Column Definition Computeds ---
+// Using computed here helps organize and ensures reactivity if options change
+
+// Step 1: Order Columns definition
+const orderColumns = computed<PlusColumn[]>(() => [
+  {
+    label: "拼单", prop: "multiAgent", valueType: "radio-group", required: true,
+    options: [{ label: '否', value: '0' }, { label: '是', value: '1' }]
+  },
+  // Agent Field: Always defined, visibility/requirement controlled reactively
+  {
+    label: "Agent", prop: "agentIds", valueType: "select",
+    hidden: orderFormData.multiAgent === '0', // Reactive visibility
+    fieldProps: {
+      multiple: true,
+      filterable: true,
+      placeholder: '请选择拼单 Agent',
+      disabled: orderFormData.multiAgent === '0' // Also disable if hidden
+    },
+    options: agents.value.map(a => ({ label: a.name, value: a.id })),
+    rules: [{
+      required: orderFormData.multiAgent === '1', // Reactive requirement
+      message: "请选择拼单 Agent",
+      trigger: 'change',
+      type: 'array'
+    }]
+  },
+  {
+    label: "Building", prop: "buildingName", valueType: "autocomplete", required: true, tooltip: "若无所需公寓请先添加",
+    fieldProps: {
+      fetchSuggestions: (queryString: string, cb: (data: any[]) => void) => {
+        const results = queryString ? buildings.value.filter(b => b.label.toLowerCase().includes(queryString.toLowerCase())) : buildings.value;
+        cb(results);
+      },
+      valueKey: 'label',
+      placeholder: "搜索或选择公寓",
+      onSelect: (item: any) => {
+        orderFormData.buildingName = item.label;
+        orderFormData.buildingId = item.value;
+      },
+      onClear: () => {
+        orderFormData.buildingId = null;
+      },
+    },
+    // Add validation rule for the text input part
+    rules: [{ required: true, message: "请搜索并选择一个公寓" }]
+    // Note: Validating that buildingId is actually set might need a hidden field or custom rule if crucial
+  },
+  { label: "Apt", prop: "apt", required: true },
+  { label: "Rent", prop: "amountRent", valueType: "number", required: true, fieldProps: { precision: 2, step: 0.01, min: 0 } },
+  {
+    label: "Bed and Bath", prop: "bedBath", valueType: "select", required: true,
+    options: ["Studio", "1B1B", "2B1B", "2B2B", "3B1B", "3B2B", "其他"].map(v => ({ label: v, value: v })),
+    fieldProps: { placeholder: '请选择/Select' }
+  },
+  { label: "Lease Start Date", prop: "dtLeaseStart", valueType: "date-picker", required: true, fieldProps: { valueFormat: 'YYYY-MM-DD' } },
+  { label: "Lease End Date", prop: "dtLeaseEnd", valueType: "date-picker", required: true, fieldProps: { valueFormat: 'YYYY-MM-DD' } },
+  // Add custom date range validation rule if needed (more complex)
+  { label: "Total Tenants", prop: "totalTenants", valueType: "number", required: true, fieldProps: { min: 1, step: 1 } },
+  {
+    label: "Broker Licenses", prop: "brokerLicenseId", valueType: "select", required: true,
+    options: licenses.value.map(l => ({ label: l.name, value: l.id })),
+    fieldProps: { placeholder: '请选择/Select' }
+  },
+  { label: "备注", prop: "memo", valueType: "textarea", fieldProps: { rows: 2 } },
+]);
+
+// Step 2: Client Columns definition
+const clientColumns = computed<PlusColumn[]>(() => [
+  { label: "Deal Date", prop: "dtDeal", valueType: "date-picker", required: true, fieldProps: { valueFormat: 'YYYY-MM-DD' } },
+  { label: "Client Name", prop: "name", required: true },
+  {
+    label: "大楼付款", prop: "commBuilding", valueType: "radio-group", required: true,
+    options: [{ label: '否', value: '0' }, { label: '是', value: '1' }]
+  },
+  {
+    label: "LL Comm", prop: "amountCommBuilding", valueType: "number",
+    hidden: clientFormData.commBuilding === '0', // Reactive visibility
+    fieldProps: { precision: 2, step: 0.01, min: 0, placeholder: '请输入金额' },
+    rules: [{ required: clientFormData.commBuilding === '1', message: "请输入 LL Comm 金额" }] // Reactive requirement
+  },
+  {
+    label: "客户付款", prop: "commCyof", valueType: "radio-group", required: true,
+    options: [{ label: '否', value: '0' }, { label: '是', value: '1' }]
+  },
+  {
+    label: "TT Comm", prop: "amountCommCyof", valueType: "number",
+    hidden: clientFormData.commCyof === '0', // Reactive visibility
+    fieldProps: { precision: 2, step: 0.01, min: 0, placeholder: '请输入金额' },
+    rules: [{ required: clientFormData.commCyof === '1', message: "请输入 TT Comm 金额" }] // Reactive requirement
+  },
+  {
+    label: "总中介费", prop: 'totalCommDisplay',
+    // Use renderField to display the computed total commission
+    renderField: () => h('span', { style: 'font-weight: bold; color: var(--el-color-primary);' }, `\$${totalCommission.value}`)
+  },
+  { label: "Rebate", prop: "rebate" },
+  { label: "WeChat", prop: "weChat", required: true },
+  { label: "Email", prop: "email", required: true, rules: [{ type: 'email', message: '请输入有效 Email' }] },
+  {
+    label: "School", prop: "school", valueType: "select", required: true,
+    options: clientResources.value?.school_branch_boston?.map(s => ({ label: s, value: s })) || [],
+    fieldProps: { filterable: true, placeholder: '请选择或搜索' }
+  },
+  {
+    label: "Life Stage", prop: "lifeStage", valueType: "select", required: true,
+    options: clientResources.value?.life_stage?.map(s => ({ label: s, value: s })) || [],
+    fieldProps: { placeholder: '请选择' }
+  },
+  {
+    label: "Gender", prop: "gender", valueType: "select", required: true,
+    // Ensure an empty value option if placeholder doesn't suffice for validation
+    options: [{ label: '请选择/Select', value: '' }, { label: 'Male', value: 'Male' }, { label: 'Female', value: 'Female' }],
+    fieldProps: { placeholder: '请选择' }
+  },
+  {
+    label: "Sources", prop: "sources", valueType: "select", required: true,
+    options: clientResources.value?.sources?.map(s => ({ label: s, value: s })) || [],
+    fieldProps: { placeholder: '请选择' }
+  },
+  {
+    label: "Payment Method", prop: "paymentMethod", valueType: "select", required: true,
+    options: clientResources.value?.payment_method_branch_boston?.map(s => ({ label: s, value: s })) || [],
+    fieldProps: { placeholder: '请选择' }
+  },
+  {
+    label: "Grade", prop: "grade", valueType: "select", required: true,
+    options: clientResources.value?.grade?.map(s => ({ label: s, value: s })) || [],
+    fieldProps: { placeholder: '请选择' }
+  },
+  {
+    label: "Package", prop: "package", valueType: "select", required: true,
+    options: clientResources.value?.package?.map(s => ({ label: s, value: s })) || [],
+    fieldProps: { placeholder: '请选择' }
+  },
+  { label: "Dob", prop: "dob", valueType: "date-picker", fieldProps: { valueFormat: 'YYYY-MM-DD' } },
+  { label: "Tel", prop: "tel" },
+  { label: "Referral", prop: "referral" },
+  { label: "备注", prop: "memo", valueType: "textarea", fieldProps: { rows: 2 } },
+]);
+
+
+// --- PlusStepsForm Configuration (Now correctly structured) ---
+const stepFormConfig = computed(() => [
+  {
+    title: "订单信息", // Step 0
+    form: {
+      modelValue: orderFormData,
+      columns: orderColumns.value, // Use .value here
+      // Common form props for this step
+      labelPosition: "top",
+      labelWidth: "100px",
+      rowProps: { gutter: 20 },
+      class: "step-form-width"
+      // Add validation rules object here if needed globally for the step's form
+      // rules: { ... }
+    }
+  },
+  {
+    title: "客户信息", // Step 1
+    form: {
+      modelValue: clientFormData,
+      columns: clientColumns.value, // Use .value here
+      // Common form props for this step
+      labelPosition: "top",
+      labelWidth: "100px",
+      rowProps: { gutter: 20 },
+      class: "step-form-width"
+      // Add validation rules object here if needed
+      // rules: { ... }
+    }
+  },
+  {
+    title: "完成", // Step 2
+    form: { // Include 'form' object, can be minimal
+      modelValue: {} // Include empty modelValue
+    }
+  }
+]);
+
+// --- Event Handlers ---
+
+// Handle "Next" click (after Step 0)
+const handleNext = async (currentStepIndex: number): Promise<void> => {
+  // Assume PlusStepsForm validates the current step internally based on 'form' config before firing @next
+  console.log("Next clicked. Current Step:", currentStepIndex);
+  if (currentStepIndex === 0) {
+    const success = await submitOrder(); // Call API from hook
+    if (success) {
+      activeStep.value = currentStepIndex + 1; // Advance step index manually on success
+    }
+    // If not success, stay on step 0, error shown by hook
+  }
+};
+
+// Handle final "Submit" click (after Step 1)
+const handleSubmit = async () => {
+  console.log("Submit clicked.");
+  // Assume PlusStepsForm validates Step 1 internally before firing @submit
+  const success = await submitClient(); // Call final API from hook
+  if (success) {
+    activeStep.value = stepFormConfig.value.length - 1; // Go to final step index (2)
+  }
+};
+
+// Final Action Button Handlers
+const handleAddNextClient = () => {
+  resetForm(); // Reset hook state
+  activeStep.value = 1; // Go back to client step (index 1)
+}
+
+const handleNewOrder = () => {
+  resetForm(); // Reset hook state
+  activeStep.value = 0; // Go back to first step (index 0)
+  // Or navigate away:
+  // router.push({ name: 'SomeOtherRoute' });
+  // Or reload (less ideal):
+  // window.location.reload();
+}
+
+const handleClose = () => {
+  // May not work in all browsers due to security restrictions
+  window.close();
+  // Provide fallback message if close fails
+  if (!window.closed) {
+    ElMessage.info("请手动关闭此标签页。");
+  }
+}
+
+</script>
+
+<template>
+  <div class="crm-create-order p-4">
+    <div v-if="isLoadingInitialData" class="text-center p-10">
+      <el-icon class="is-loading" :size="26">
+        <Loading />
+      </el-icon>
+      <p>正在加载资源...</p>
+    </div>
+
+    <div v-else>
+      <PlusStepsForm v-model="activeStep" :data="stepFormConfig" :loading="isSubmittingOrder || isSubmittingClient"
+        :show-submit-button="activeStep === 1" :show-next-button="activeStep === 0" :show-prev-button="activeStep === 1"
+        submit-text="提交客户信息" next-text="保存订单并下一步" prev-text="上一步" align-center @next="handleNext" @submit="handleSubmit"
+        @prev="(currentStepIndex) => activeStep = currentStepIndex - 1">
+        <template #step-2>
+          <div class="final-step-content p-8 text-center">
+            <el-result v-if="finalStatus === 'success'" icon="success" title="提交成功" sub-title="订单和客户信息已成功录入 CRM。">
+              <template #extra>
+                <div class="flex justify-center gap-4 mt-4">
+                  <el-button type="primary" @click="handleAddNextClient">
+                    <el-icon>
+                      <User />
+                    </el-icon> 添加下一个客户
+                  </el-button>
+                  <el-button type="success" @click="handleNewOrder">
+                    <el-icon>
+                      <DocumentAdd />
+                    </el-icon> 录新单
+                  </el-button>
+                  <el-button type="danger" @click="handleClose">
+                    <el-icon>
+                      <Close />
+                    </el-icon> 关闭
+                  </el-button>
+                </div>
+              </template>
+            </el-result>
+
+            <el-result v-else-if="finalStatus === 'error'" icon="error" title="提交失败"
+              :sub-title="errorMessage || '发生未知错误，请检查信息后重试。'">
+              <template #extra>
+                <el-button type="primary" @click="activeStep = 1">返回修改客户信息</el-button>
+              </template>
+            </el-result>
+
+            <div v-else-if="isSubmittingClient">
+              <el-icon class="is-loading" :size="26">
+                <Loading />
+              </el-icon>
+              <p>正在提交客户信息...</p>
+            </div>
+
+            <div v-else>
+              <p>准备完成。</p>
+            </div>
+          </div>
+        </template>
+
+      </PlusStepsForm>
+
+      <el-alert v-if="errorMessage && finalStatus !== 'error'" :title="errorMessage" type="error" show-icon
+        class="mt-4" />
+
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.crm-create-order {
+  max-width: 900px;
+  /* Container width */
+  margin: auto;
+}
+
+/* Apply styling targetting the class added in stepFormConfig */
+:deep(.step-form-width) {
+  width: 100%;
+  max-width: 700px;
+  /* Max width of the form itself */
+  margin: 20px auto;
+  /* Center the form */
+}
+
+.final-step-content {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+</style>

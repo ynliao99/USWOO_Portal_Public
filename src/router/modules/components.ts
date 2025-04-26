@@ -8,6 +8,7 @@ export default {
     icon: "ep/menu",
     title: $t("menus.pureComponents"),
     rank: components
+    //showLink: false,
   },
   children: [
     {

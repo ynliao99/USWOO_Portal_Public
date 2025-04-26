@@ -23,11 +23,11 @@ export default ({ mode }: ConfigEnv): UserConfigExport => {
       // 端口号
       port: VITE_PORT,
       host: "0.0.0.0",
-      allowedHosts: ["devportal.uswoo.cn"], // ← 要允许的域名
+      allowedHosts: ["devportal.uswoo.cn", "portal.uswoo.cn"], // ← 要允许的域名
       // 本地跨域代理
       proxy: {
         "/portalapi": {
-          target: "https://portal.uswoo.cn/agent/api", // api服务地址
+          target: "https://api.portal.uswoo.cn/agent/api", // api服务地址
           changeOrigin: true,
           rewrite: path => path.replace(/^\/portalapi/, "")
         },

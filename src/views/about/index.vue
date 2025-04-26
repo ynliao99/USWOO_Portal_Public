@@ -61,9 +61,10 @@ Object.keys(devDependencies).forEach(key => {
 <template>
   <div>
     <el-card class="mb-4 box-card" shadow="never">
-      <span>
-        vue-pure-admin 是一款开源免费且开箱即用的中后台管理系统模版。完全采用
-        ECMAScript 模块（ESM）规范来编写和组织代码，使用了最新的
+      <span
+        >USWOO Empolyee Portal 基于 PureAdmin 框架开发。 vue-pure-admin
+        是一款开源免费且开箱即用的中后台管理系统模版。完全采用 ECMAScript
+        模块（ESM）规范来编写和组织代码，使用了最新的
         Vue3、Vite、Element-Plus、TypeScript、Pinia、Tailwindcss
         等主流技术开发。
       </span>

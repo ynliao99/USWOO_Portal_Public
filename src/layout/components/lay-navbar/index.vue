@@ -86,7 +86,7 @@ const { t, locale, translationCh, translationEn } = useTranslationLang();
       <!-- 全屏 -->
       <LaySidebarFullScreen id="full-screen" />
       <!-- 消息通知 -->
-      <LayNotice id="header-notice" />
+      <!-- <LayNotice id="header-notice" /> -->
       <!-- 退出登录 -->
       <el-dropdown trigger="click">
         <span class="el-dropdown-link navbar-bg-hover select-none">
@@ -95,13 +95,13 @@ const { t, locale, translationCh, translationEn } = useTranslationLang();
         </span>
         <template #dropdown>
           <el-dropdown-menu class="logout">
-            <el-dropdown-item @click="toAccountSettings">
+            <!-- <el-dropdown-item @click="toAccountSettings">
               <IconifyIconOffline
                 :icon="AccountSettingsIcon"
                 style="margin: 5px"
               />
               {{ t("buttons.pureAccountSettings") }}
-            </el-dropdown-item>
+            </el-dropdown-item> -->
             <el-dropdown-item @click="logout">
               <IconifyIconOffline
                 :icon="LogoutCircleRLine"

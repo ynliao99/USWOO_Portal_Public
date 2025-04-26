@@ -86,6 +86,7 @@ menus:
   apt-info: 高级公寓信息
   calendar: 看房日历
   co: 拼室友/转租/短租
+  createOrder: CRM录单
   customer: 客资管理
   dashboard: 数据看板
   drive: 视频云盘
@@ -220,6 +221,7 @@ menus:
   pureWaterfall: 瀑布流无限滚动
   pureWatermark: 水印
   pureWavesurfer: 音频可视化
+  teamManagement: 团队管理
 panel:
   pureClearCache: 清空缓存
   pureClearCacheAndToLogin: 清空缓存并返回登录页
