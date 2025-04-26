@@ -15,7 +15,7 @@ declare const initiateMapAutoComplete: (...args: any[]) => void;
 defineOptions({
   name: "showing-scheduler"
 });
-// 从 hook 中获取状态和操作方法
+
 const {
   dataList,
   loading,
@@ -28,7 +28,6 @@ const {
   openDialog,
   handleSave,
   handleDelete,
-  // 新增，更新排序和筛选条件状态的方法
   updateQueryParams
 } = useSchedules();
 
