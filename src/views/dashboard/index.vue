@@ -111,7 +111,7 @@
           </div>
         </SeamlessScroll>
         <div v-else class="progress-bulk-container">
-          <p style=" padding-top: 20px;color: #aaa; text-align: center">
+          <p style="padding-top: 20px; color: #aaa; text-align: center">
             暂无季度目标数据
           </p>
         </div>
@@ -168,21 +168,13 @@
             </table>
           </SeamlessScroll>
           <div v-else class="right-table">
-            <p style=" padding-top: 20px;color: #aaa; text-align: center">
+            <p style="padding-top: 20px; color: #aaa; text-align: center">
               暂无转租等信息
             </p>
           </div>
         </div>
         <div class="lower-right" style="background-color: rgb(34 34 34 / 0%)">
-          <iframe
-            id="gCal"
-            src="https://portal.uswoo.cn/agent/calendar/calendar.html"
-            style="opacity: 0.9"
-            width="100%"
-            height="100%"
-            frameborder="0"
-            scrolling="no"
-          />
+          <CalendarComponent :showToolbar="false" maxHeight="100%" />
         </div>
       </div>
     </div>
@@ -240,6 +232,7 @@ import { ref, reactive, computed } from "vue";
 import { useDashboardData, formatNumberWithCommas } from "./dataHandler"; // Adjust path if needed
 import SeamlessScroll from "@/components/ReSeamlessScroll"; // Adjust path as per your project structure
 import PlaneIcon from "~icons/fa/plane";
+import CalendarComponent from "@/views/bos-showing/calendar.vue";
 
 defineOptions({
   name: "DashboardIndex"
@@ -311,7 +304,6 @@ const goalsScrollOption = reactive({
 </script>
 
 <style>
-
 @import url("https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap");
 @import url("https://use.fontawesome.com/releases/v5.15.4/css/all.css");
 
@@ -348,13 +340,10 @@ html {
 
   /* 防止出现滚动条 */
   font-size: 1vw;
-  user-select: none;
 
   /* 针对Chrome、Safari等浏览器 */
-  user-select: none;
 
   /* 针对Firefox浏览器 */
-  user-select: none;
 
   /* 针对IE、Edge浏览器 */
   user-select: none;
@@ -500,7 +489,6 @@ html {
   margin: 0 5px;
 
   /* 进度条的高度 */
-  appearance: none;
   appearance: none;
 
   /* Add some horizontal space */

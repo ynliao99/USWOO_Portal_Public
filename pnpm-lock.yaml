@@ -11,6 +11,18 @@ importers:
       '@amap/amap-jsapi-loader':
         specifier: ^1.0.1
         version: 1.0.1
+      '@fullcalendar/core':
+        specifier: ^6.1.17
+        version: 6.1.17
+      '@fullcalendar/daygrid':
+        specifier: ^6.1.17
+        version: 6.1.17(@fullcalendar/core@6.1.17)
+      '@fullcalendar/interaction':
+        specifier: ^6.1.17
+        version: 6.1.17(@fullcalendar/core@6.1.17)
+      '@fullcalendar/timegrid':
+        specifier: ^6.1.17
+        version: 6.1.17(@fullcalendar/core@6.1.17)
       '@howdyjs/mouse-menu':
         specifier: ^2.1.6
         version: 2.1.6(vue@3.5.13(typescript@5.8.3))
@@ -23,6 +35,9 @@ importers:
       '@logicflow/extension':
         specifier: ^1.2.28
         version: 1.2.28
+      '@popperjs/core':
+        specifier: ^2.11.8
+        version: 2.11.8
       '@pureadmin/descriptions':
         specifier: ^1.2.1
         version: 1.2.1(echarts@5.6.0)(element-plus@2.9.7(vue@3.5.13(typescript@5.8.3)))(typescript@5.8.3)
@@ -86,6 +101,9 @@ importers:
       element-plus:
         specifier: ^2.9.7
         version: 2.9.7(vue@3.5.13(typescript@5.8.3))
+      fullcalendar:
+        specifier: ^6.1.17
+        version: 6.1.17
       highlight.js:
         specifier: ^11.11.1
         version: 11.11.1
@@ -140,6 +158,9 @@ importers:
       swiper:
         specifier: ^11.2.6
         version: 11.2.6
+      tippy.js:
+        specifier: ^6.3.7
+        version: 6.3.7
       typeit:
         specifier: ^8.8.7
         version: 8.8.7
@@ -336,6 +357,9 @@ importers:
       stylelint-config-standard-scss:
         specifier: ^14.0.0
         version: 14.0.0(postcss@8.5.3)(stylelint@16.18.0(typescript@5.8.3))
+      stylelint-config-standard-vue:
+        specifier: ^1.0.0
+        version: 1.0.0(postcss-html@1.8.0)(stylelint@16.18.0(typescript@5.8.3))
       stylelint-prettier:
         specifier: ^5.0.3
         version: 5.0.3(prettier@3.5.3)(stylelint@16.18.0(typescript@5.8.3))
@@ -1055,6 +1079,34 @@ packages:
   '@floating-ui/utils@0.2.9':
     resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
 
+  '@fullcalendar/core@6.1.17':
+    resolution: {integrity: sha512-0W7lnIrv18ruJ5zeWBeNZXO8qCWlzxDdp9COFEsZnyNjiEhUVnrW/dPbjRKYpL0edGG0/Lhs0ghp1z/5ekt8ZA==}
+
+  '@fullcalendar/daygrid@6.1.17':
+    resolution: {integrity: sha512-K7m+pd7oVJ9fW4h7CLDdDGJbc9szJ1xDU1DZ2ag+7oOo1aCNLv44CehzkkknM6r8EYlOOhgaelxQpKAI4glj7A==}
+    peerDependencies:
+      '@fullcalendar/core': ~6.1.17
+
+  '@fullcalendar/interaction@6.1.17':
+    resolution: {integrity: sha512-AudvQvgmJP2FU89wpSulUUjeWv24SuyCx8FzH2WIPVaYg+vDGGYarI7K6PcM3TH7B/CyaBjm5Rqw9lXgnwt5YA==}
+    peerDependencies:
+      '@fullcalendar/core': ~6.1.17
+
+  '@fullcalendar/list@6.1.17':
+    resolution: {integrity: sha512-fkyK49F9IxwlGUBVhJGsFpd/LTi/vRVERLIAe1HmBaGkjwpxnynm8TMLb9mZip97wvDk3CmZWduMe6PxscAlow==}
+    peerDependencies:
+      '@fullcalendar/core': ~6.1.17
+
+  '@fullcalendar/multimonth@6.1.17':
+    resolution: {integrity: sha512-ZxA9mkTzKayCdxR5je9P9++qqhSeSbuvXmvZ6doZw6omv8K52cD7XJii+P7gvxATXxtI6hg4i+DuMyOHxP1E2g==}
+    peerDependencies:
+      '@fullcalendar/core': ~6.1.17
+
+  '@fullcalendar/timegrid@6.1.17':
+    resolution: {integrity: sha512-K4PlA3L3lclLOs3IX8cvddeiJI9ZVMD7RA9IqaWwbvac771971foc9tFze9YY+Pqesf6S+vhS2dWtEVlERaGlQ==}
+    peerDependencies:
+      '@fullcalendar/core': ~6.1.17
+
   '@howdyjs/mouse-menu@2.1.6':
     resolution: {integrity: sha512-19TjOfX9p9KUOMVlThkSTAA4KfqHvrEFGTCwFVPREOjpBommFSnaXmf7mHGdoahJsGdBMAijGFoe68E/MpmnNw==}
     peerDependencies:
@@ -1280,35 +1332,30 @@ packages:
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
-    libc: [glibc]
 
   '@napi-rs/canvas-linux-arm64-musl@0.1.69':
     resolution: {integrity: sha512-a3xjNRIeK2m2ZORGv2moBvv3vbkaFZG1QKMeiEv/BKij+rkztuEhTJGMar+buICFgS0fLgphXXsKNkUSJb7eRQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
-    libc: [musl]
 
   '@napi-rs/canvas-linux-riscv64-gnu@0.1.69':
     resolution: {integrity: sha512-pClUoJF5wdC9AvD0mc15G9JffL1Q85nuH1rLSQPRkGmGmQOtRjw5E9xNbanz7oFUiPbjH7xcAXUjVAcf7tdgPQ==}
     engines: {node: '>= 10'}
     cpu: [riscv64]
     os: [linux]
-    libc: [glibc]
 
   '@napi-rs/canvas-linux-x64-gnu@0.1.69':
     resolution: {integrity: sha512-96X3bFAmzemfw84Ts6Jg/omL86uuynvK06MWGR/mp3JYNumY9RXofA14eF/kJIYelbYFWXcwpbcBR71lJ6G/YQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
-    libc: [glibc]
 
   '@napi-rs/canvas-linux-x64-musl@0.1.69':
     resolution: {integrity: sha512-2QTsEFO72Kwkj53W9hc5y1FAUvdGx0V+pjJB+9oQF6Ys9+y989GyPIl5wZDzeh8nIJW6koZZ1eFa8pD+pA5BFQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
 
   '@napi-rs/canvas-win32-x64-msvc@0.1.69':
     resolution: {integrity: sha512-Q4YA8kVnKarApBVLu7F8icGlIfSll5Glswo5hY6gPS4Is2dCI8+ig9OeDM8RlwYevUIxKq8lZBypN8Q1iLAQ7w==}
@@ -1365,42 +1412,36 @@ packages:
     engines: {node: '>= 10.0.0'}
     cpu: [arm]
     os: [linux]
-    libc: [glibc]
 
   '@parcel/watcher-linux-arm-musl@2.5.1':
     resolution: {integrity: sha512-6E+m/Mm1t1yhB8X412stiKFG3XykmgdIOqhjWj+VL8oHkKABfu/gjFj8DvLrYVHSBNC+/u5PeNrujiSQ1zwd1Q==}
     engines: {node: '>= 10.0.0'}
     cpu: [arm]
     os: [linux]
-    libc: [musl]
 
   '@parcel/watcher-linux-arm64-glibc@2.5.1':
     resolution: {integrity: sha512-LrGp+f02yU3BN9A+DGuY3v3bmnFUggAITBGriZHUREfNEzZh/GO06FF5u2kx8x+GBEUYfyTGamol4j3m9ANe8w==}
     engines: {node: '>= 10.0.0'}
     cpu: [arm64]
     os: [linux]
-    libc: [glibc]
 
   '@parcel/watcher-linux-arm64-musl@2.5.1':
     resolution: {integrity: sha512-cFOjABi92pMYRXS7AcQv9/M1YuKRw8SZniCDw0ssQb/noPkRzA+HBDkwmyOJYp5wXcsTrhxO0zq1U11cK9jsFg==}
     engines: {node: '>= 10.0.0'}
     cpu: [arm64]
     os: [linux]
-    libc: [musl]
 
   '@parcel/watcher-linux-x64-glibc@2.5.1':
     resolution: {integrity: sha512-GcESn8NZySmfwlTsIur+49yDqSny2IhPeZfXunQi48DMugKeZ7uy1FX83pO0X22sHntJ4Ub+9k34XQCX+oHt2A==}
     engines: {node: '>= 10.0.0'}
     cpu: [x64]
     os: [linux]
-    libc: [glibc]
 
   '@parcel/watcher-linux-x64-musl@2.5.1':
     resolution: {integrity: sha512-n0E2EQbatQ3bXhcH2D1XIAANAcTZkQICBPVaxMeaCVBtOpBZpWJuf7LwyWPSBDITb7In8mqQgJ7gH8CILCURXg==}
     engines: {node: '>= 10.0.0'}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
 
   '@parcel/watcher-win32-arm64@2.5.1':
     resolution: {integrity: sha512-RFzklRvmc3PkjKjry3hLF9wD7ppR4AKcWNzH7kXR7GUe0Igb3Nz8fyPwtZCSquGrhU5HhUNDr/mKBqj7tqA2Vw==}
@@ -1495,67 +1536,56 @@ packages:
     resolution: {integrity: sha512-mz5POx5Zu58f2xAG5RaRRhp3IZDK7zXGk5sdEDj4o96HeaXhlUwmLFzNlc4hCQi5sGdR12VDgEUqVSHer0lI9g==}
     cpu: [arm]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-arm-musleabihf@4.39.0':
     resolution: {integrity: sha512-+YDwhM6gUAyakl0CD+bMFpdmwIoRDzZYaTWV3SDRBGkMU/VpIBYXXEvkEcTagw/7VVkL2vA29zU4UVy1mP0/Yw==}
     cpu: [arm]
     os: [linux]
-    libc: [musl]
 
   '@rollup/rollup-linux-arm64-gnu@4.39.0':
     resolution: {integrity: sha512-EKf7iF7aK36eEChvlgxGnk7pdJfzfQbNvGV/+l98iiMwU23MwvmV0Ty3pJ0p5WQfm3JRHOytSIqD9LB7Bq7xdQ==}
     cpu: [arm64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-arm64-musl@4.39.0':
     resolution: {integrity: sha512-vYanR6MtqC7Z2SNr8gzVnzUul09Wi1kZqJaek3KcIlI/wq5Xtq4ZPIZ0Mr/st/sv/NnaPwy/D4yXg5x0B3aUUA==}
     cpu: [arm64]
     os: [linux]
-    libc: [musl]
 
   '@rollup/rollup-linux-loongarch64-gnu@4.39.0':
     resolution: {integrity: sha512-NMRUT40+h0FBa5fb+cpxtZoGAggRem16ocVKIv5gDB5uLDgBIwrIsXlGqYbLwW8YyO3WVTk1FkFDjMETYlDqiw==}
     cpu: [loong64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-powerpc64le-gnu@4.39.0':
     resolution: {integrity: sha512-0pCNnmxgduJ3YRt+D+kJ6Ai/r+TaePu9ZLENl+ZDV/CdVczXl95CbIiwwswu4L+K7uOIGf6tMo2vm8uadRaICQ==}
     cpu: [ppc64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-riscv64-gnu@4.39.0':
     resolution: {integrity: sha512-t7j5Zhr7S4bBtksT73bO6c3Qa2AV/HqiGlj9+KB3gNF5upcVkx+HLgxTm8DK4OkzsOYqbdqbLKwvGMhylJCPhQ==}
     cpu: [riscv64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-riscv64-musl@4.39.0':
     resolution: {integrity: sha512-m6cwI86IvQ7M93MQ2RF5SP8tUjD39Y7rjb1qjHgYh28uAPVU8+k/xYWvxRO3/tBN2pZkSMa5RjnPuUIbrwVxeA==}
     cpu: [riscv64]
     os: [linux]
-    libc: [musl]
 
   '@rollup/rollup-linux-s390x-gnu@4.39.0':
     resolution: {integrity: sha512-iRDJd2ebMunnk2rsSBYlsptCyuINvxUfGwOUldjv5M4tpa93K8tFMeYGpNk2+Nxl+OBJnBzy2/JCscGeO507kA==}
     cpu: [s390x]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-x64-gnu@4.39.0':
     resolution: {integrity: sha512-t9jqYw27R6Lx0XKfEFe5vUeEJ5pF3SGIM6gTfONSMb7DuG6z6wfj2yjcoZxHg129veTqU7+wOhY6GX8wmf90dA==}
     cpu: [x64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-x64-musl@4.39.0':
     resolution: {integrity: sha512-ThFdkrFDP55AIsIZDKSBWEt/JcWlCzydbZHinZ0F/r1h83qbGeenCt/G/wG2O0reuENDD2tawfAj2s8VK7Bugg==}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
 
   '@rollup/rollup-win32-arm64-msvc@4.39.0':
     resolution: {integrity: sha512-jDrLm6yUtbOg2TYB3sBF3acUnAwsIksEYjLeHL+TJv9jg+TmTwdyjnDex27jqEMakNKf3RwwPahDIt7QXCSqRQ==}
@@ -1623,28 +1653,24 @@ packages:
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
-    libc: [glibc]
 
   '@tailwindcss/oxide-linux-arm64-musl@4.1.3':
     resolution: {integrity: sha512-dm18aQiML5QCj9DQo7wMbt1Z2tl3Giht54uVR87a84X8qRtuXxUqnKQkRDK5B4bCOmcZ580lF9YcoMkbDYTXHQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
-    libc: [musl]
 
   '@tailwindcss/oxide-linux-x64-gnu@4.1.3':
     resolution: {integrity: sha512-LMdTmGe/NPtGOaOfV2HuO7w07jI3cflPrVq5CXl+2O93DCewADK0uW1ORNAcfu2YxDUS035eY2W38TxrsqngxA==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
-    libc: [glibc]
 
   '@tailwindcss/oxide-linux-x64-musl@4.1.3':
     resolution: {integrity: sha512-aalNWwIi54bbFEizwl1/XpmdDrOaCjRFQRgtbv9slWjmNPuJJTIKPHf5/XXDARc9CneW9FkSTqTbyvNecYAEGw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
 
   '@tailwindcss/oxide-win32-arm64-msvc@4.1.3':
     resolution: {integrity: sha512-PEj7XR4OGTGoboTIAdXicKuWl4EQIjKHKuR+bFy9oYN7CFZo0eu74+70O4XuERX4yjqVZGAkCdglBODlgqcCXg==}
@@ -3102,6 +3128,9 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
 
+  fullcalendar@6.1.17:
+    resolution: {integrity: sha512-5pq3jYo9cJnVn8TrnukJdP3uNZWk2V1uiTqVXIaSbO5qIXeF3H1jE11PAB5fBOacnZ9HLI/98IT82Y1rz/2VIw==}
+
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
 
@@ -3750,28 +3779,24 @@ packages:
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [linux]
-    libc: [glibc]
 
   lightningcss-linux-arm64-musl@1.29.2:
     resolution: {integrity: sha512-Q64eM1bPlOOUgxFmoPUefqzY1yV3ctFPE6d/Vt7WzLW4rKTv7MyYNky+FWxRpLkNASTnKQUaiMJ87zNODIrrKQ==}
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [linux]
-    libc: [musl]
 
   lightningcss-linux-x64-gnu@1.29.2:
     resolution: {integrity: sha512-0v6idDCPG6epLXtBH/RPkHvYx74CVziHo6TMYga8O2EiQApnUPZsbR9nFNrg2cgBzk1AYqEd95TlrsL7nYABQg==}
     engines: {node: '>= 12.0.0'}
     cpu: [x64]
     os: [linux]
-    libc: [glibc]
 
   lightningcss-linux-x64-musl@1.29.2:
     resolution: {integrity: sha512-rMpz2yawkgGT8RULc5S4WiZopVMOFWjiItBT7aSfDX4NQav6M44rhn5hjtkKzB+wMTRlLLqxkeYEtQ3dd9696w==}
     engines: {node: '>= 12.0.0'}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
 
   lightningcss-win32-arm64-msvc@1.29.2:
     resolution: {integrity: sha512-nL7zRW6evGQqYVu/bKGK+zShyz8OVzsCotFgc7judbt6wnB2KbiKKJwBE4SGoDBQ1O94RjW4asrCjQL4i8Fhbw==}
@@ -4503,6 +4528,9 @@ packages:
     resolution: {integrity: sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==}
     engines: {node: ^10 || ^12 || >=14}
 
+  preact@10.12.1:
+    resolution: {integrity: sha512-l8386ixSsBdbreOAkqtrwqHwdvR35ID8c3rKPa8lCWuO86dBi32QWHV4vfsZK1utLLFMvw+Z5Ad4XLkZzchscg==}
+
   preact@10.26.5:
     resolution: {integrity: sha512-fmpDkgfGU6JYux9teDWLhj9mKN55tyepwYbxHgQuIxbWQzgFg5vk7Mrrtfx7xRxq798ynkY4DDDxZr235Kk+4w==}
 
@@ -4945,6 +4973,13 @@ packages:
     peerDependenciesMeta:
       postcss:
         optional: true
+
+  stylelint-config-standard-vue@1.0.0:
+    resolution: {integrity: sha512-wAzU7p6DSlo04pWfCbOcaMq09Nojt0FEsbdxhCBTdC7IguD9ZVl7FP/bvyA0HAHjZGC4JkW7m6WiQaoVMDSuFw==}
+    engines: {node: ^12 || >=14}
+    peerDependencies:
+      postcss-html: ^1.0.0
+      stylelint: '>=14.0.0'
 
   stylelint-config-standard@36.0.1:
     resolution: {integrity: sha512-8aX8mTzJ6cuO8mmD5yon61CWuIM4UD8Q5aBcWKGSf6kg+EC3uhB+iOywpTK4ca6ZL7B49en8yanOFtUW0qNzyw==}
@@ -6217,6 +6252,32 @@ snapshots:
       '@floating-ui/utils': 0.2.9
 
   '@floating-ui/utils@0.2.9': {}
+
+  '@fullcalendar/core@6.1.17':
+    dependencies:
+      preact: 10.12.1
+
+  '@fullcalendar/daygrid@6.1.17(@fullcalendar/core@6.1.17)':
+    dependencies:
+      '@fullcalendar/core': 6.1.17
+
+  '@fullcalendar/interaction@6.1.17(@fullcalendar/core@6.1.17)':
+    dependencies:
+      '@fullcalendar/core': 6.1.17
+
+  '@fullcalendar/list@6.1.17(@fullcalendar/core@6.1.17)':
+    dependencies:
+      '@fullcalendar/core': 6.1.17
+
+  '@fullcalendar/multimonth@6.1.17(@fullcalendar/core@6.1.17)':
+    dependencies:
+      '@fullcalendar/core': 6.1.17
+      '@fullcalendar/daygrid': 6.1.17(@fullcalendar/core@6.1.17)
+
+  '@fullcalendar/timegrid@6.1.17(@fullcalendar/core@6.1.17)':
+    dependencies:
+      '@fullcalendar/core': 6.1.17
+      '@fullcalendar/daygrid': 6.1.17(@fullcalendar/core@6.1.17)
 
   '@howdyjs/mouse-menu@2.1.6(vue@3.5.13(typescript@5.8.3))':
     dependencies:
@@ -8592,6 +8653,15 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
+  fullcalendar@6.1.17:
+    dependencies:
+      '@fullcalendar/core': 6.1.17
+      '@fullcalendar/daygrid': 6.1.17(@fullcalendar/core@6.1.17)
+      '@fullcalendar/interaction': 6.1.17(@fullcalendar/core@6.1.17)
+      '@fullcalendar/list': 6.1.17(@fullcalendar/core@6.1.17)
+      '@fullcalendar/multimonth': 6.1.17(@fullcalendar/core@6.1.17)
+      '@fullcalendar/timegrid': 6.1.17(@fullcalendar/core@6.1.17)
+
   function-bind@1.1.2: {}
 
   gensync@1.0.0-beta.2: {}
@@ -10132,6 +10202,8 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
+  preact@10.12.1: {}
+
   preact@10.26.5: {}
 
   prelude-ls@1.2.1: {}
@@ -10554,6 +10626,14 @@ snapshots:
       stylelint-config-standard: 36.0.1(stylelint@16.18.0(typescript@5.8.3))
     optionalDependencies:
       postcss: 8.5.3
+
+  stylelint-config-standard-vue@1.0.0(postcss-html@1.8.0)(stylelint@16.18.0(typescript@5.8.3)):
+    dependencies:
+      postcss-html: 1.8.0
+      stylelint: 16.18.0(typescript@5.8.3)
+      stylelint-config-html: 1.1.0(postcss-html@1.8.0)(stylelint@16.18.0(typescript@5.8.3))
+      stylelint-config-recommended-vue: 1.6.0(postcss-html@1.8.0)(stylelint@16.18.0(typescript@5.8.3))
+      stylelint-config-standard: 36.0.1(stylelint@16.18.0(typescript@5.8.3))
 
   stylelint-config-standard@36.0.1(stylelint@16.18.0(typescript@5.8.3)):
     dependencies:

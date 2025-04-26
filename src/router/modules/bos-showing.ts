@@ -13,7 +13,6 @@ export default {
   },
   children: [
     {
-      
       path: "/bos-showing/index",
       name: "bos-showing",
       component: () => import("@/views/bos-showing/index.vue"),
@@ -25,11 +24,10 @@ export default {
     {
       path: "/bos-showing/calendar",
       name: "bos-calendar",
-      component: () => import("@/layout/frame.vue"),
+      component: () => import("@/views/bos-showing/calendar.vue"),
       meta: {
-        icon:CalendarIcon,
-        title: $t("menus.calendar"),
-        frameSrc: "https://portal.uswoo.cn/agent/calendar/calendar.html"
+        icon: CalendarIcon,
+        title: $t("menus.calendar")
       }
     }
   ]
