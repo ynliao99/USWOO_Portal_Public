@@ -3,7 +3,53 @@ export function useColumns() {
   const { version, engines } = pkg;
   const columns = [
     {
-      label: "当前版本",
+      label: "程序版本",
+      minWidth: 100,
+      cellRenderer: () => {
+        return (
+          <el-tag size="large" class="text-base!">
+            1.0.0
+          </el-tag>
+        );
+      }
+    },
+    {
+      label: "许可证",
+      minWidth: 100,
+      cellRenderer: () => {
+        return (
+          <el-tag size="large" class="text-base!">
+            MIT LICENSE
+          </el-tag>
+        );
+      }
+    },
+    {
+      label: "版权所有",
+      minWidth: 100,
+      className: "pure-version",
+      cellRenderer: () => {
+        return (
+          <a href="https://lyndons.cn" target="_blank">
+            <span style="color: var(--el-color-primary)">Lyndons's Studio</span>
+          </a>
+        );
+      }
+    },
+    {
+      label: "商用许可",
+      className: "pure-version",
+      minWidth: 100,
+      cellRenderer: () => {
+        return (
+          <a href="https://www.uswoo.com" target="_blank">
+            <span style="color: var(--el-color-primary)">USWOO Realty</span>
+          </a>
+        );
+      }
+    },
+    {
+      label: "框架版本",
       minWidth: 100,
       cellRenderer: () => {
         return (

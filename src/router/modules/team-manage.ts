@@ -5,7 +5,7 @@ export default {
   path: "/team-manage",
   redirect: "/team-manage/index",
   meta: {
-    icon: "ep:monitor",
+    icon: "lucide:user-cog",
     title: $t("menus.teamManagement"),
     rank: teamManagement
   },

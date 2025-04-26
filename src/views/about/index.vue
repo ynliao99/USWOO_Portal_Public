@@ -61,12 +61,14 @@ Object.keys(devDependencies).forEach(key => {
 <template>
   <div>
     <el-card class="mb-4 box-card" shadow="never">
-      <span
-        >USWOO Empolyee Portal 基于 PureAdmin 框架开发。 vue-pure-admin
+      <span>
+        USWOO Empolyee Portal 基于 PureAdmin 框架开发。 vue-pure-admin
         是一款开源免费且开箱即用的中后台管理系统模版。完全采用 ECMAScript
         模块（ESM）规范来编写和组织代码，使用了最新的
-        Vue3、Vite、Element-Plus、TypeScript、Pinia、Tailwindcss
+        Vue3、Vite、Element-Plus、TypeScript、Javascript、Pinia、Tailwindcss
         等主流技术开发。
+        <br />
+        后端技术栈采用PHP8.4、MySQL8.0、Redis7.0、Nginx1.2，属自行搭建的API，计划未来使用主流框架规范。
       </span>
     </el-card>
 
@@ -84,7 +86,7 @@ Object.keys(devDependencies).forEach(key => {
     <el-card class="m-4 box-card" shadow="never">
       <template #header>
         <div class="card-header flex items-center">
-          <span class="font-medium">生产环境依赖</span>
+          <span class="font-medium">生产环境依赖 (使用中)</span>
           <el-tag type="primary" effect="dark" size="small" round class="ml-1">
             {{ schema.length }}
           </el-tag>

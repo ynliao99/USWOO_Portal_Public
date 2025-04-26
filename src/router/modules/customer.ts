@@ -1,6 +1,6 @@
 import { $t } from "@/plugins/i18n";
 import { customer } from "@/router/enums";
-import Icon from "~icons/mdi/office-building-marker-outline";
+import Icon from "~icons/fluent/document-signature-16-regular";
 
 export default {
   path: "/customer/index",

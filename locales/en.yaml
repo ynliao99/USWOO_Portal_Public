@@ -1,3 +1,10 @@
+apt:
+  address: Address
+  amenities: Amenities
+  broker_fee: Broker Fee
+  building_name: Apartment Name
+  intl_student: Intl' Student
+  pet: Pet
 buttons:
   pureAccountSettings: Account
   pureBackTop: BackTop

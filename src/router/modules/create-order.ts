@@ -1,6 +1,6 @@
 import { $t } from "@/plugins/i18n";
 import { createOrder } from "@/router/enums";
-import Icon from "~icons/mdi/account-supervisor";
+import Icon from "~icons/icon-park-outline/order";
 import { getToken } from "@/utils/auth";
 
 // 首先获取 token
