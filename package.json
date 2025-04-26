@@ -69,6 +69,7 @@
     "@zxcvbn-ts/core": "^3.0.4",
     "animate.css": "^4.1.1",
     "axios": "^1.8.4",
+    "bootstrap-icons": "^1.11.3",
     "china-area-data": "^5.0.1",
     "codemirror": "^5.65.19",
     "codemirror-editor-vue3": "^2.8.0",
