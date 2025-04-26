@@ -26,12 +26,12 @@ defineOptions({
 // --- Define Props ---
 interface Props {
   showToolbar?: boolean; // Optional boolean prop
-  maxHeight?: string; // Optional string prop for CSS max-height value
+  maxheight?: string; // Optional string prop for CSS max-height value
 }
 
 const props = withDefaults(defineProps<Props>(), {
   showToolbar: true, // Default: show the toolbar
-  maxHeight: "90vh" // Default: max-height is 90% of viewport height
+  maxheight: "90vh" // Default: max-height is 90% of viewport height
 });
 
 // --- Interfaces ---
