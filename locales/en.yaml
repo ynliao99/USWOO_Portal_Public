@@ -202,6 +202,7 @@ menus:
   pureWaterfall: Waterfall
   pureWatermark: Water Mark
   pureWavesurfer: Audio Visualization
+  teamManagement: Team Management
 panel:
   pureClearCache: Clear Cache
   pureClearCacheAndToLogin: Clear cache and return to login page
