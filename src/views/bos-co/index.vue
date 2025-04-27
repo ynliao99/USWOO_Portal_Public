@@ -11,7 +11,7 @@ import AddIcon from "~icons/ri/add-circle-line";
 import { coFormRules } from "./utils/rule";
 
 const tableRef = ref();
-const formRef = ref<InstanceType<typeof ElForm>>();
+const ruleFormRef = ref<InstanceType<typeof ElForm>>();
 defineOptions({
   name: "co"
 });
@@ -58,7 +58,7 @@ const dateRange = computed<string[]>({
       : [];
   },
   set(val: string[]) {
-    if (val.length === 2) {
+    if (val && val.length === 2) {
       form.value.term_sd = val[0];
       form.value.term_ed = val[1];
     } else {
@@ -68,17 +68,15 @@ const dateRange = computed<string[]>({
   }
 });
 
-// 表单校验
-// 表单 ref，用于校验
-const ruleFormRef = ref<FormInstance>();
-
 // 提交前先触发表单验证
 const onSubmit = async (formEl: FormInstance | undefined) => {
   if (!formEl) return;
-  message("请填写所有的必填项目。", { type: "warning" });
+
   await formEl.validate(valid => {
     if (valid) {
       handleSave();
+    } else {
+      message("请填写所有的必填项目。", { type: "warning" });
     }
   });
 };
@@ -124,18 +122,41 @@ function openDialog(mode: "add" | "edit", record?: CoRecord) {
 }
 
 async function handleSave() {
-  formRef.value?.validate(async valid => {
-    if (!valid) return;
+  ruleFormRef.value?.validate(async valid => {
+    if (!valid) {
+      message("需要填写所有的必填项目", { type: "warning" });
+      return;
+    }
+
+    // 1. 从 form.value 中解构出不需要的字段，剩下的放入 restOfForm
+    const {
+      updated_at, // 解构出来，但不使用
+      userAgentId, // 解构出来，但不使用
+      userAgentName, // 解构出来，但不使用
+      eventID, // 解构出来，但不使用 (即使它可能是 null/undefined)
+      period, // 解构出来，但不使用 (即使它可能是 null/undefined)
+      roomType, // 单独解构出来处理
+      ...restOfForm // 剩余的、需要的字段都在这里
+    } = form.value;
+
+    // 2. 构建 payload，只包含需要的字段和处理过的 roomType
     const payload = {
-      ...form.value,
-      roomType: Array.isArray(form.value.roomType)
-        ? form.value.roomType.join(", ")
-        : (form.value.roomType ?? "")
+      ...restOfForm, // 展开需要的字段
+      roomType: Array.isArray(roomType) // 添加处理过的 roomType
+        ? roomType.join(", ")
+        : (roomType ?? "")
     };
+
     try {
-      await saveRecord(payload);
-      dialogVisible.value = false;
+      // 3. 调用修改后的 saveRecord 并等待结果
+      const success = await saveRecord(payload);
+
+      // 4. 根据保存结果决定是否关闭对话框
+      if (success) {
+        dialogVisible.value = false; // 只有成功才关闭
+      }
     } catch {
+      message("数据库响应错误，请重试", { type: "error" });
       // handled
     }
   });
@@ -220,14 +241,41 @@ watch(dialogVisible, newVal => {
 });
 
 onMounted(() => {
-  fetchRecords();
+  fetchRecords(); // 获取初始数据
+
   document.addEventListener("autocomplete-selected", (e: CustomEvent) => {
-    const { marker, value } = e.detail as {
-      marker: keyof CoRecord;
-      value: any;
-    };
-    // 简单断言
-    form[marker] = value;
+    // 最好打印一下事件的详细信息，确认 marker 和 value 的确是你期望的
+    console.log("Autocomplete Event Detail:", e.detail);
+
+    // 使用类型断言，或者更安全地进行类型检查
+    const detail = e.detail as { marker?: string; value?: any };
+
+    if (
+      detail &&
+      typeof detail.marker === "string" &&
+      detail.value !== undefined
+    ) {
+      const markerKey = detail.marker; // 'placeName' 或 'location'
+      const value = detail.value; // 选中的值
+
+      // --- 核心修改在这里 ---
+      // 检查 marker 是否是期望的键，并更新 form.value 上的对应属性
+      if (markerKey === "placeName" || markerKey === "location") {
+        form.value[markerKey] = value; // 更新 form.value 而不是 form
+        console.log(`Updated form.value.${markerKey} to:`, value);
+
+        ruleFormRef.value?.clearValidate(markerKey);
+
+        ruleFormRef.value?.validateField(markerKey);
+      } else {
+        console.warn(
+          "Received autocomplete event with unexpected marker:",
+          markerKey
+        );
+      }
+    } else {
+      console.warn("Received invalid autocomplete event detail:", e.detail);
+    }
   });
 });
 </script>
@@ -287,10 +335,10 @@ onMounted(() => {
           @page-current-change="handlePageChange"
         >
           <template #operation="{ row }">
-            <template
-              v-if="String(row.userAgentId) === String(currentUserAgentId)"
-            >
-              <div style="white-space: nowrap">
+            <div style="white-space: nowrap">
+              <template
+                v-if="String(row.userAgentId) === String(currentUserAgentId)"
+              >
                 <el-button
                   class="icon-button"
                   color="#557DED"
@@ -298,15 +346,15 @@ onMounted(() => {
                   size="default"
                   @click="openDialog('edit', row)"
                 />
-                <el-button
-                  class="icon-button"
-                  type="primary"
-                  :icon="useRenderIcon(ViewIcon)"
-                  size="default"
-                  @click="showDetails(row)"
-                />
-              </div>
-            </template>
+              </template>
+              <el-button
+                class="icon-button"
+                type="primary"
+                :icon="useRenderIcon(ViewIcon)"
+                size="default"
+                @click="showDetails(row)"
+              />
+            </div>
           </template>
           <template #placeName="{ row }">
             <a
@@ -427,7 +475,7 @@ onMounted(() => {
           </el-checkbox-group>
         </el-form-item>
 
-        <el-form-item label="租期" required prop="dateRange">
+        <el-form-item label="租期" :prop="['term_sd', 'term_ed']">
           <el-date-picker
             v-model="dateRange"
             type="daterange"
@@ -441,6 +489,7 @@ onMounted(() => {
             required
           />
         </el-form-item>
+
         <el-form-item label="本人性别" required prop="sex">
           <el-radio-group v-model="form.sex">
             <el-radio-button value="男">男</el-radio-button>
@@ -497,7 +546,20 @@ onMounted(() => {
       <div class="detail-content">
         <div class="detail-item">
           <span class="detail-label">状态：</span>
-          <span class="detail-value">{{ recordDetail.status }}</span>
+          <span class="detail-value">
+            <span v-if="recordDetail.status === 'Open'" style="color: #67c23a">
+              {{ recordDetail.status }}
+            </span>
+            <span
+              v-else-if="recordDetail.status === 'Closed'"
+              style="color: #f56c6c"
+            >
+              {{ recordDetail.status }} ❌
+            </span>
+            <span v-else>
+              {{ recordDetail.status }}
+            </span>
+          </span>
         </div>
         <div class="detail-item">
           <span class="detail-label">类型：</span>
@@ -613,14 +675,55 @@ onMounted(() => {
 }
 
 .detail-content {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  /* Styles for the overall container, e.g., padding */
+  padding: 10px;
+
+  /* Example */
 }
 
 .detail-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+
+  /* Label width auto, value takes rest */
+  gap: 0 8px;
+
+  /* No row gap needed here, 8px column gap */
+  align-items: baseline;
+
+  /* Align text baselines for better visual flow */
+  margin-bottom: 12px;
+
+  /* Vertical spacing between items */
+
   font-size: 16px;
+
+  /* Keep existing style */
   line-height: 1.6;
+
+  /* Keep existing style */
+}
+
+.detail-label {
+  grid-column: 1;
+  font-weight: bold;
+  color: #606266;
+  text-align: right;
+
+  /* Optional: Add space if colon feels too close */
+
+  /* padding-right: 4px; */
+}
+
+.detail-value {
+  /* grid-column: 2; is implicit */
+  color: #303133;
+
+  /* For line breaks */
+  word-break: break-word;
+  white-space: pre-wrap;
+
+  /* For long words */
 }
 
 .el-dialog {
@@ -628,16 +731,6 @@ onMounted(() => {
   padding-right: 12px;
   margin-top: 10vh;
   overflow-y: auto;
-}
-
-.detail-label {
-  margin-right: 8px;
-  font-weight: bold;
-  color: #606266;
-}
-
-.detail-value {
-  color: #303133;
 }
 
 .cell {

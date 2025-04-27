@@ -22,6 +22,15 @@ export interface CoRecord {
   demand: string;
   updated_at?: string;
   userAgentId?: string;
+  eventID?: string;
+  period?: string;
+}
+
+// 响应体接口
+interface SaveResponse {
+  status: "success" | "error" | string; // 允许 'success', 'error' 或其他字符串状态
+  message?: string; // message 是可选的
+  [key: string]: any; // 允许其他可能的字段
 }
 
 interface FetchRecordsResponse {
@@ -233,12 +242,59 @@ export function useCoRecords() {
       });
   }
 
-  async function saveRecord(rec: Partial<CoRecord>) {
+  async function saveRecord(rec: Partial<CoRecord>): Promise<boolean> {
+    // 添加返回类型
     const action = rec.id ? "update" : "add";
     const params: any = { action };
-    if (rec.id) params.caseID = rec.id;
-    await http.request("post", "/portalapi/co111/", { params, data: rec });
-    fetchRecords();
+    // 注意: 确认后端接口使用的参数名是 id 还是 caseID
+    if (rec.id) params.id = rec.id;
+
+    try {
+      // 发起请求并等待响应
+      const res = await http.request<SaveResponse>("post", "/portalapi/co/", {
+        params,
+        data: rec
+      });
+
+      // 检查响应状态
+      if (res?.status === "success") {
+        // --- 成功情况 ---
+        message("保存成功！", { type: "success" }); // 显示成功消息
+        fetchRecords(); // 成功后刷新列表
+        return true; // 返回 true 表示成功
+      } else {
+        // --- 失败情况 (API 返回了非 'success' 状态) ---
+        let errorMsg = "保存失败";
+        if (res?.message) {
+          // 如果有 message 字段，使用它
+          errorMsg = res.message;
+        } else if (res) {
+          // 如果没有 message 但有响应体，尝试将整个响应体转为字符串作为信息
+          // （注意：对于复杂对象可能过长，可以考虑只显示状态或其他关键信息）
+          errorMsg = `保存失败: ${JSON.stringify(res)}`;
+          console.error("Save failed response without message:", res); // 在控制台记录详细错误
+        }
+        // else: res 为空或未定义，使用默认的 "保存失败"
+
+        message(errorMsg, { type: "error" }); // 显示最终的错误消息
+        return false; // 返回 false 表示失败
+      }
+    } catch (error: any) {
+      // --- 异常情况 (网络错误、服务器500等导致请求本身失败) ---
+      console.error("Error during saveRecord request:", error); // 在控制台记录原始错误
+
+      let networkErrorMsg = "保存请求失败";
+      // 尝试从错误对象中提取更有用的信息 (例如 axios 的错误结构)
+      if (error?.response?.data?.message) {
+        networkErrorMsg = error.response.data.message; // 优先使用后端在错误响应体中提供的 message
+      } else if (error?.message) {
+        networkErrorMsg = error.message; // 其次使用错误对象自身的 message
+      }
+      // else: 使用默认的 "保存请求失败"
+
+      message(networkErrorMsg, { type: "error" }); // 显示网络或请求错误消息
+      return false; // 返回 false 表示失败
+    }
   }
 
   onMounted(() => {

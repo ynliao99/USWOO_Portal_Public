@@ -89,18 +89,11 @@ const coFormRules: FormRules = reactive({
       trigger: "blur"
     }
   ],
-  dateRange: [
-    {
-      validator: (rule, value, callback) => {
-        if (!value || value.length !== 2 || !value[0] || !value[1]) {
-          callback(new Error(transformI18n($t("co.requiredDateRange"))));
-        } else {
-          callback();
-        }
-      },
-      trigger: "blur"
-    }
-  ],
+  // 添加 term_sd 的规则
+  term_sd: [{ required: true, message: "请选择开始日期", trigger: "change" }],
+  // 添加 term_ed 的规则
+  term_ed: [{ required: true, message: "请选择结束日期", trigger: "change" }],
+
   sex: [
     {
       validator: (rule, value, callback) => {

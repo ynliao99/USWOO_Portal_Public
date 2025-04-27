@@ -84,10 +84,12 @@ const ruleFormRef = ref<FormInstance>();
 // 提交前先触发表单验证
 const onSubmit = async (formEl: FormInstance | undefined) => {
   if (!formEl) return;
-  message("请填写所有的必填项目。", { type: "warning" });
+
   await formEl.validate(valid => {
     if (valid) {
       handleSave();
+    } else {
+      message("请填写所有的必填项目。", { type: "warning" });
     }
   });
 };
