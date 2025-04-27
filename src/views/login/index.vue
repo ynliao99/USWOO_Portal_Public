@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import Motion from "./utils/motion";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { message } from "@/utils/message";
 import { loginRules } from "./utils/rule";
 import TypeIt from "@/components/ReTypeit";
@@ -41,6 +41,7 @@ defineOptions({
 const imgCode = ref("");
 const loginDay = ref(30);
 const router = useRouter();
+const route = useRoute();
 const loading = ref(false);
 const checked = ref(false);
 const disabled = ref(false);
@@ -78,14 +79,27 @@ const onLogin = async (formEl: FormInstance | undefined) => {
             // 获取后端路由
             return initRouter().then(() => {
               disabled.value = true;
+              // router 不跳转版
+              //   .push(getTopMenu(true).path)
+              //   .then(() => {
+              //     message(t("login.pureLoginSuccess"), { type: "success" });
+              //   })
+              // 检查当前路由是否有 redirect 查询参数
+              const redirectUrl = route.query.redirect as string;
+              // 确定最终要跳转的路径
+              // 如果 redirectUrl 存在且不为空，则跳转到 redirectUrl；否则跳转到默认的 getTopMenu(true).path
+              const targetPath = redirectUrl
+                ? redirectUrl
+                : getTopMenu(true).path;
+              // 执行跳转
               router
-                .push(getTopMenu(true).path)
+                .push(targetPath) // <--- 使用计算出的目标路径
                 .then(() => {
                   message(t("login.pureLoginSuccess"), { type: "success" });
                 })
                 .finally(() => (disabled.value = false));
             });
-          } else if(res.status) {
+          } else if (res.status) {
             message(res.message, { type: "error" });
           } else {
             message(t("login.pureLoginFail") + "错误", { type: "error" });
@@ -343,13 +357,9 @@ watch(loginDay, value => {
       class="w-full flex-c absolute bottom-3 text-sm text-[rgba(0,0,0,0.6)] dark:text-[rgba(220,220,242,0.8)]"
     >
       Copyright © 2010 - 2025
-    <a
-      class="hover:text-primary"
-      href="https://lyndons.cn"
-      target="_blank"
-    >
-      &nbsp;Lyndon's Studio.&nbsp;
-    </a>
+      <a class="hover:text-primary" href="https://lyndons.cn" target="_blank">
+        &nbsp;Lyndon's Studio.&nbsp;
+      </a>
     </div>
   </div>
 </template>
