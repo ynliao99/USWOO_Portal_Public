@@ -7,12 +7,14 @@ import { useTranslationLang } from "@/layout/hooks/useTranslationLang";
 import LaySidebarFullScreen from "../lay-sidebar/components/SidebarFullScreen.vue";
 import LaySidebarBreadCrumb from "../lay-sidebar/components/SidebarBreadCrumb.vue";
 import LaySidebarTopCollapse from "../lay-sidebar/components/SidebarTopCollapse.vue";
+import { startAppGuide } from "@/utils/guide";
 
 import GlobalizationIcon from "@/assets/svg/globalization.svg?component";
 import AccountSettingsIcon from "~icons/ri/user-settings-line";
 import LogoutCircleRLine from "~icons/ri/logout-circle-r-line";
 import Setting from "~icons/ri/settings-3-line";
 import Check from "~icons/ep/check";
+import TipsIcon from "~icons/ic/outline-tips-and-updates";
 
 const {
   layout,
@@ -30,6 +32,10 @@ const {
 } = useNav();
 
 const { t, locale, translationCh, translationEn } = useTranslationLang();
+function handleGuideClick() {
+  // 2. 在按钮点击时调用导出的函数
+  startAppGuide();
+}
 </script>
 
 <template>
@@ -83,6 +89,18 @@ const { t, locale, translationCh, translationEn } = useTranslationLang();
           </el-dropdown-menu>
         </template>
       </el-dropdown>
+      <!-- 引导通知 -->
+      <el-tooltip
+        v-if="pureApp.sidebar.opened"
+        content="功能引导"
+        placement="bottom"
+      >
+        <TipsIcon
+          class="navbar-bg-hover w-[40px] h-[48px] p-[11px] cursor-pointer outline-hidden"
+          @click="handleGuideClick"
+        />
+      </el-tooltip>
+
       <!-- 全屏 -->
       <LaySidebarFullScreen id="full-screen" />
       <!-- 消息通知 -->
