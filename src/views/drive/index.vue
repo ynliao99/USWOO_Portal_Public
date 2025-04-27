@@ -1,128 +1,138 @@
 <template>
-  <el-form
-    ref="formRef"
-    :model="validateForm"
-    :rules="rules"
-    label-width="120px"
-    class="p-4 bg-white"
-  >
-    <!-- 视频上传 -->
-    <el-form-item
-      label="选择视频"
-      prop="fileList"
-      :rules="[{ required: true, message: '附件不能为空' }]"
+  <div class="upload-form">
+    <el-form
+      ref="formRef"
+      :model="validateForm"
+      :rules="rules"
+      label-width="120px"
+      class="p-4 bg-white"
     >
-      <el-upload
-        ref="uploadRef"
-        v-model:file-list="validateForm.fileList"
-        drag
-        action="#"
-        class="w-[200px]!"
-        :auto-upload="false"
-        accept="video/*"
-        :limit="1"
-        :on-exceed="onExceed"
-        @change="(uploadFile, uploadFiles) => handleSelect(uploadFiles)"
-        @remove="(_, files) => handleSelect(files)"
+      <!-- 视频上传 -->
+      <el-form-item
+        label="选择视频"
+        prop="fileList"
+        :rules="[{ required: true, message: '附件不能为空' }]"
       >
-        <div class="el-upload__text">
-          <UploadIcon class="m-auto mb-2" />
-          可点击或拖拽上传
+        <el-upload
+          ref="uploadRef"
+          v-model:file-list="validateForm.fileList"
+          drag
+          action="#"
+          class="w-[200px]!"
+          :auto-upload="false"
+          accept="video/*"
+          :limit="1"
+          :on-exceed="onExceed"
+          @change="(uploadFile, uploadFiles) => handleSelect(uploadFiles)"
+          @remove="(_, files) => handleSelect(files)"
+        >
+          <div class="el-upload__text">
+            <UploadIcon class="m-auto mb-2" />
+            可点击或拖拽上传
+          </div>
+        </el-upload>
+      </el-form-item>
+
+      <!-- 公寓名称及地址 -->
+      <el-form-item label="公寓名称" prop="apartmentName">
+        <el-input
+          ref="nameInputRef"
+          v-model="validateForm.apartmentName"
+          data-marker="apartmentName"
+          placeholder="请输入公寓名称"
+          @blur="onApartmentNameBlur"
+        />
+      </el-form-item>
+      <el-form-item label="公寓地址" prop="apartmentAddress">
+        <el-input
+          v-model="validateForm.apartmentAddress"
+          data-marker="apartmentAddress"
+          placeholder="请输入公寓地址"
+        />
+      </el-form-item>
+
+      <!-- Unit / APT -->
+      <el-form-item label="Unit/APT" prop="unit">
+        <el-input
+          v-model="validateForm.unit"
+          placeholder="请输入房间号                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  "
+        />
+      </el-form-item>
+
+      <!-- 房间类型 -->
+      <el-form-item label="房间类型" prop="roomType">
+        <el-select v-model="validateForm.roomType" placeholder="请选择房间类型">
+          <el-option
+            v-for="opt in roomOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
+        </el-select>
+      </el-form-item>
+
+      <!-- 区域 -->
+      <el-form-item label="区域" prop="area">
+        <el-select
+          v-model="validateForm.area"
+          placeholder="请选择区域"
+          class="w-[200px]"
+        >
+          <el-option v-for="a in areas" :key="a" :label="a" :value="a" />
+        </el-select>
+      </el-form-item>
+
+      <!-- 上传目的地 -->
+      <el-form-item label="上传到" prop="targetSource">
+        <el-select
+          v-model="validateForm.targetSource"
+          placeholder="请选择上传目的地"
+          class="w-[200px]"
+        >
+          <el-option
+            v-for="opt in targetSources"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
+        </el-select>
+      </el-form-item>
+
+      <!-- 提交按钮 -->
+      <el-form-item>
+        <el-button type="primary" @click="submit()">开始上传</el-button>
+        <el-button @click="resetForm(formRef)">重置</el-button>
+      </el-form-item>
+
+      <div class="el-form-item">
+        <div class="el-form-item__content" style="margin-left: 0">
+          <span class="mb-2 text-sm text-gray-500">
+            你上传的视频将被传输至位于<a
+              href="https://cn.aliyun.com/product/oss"
+              target="_blank"
+              class="!text-blue-400"
+            >
+              <LocationIcon
+                class="w-[1em] h-[1em] inline-block location-icon"
+              />
+              中国香港的数据中心</a
+            >保存
+          </span>
         </div>
-      </el-upload>
-    </el-form-item>
-
-    <!-- 公寓名称及地址 -->
-    <el-form-item label="公寓名称" prop="apartmentName">
-      <el-input
-        ref="nameInputRef"
-        v-model="validateForm.apartmentName"
-        data-marker="apartmentName"
-        placeholder="请输入公寓名称"
-        @blur="onApartmentNameBlur"
+      </div>
+      <!-- 上传进度 -->
+      <el-progress
+        v-if="uploading"
+        :text-inside="true"
+        :stroke-width="20"
+        :percentage="percent"
+        status="exception"
+        striped
+        striped-flow
+        class="mb-2"
       />
-    </el-form-item>
-    <el-form-item label="公寓地址" prop="apartmentAddress">
-      <el-input
-        v-model="validateForm.apartmentAddress"
-        data-marker="apartmentAddress"
-        placeholder="请输入公寓地址"
-      />
-    </el-form-item>
-
-    <!-- Unit / APT -->
-    <el-form-item label="Unit/APT" prop="unit">
-      <el-input
-        v-model="validateForm.unit"
-        placeholder="请输入房间号                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  "
-      />
-    </el-form-item>
-
-    <!-- 房间类型 -->
-    <el-form-item label="房间类型" prop="roomType">
-      <el-select v-model="validateForm.roomType" placeholder="请选择房间类型">
-        <el-option
-          v-for="opt in roomOptions"
-          :key="opt.value"
-          :label="opt.label"
-          :value="opt.value"
-        />
-      </el-select>
-    </el-form-item>
-
-    <!-- 区域 -->
-    <el-form-item label="区域" prop="area">
-      <el-select
-        v-model="validateForm.area"
-        placeholder="请选择区域"
-        class="w-[200px]"
-      >
-        <el-option v-for="a in areas" :key="a" :label="a" :value="a" />
-      </el-select>
-    </el-form-item>
-
-    <!-- 上传目的地 -->
-    <el-form-item label="上传到" prop="targetSource">
-      <el-select
-        v-model="validateForm.targetSource"
-        placeholder="请选择上传目的地"
-        class="w-[200px]"
-      >
-        <el-option
-          v-for="opt in targetSources"
-          :key="opt.value"
-          :label="opt.label"
-          :value="opt.value"
-        />
-      </el-select>
-    </el-form-item>
-
-    <!-- 提交按钮 -->
-    <el-form-item>
-      <el-button type="primary" @click="submit()">开始上传</el-button>
-      <el-button @click="resetForm(formRef)">重置</el-button>
-    </el-form-item>
-
-    <el-form-item>
-      <span class="inline-flex items-center mb-2">
-        你上传的视频将被传输至位于
-        <LocationIcon class="w-[1em] h-[1em] align-middle" />
-        中国香港的数据中心保存
-      </span>
-    </el-form-item>
-
-    <!-- 上传进度 -->
-    <el-progress
-      v-if="uploading"
-      :text-inside="true"
-      :stroke-width="20"
-      :percentage="percent"
-      status="exception"
-      striped
-      striped-flow
-      class="mb-2"
-    />
-  </el-form>
+    </el-form>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -424,3 +434,9 @@ const resetForm = (formEl: any) => {
   validateForm.fileList = [];
 };
 </script>
+
+<style scoped lang="scss">
+:deep(.location-icon) {
+  display: inline-block !important;
+}
+</style>

@@ -16,6 +16,7 @@ import { useEpThemeStoreHook } from "@/store/modules/epTheme";
 import { usePermissionStoreHook } from "@/store/modules/permission";
 import ExitFullscreen from "~icons/ri/fullscreen-exit-fill";
 import Fullscreen from "~icons/ri/fullscreen-fill";
+import { http } from "@/utils/http";
 
 const errorInfo =
   "The current routing configuration is incorrect, please check the configuration";
@@ -147,6 +148,21 @@ export function useNav() {
     return new URL("/logo.png", import.meta.url).href;
   }
 
+  /** 记录用户行为 */
+  async function logAction() {
+    const currentPageUrl = window.location.href;
+
+    // 2. Prepare the data payload to be sent
+    //    Using an object allows you to potentially add more data later.
+    const dataToSend = {
+      url: currentPageUrl
+    };
+
+    await http.request("post", "/portalapi/log/", {
+      data: dataToSend // 将记录数据放在请求体中
+    });
+  }
+
   return {
     title,
     device,
@@ -175,6 +191,7 @@ export function useNav() {
     tooltipEffect,
     toAccountSettings,
     getDropdownItemStyle,
-    getDropdownItemClass
+    getDropdownItemClass,
+    logAction
   };
 }

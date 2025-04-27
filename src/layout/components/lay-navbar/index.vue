@@ -15,6 +15,7 @@ import LogoutCircleRLine from "~icons/ri/logout-circle-r-line";
 import Setting from "~icons/ri/settings-3-line";
 import Check from "~icons/ep/check";
 import TipsIcon from "~icons/ic/outline-tips-and-updates";
+import { log } from "console";
 
 const {
   layout,
@@ -28,8 +29,11 @@ const {
   toggleSideBar,
   toAccountSettings,
   getDropdownItemStyle,
-  getDropdownItemClass
+  getDropdownItemClass,
+  logAction
 } = useNav();
+
+logAction();
 
 const { t, locale, translationCh, translationEn } = useTranslationLang();
 function handleGuideClick() {
