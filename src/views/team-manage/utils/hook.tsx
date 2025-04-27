@@ -3,6 +3,7 @@ import { message } from "@/utils/message"; // Assuming PureAdmin's message utili
 import type { PaginationProps } from "@pureadmin/table";
 // import { ElMessageBox } from "element-plus"; // Keep if needed for confirmations
 import { http } from "@/utils/http"; // Import the project's pre-configured http client
+import { ElMessageBox } from "element-plus";
 
 // --- Interfaces ---
 
@@ -187,6 +188,40 @@ export function useTeamManagement() {
     }
   };
 
+  // 新用户指定
+  const handleSpecifyAccess = row => {
+    ElMessageBox.confirm(
+      `请为用户 ${row.userAgentName} 指定管理方式：`, // 提示信息
+      "指定管理方式", // 对话框标题
+      {
+        confirmButtonText: "设为全职", // 确认按钮文字
+        cancelButtonText: "设为非全职", // 取消按钮文字
+        type: "warning", // 图标类型
+        distinguishCancelAndClose: true, // 区分点击取消按钮和关闭按钮
+        center: true // 让内容居中（可选）
+      }
+    )
+      .then(() => {
+        // 用户点击了 "设为全职" (Confirm 按钮)
+        // 调用更新函数，传入 true 代表全职
+        handleUpdateUserAccess(row.userAgentId, true);
+        message(`${row.userAgentName} 已设为按全职管理`, { type: "success" });
+      })
+      .catch(action => {
+        // 用户点击了 "设为非全职" (Cancel 按钮) 或关闭了对话框
+        if (action === "cancel") {
+          // 用户点击了 "设为非全职"
+          // 调用更新函数，传入 false 代表非全职
+          handleUpdateUserAccess(row.userAgentId, false);
+          message(`${row.userAgentName} 已设为按非全职（兼职）管理`, {
+            type: "success"
+          });
+        } else {
+          // 用户通过点击 'X' 或按下 ESC 关闭了对话框
+          message("操作取消", { type: "info" });
+        }
+      });
+  };
   // Update user access type using the project's http client
   const handleUpdateUserAccess = async (
     userAgentId: string,
@@ -430,6 +465,7 @@ export function useTeamManagement() {
     handleSizeChange,
     handleCurrentChange,
     handleUpdateUserAccess,
-    fetchTeamData
+    fetchTeamData,
+    handleSpecifyAccess
   };
 }

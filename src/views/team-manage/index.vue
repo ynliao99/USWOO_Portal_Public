@@ -29,6 +29,7 @@ const {
   handleSizeChange,
   handleCurrentChange,
   handleUpdateUserAccess,
+  handleSpecifyAccess,
   fetchTeamData
 } = useTeamManagement();
 
@@ -209,11 +210,7 @@ const onSwitchChange = (newState: boolean, row) => {
                   type="warning"
                   link
                   :size="size"
-                  @click="
-                    () => {
-                      /* Maybe open a dialog or force selection? */
-                    }
-                  "
+                  @click="handleSpecifyAccess(row)"
                   >未指定</el-button
                 >
               </el-tooltip>
