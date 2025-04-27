@@ -34,6 +34,9 @@ import DeleteBinIcon from "~icons/ri/delete-bin-7-line"; // Void icon
 import CheckIcon from "~icons/ri/check-line";
 import ExternalLinkIcon from "~icons/ri/external-link-line"; // For CRM link
 
+import { useNav } from "@/layout/hooks/useNav";
+const { device } = useNav();
+
 // Define component name (optional but good practice)
 defineOptions({
   name: "CustomerOperations" // Changed name for clarity
@@ -587,7 +590,7 @@ watch(searchTermLocal, newValue => {
         <pure-table
           ref="tableRef"
           row-key="uuid"
-          adaptive
+          :adaptive="device != 'mobile'"
           :data="paginatedRecords"
           :columns="dynamicColumns"
           :loading="loading"
@@ -1027,8 +1030,6 @@ watch(searchTermLocal, newValue => {
 </template>
 
 <style lang="scss">
-
-
 @media (width <=768px) {
   .el-dialog {
     width: 90% !important;

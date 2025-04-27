@@ -214,4 +214,8 @@ function handleGuideClick() {
     min-width: 100%;
   }
 }
+
+:deep(.inline-block) {
+  display: inline-block !important;
+}
 </style>

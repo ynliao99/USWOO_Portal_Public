@@ -37,6 +37,8 @@ import { aptFormRules } from "./utils/rule";
 import IframeDialog, {
   IframeDialogProps
 } from "@/components/IframeDialog/Iframe.vue";
+import { useNav } from "@/layout/hooks/useNav";
+const { device } = useNav();
 
 const iframeDialog = ref();
 
@@ -643,7 +645,7 @@ onMounted(() => {
           :loading="loading"
           :pagination="pagination"
           table-layout="auto"
-          adaptive
+          :adaptive="device != 'mobile'"
           stripe
           :size="size"
           @sort-change="handleSortChange"

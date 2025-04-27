@@ -162,7 +162,7 @@ export function useCustomerRecords() {
       label: "操作",
       prop: "operation",
       slot: "operation",
-      fixed: "left",
+
       width: 154 // Increased width for more buttons
     },
     {

@@ -9,13 +9,9 @@ const TITLE = getConfig("Title");
     class="layout-footer text-[rgba(0,0,0,0.6)] dark:text-[rgba(220,220,242,0.8)]"
   >
     Copyright © 2010 - 2025
-    <a
-      class="hover:text-primary"
-      href="https://lyndons.cn"
-      target="_blank"
-    >
+    <a class="hover:text-primary" href="https://lyndons.cn" target="_blank">
       &nbsp;Lyndon's Studio.&nbsp;
-    </a> Powered by Pure Admin.
+    </a>
   </footer>
 </template>
 
