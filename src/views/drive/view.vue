@@ -7,8 +7,12 @@ import EditIcon from "~icons/ri/edit-circle-line";
 import DeleteIcon from "~icons/ri/delete-bin-2-line";
 import ShareIcon from "~icons/ri/share-forward-2-fill";
 import DownloadIcon from "~icons/ri/download-2-fill";
-import LockIcon from "~icons/ri/lock-2-fill"
-import { useRecords, useSourceOptions, usePermissionManagement } from "./utils/getViewRecord";
+import LockIcon from "~icons/ri/lock-2-fill";
+import {
+  useRecords,
+  useSourceOptions,
+  usePermissionManagement
+} from "./utils/getViewRecord";
 import { driveViewFormRules } from "./utils/rule";
 import { message } from "@/utils/message";
 import type { FormInstance } from "element-plus";
@@ -47,15 +51,16 @@ const {
 } = useRecords();
 
 const hasPermissionManagement = computed(() => {
-  const sel = sourceOptions.value.find(opt => opt.value === selectedSource.value)
-  return sel?.owner === currentUserAgentId.value
-})
+  const sel = sourceOptions.value.find(
+    opt => opt.value === selectedSource.value
+  );
+  return sel?.owner === currentUserAgentId.value;
+});
 
-
-const selectedSource = ref<string>('self')  // 默认值self字符串，会选中下面这个默认项
+const selectedSource = ref<string>("self"); // 默认值self字符串，会选中下面这个默认项
 const sourceOptions = ref<SelectOption[]>([
-  { label: '我上传的', value: 'self' }
-])
+  { label: "我上传的", value: "self" }
+]);
 
 const {
   permissionDialogVisible,
@@ -67,9 +72,8 @@ const {
   filteredWhiteListNameList,
   handleRemoteSearch,
   openPermissionDialog,
-  savePermission,
+  savePermission
 } = usePermissionManagement();
-
 
 function onOpenPermission() {
   openPermissionDialog(selectedSource.value);
@@ -80,34 +84,49 @@ function onOpenPermission() {
 useSourceOptions()
   .then(({ sourceOptions: so }) => {
     // 把后端选项追加到默认选项之后
-    sourceOptions.value = [
-      { label: '我的云盘', value: 'self' },
-      ...so.value
-    ]
+    sourceOptions.value = [{ label: "我的云盘", value: "self" }, ...so.value];
   })
   .catch(err => {
-    console.error('加载 sourceOptions 失败', err)
-  })
+    console.error("加载 sourceOptions 失败", err);
+  });
 
 async function onRefresh() {
-  message("刷新中...", { type: "info" })
+  message("刷新中...", { type: "info" });
   // 1. 刷新表格数据
   await fetchRecords();
 
   // 2. 重新加载存储源列表
   try {
     const { sourceOptions: so } = await useSourceOptions();
-    sourceOptions.value = [
-      { label: '我的云盘', value: 'self' },
-      ...so.value
-    ];
+    sourceOptions.value = [{ label: "我的云盘", value: "self" }, ...so.value];
   } catch (err) {
-    console.error('刷新 sourceOptions 失败', err);
+    console.error("刷新 sourceOptions 失败", err);
   }
 }
 
+const roomOptions = [
+  { label: "Studio", value: "Studio" },
+  { label: "Studio Den", value: "StudioDen" },
+  { label: "1B1B", value: "1B1B" },
+  { label: "1B Den", value: "1B Den" },
+  { label: "1B Split", value: "1B Split" },
+  { label: "2B1B", value: "2B1B" },
+  { label: "2B Split", value: "2B Split" },
+  { label: "2B2B", value: "2B2B" },
+  { label: "3B1B", value: "3B1B" },
+  { label: "3B2B", value: "3B2B" },
+  { label: "3B3B", value: "3B3B" },
+  { label: "4B1B", value: "4B1B" },
+  { label: "4B2B", value: "4B2B" },
+  { label: "4B3B", value: "4B3B" },
+  { label: "4B4B", value: "4B4B" },
+  { label: "5B+", value: "5B+" },
+  { label: "Other", value: "Other" },
+  { label: "公共设施", value: "公共设施" }
+];
+
 // 本地搜索输入
-const searchTermLocal = ref('');
+const searchTermLocal = ref("");
 
 console.log(currentUserAgentId.value);
 // 定义一个状态标识，记录是否已初始化自动补全
@@ -120,14 +139,15 @@ const ruleFormRef = ref<FormInstance>();
 // 提交前先触发表单验证
 const onSubmit = async (formEl: FormInstance | undefined) => {
   if (!formEl) return;
-  message("请填写所有的必填项目。", { type: "warning" });
+
   await formEl.validate(valid => {
     if (valid) {
       handleSave();
+    } else {
+      message("请填写所有的必填项目。", { type: "warning" });
     }
   });
 };
-
 
 onMounted(() => {
   fetchRecords();
@@ -169,57 +189,112 @@ watch(dialogVisible, newVal => {
 
 <template>
   <div>
-    <el-input v-model="searchTermLocal" placeholder="全能搜索..." clearable style="margin: 0" @input="handleSearch" />
+    <el-input
+      v-model="searchTermLocal"
+      placeholder="全能搜索..."
+      clearable
+      style="margin: 0"
+      @input="handleSearch"
+    />
 
     <PureTableBar title="我上传的视频" :columns="columns" @refresh="onRefresh">
-
       <template #buttons>
         <!-- 只有 owner === 当前用户时才显示 -->
-        <el-button v-if="hasPermissionManagement" type="default" style="margin-right: 1rem;"
-          :icon="useRenderIcon(LockIcon)" @click="onOpenPermission">
+        <el-button
+          v-if="hasPermissionManagement"
+          type="default"
+          style="margin-right: 1rem"
+          :icon="useRenderIcon(LockIcon)"
+          @click="onOpenPermission"
+        >
           权限
         </el-button>
 
-        <el-select v-model="selectedSource" placeholder="请选择存储源" class="auto-width-select" @change="handleChangeSource">
-          <el-option v-for="opt in sourceOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+        <el-select
+          v-model="selectedSource"
+          placeholder="请选择存储源"
+          class="auto-width-select"
+          @change="handleChangeSource"
+        >
+          <el-option
+            v-for="opt in sourceOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
         </el-select>
-
       </template>
 
       <template #default="{ size, dynamicColumns }">
-        <pure-table :data="dataList" :columns="dynamicColumns" showOverflowTooltip :loading="loading"
-          :pagination="{ ...pagination, size }" table-layout="fixed" stripe adaptive :size="size"
-          @page-size-change="handleSizeChange" @page-current-change="handleCurrentChange">
+        <pure-table
+          :data="dataList"
+          :columns="dynamicColumns"
+          showOverflowTooltip
+          :loading="loading"
+          :pagination="{ ...pagination, size }"
+          table-layout="fixed"
+          stripe
+          adaptive
+          :size="size"
+          @page-size-change="handleSizeChange"
+          @page-current-change="handleCurrentChange"
+        >
           <template #operation="{ row }">
             <template v-if="row">
               <div style="white-space: nowrap" class="opt-buttons">
                 <!-- 只有自己或者ID为 649u54989 的人才看得到编辑/删除 -->
-                <template v-if="
+                <template
+                  v-if="
                     String(row.userID) === String(currentUserAgentId) ||
                     currentUserAgentId === '649u54989'
-                  ">
+                  "
+                >
                   <el-tooltip content="编辑" placement="top" effect="dark">
-                    <el-button class="icon-button" color="#557DED" size="default" :icon="useRenderIcon(EditIcon)"
-                      @click="openDialog('edit', row)" />
+                    <el-button
+                      class="icon-button"
+                      color="#557DED"
+                      size="default"
+                      :icon="useRenderIcon(EditIcon)"
+                      @click="openDialog('edit', row)"
+                    />
                   </el-tooltip>
 
-                  <el-popconfirm title="删除后不可恢复且当月上传次数-1！确定删除吗？" @confirm="handleDelete(row)">
+                  <el-popconfirm
+                    title="删除后不可恢复且当月上传次数-1！确定删除吗？"
+                    @confirm="handleDelete(row)"
+                  >
                     <template #reference>
-                      <el-button class="icon-button" type="danger" size="default" :icon="useRenderIcon(DeleteIcon)" />
+                      <el-button
+                        class="icon-button"
+                        type="danger"
+                        size="default"
+                        :icon="useRenderIcon(DeleteIcon)"
+                      />
                     </template>
                   </el-popconfirm>
                 </template>
 
                 <!-- 其余按钮正常显示 -->
-                <template v-if="String(row.status) === 'Done' && row.processed_oss_path">
-                  <el-tooltip content="生成分享链接" placement="top" effect="dark">
-                    <el-button class="icon-button" type="success" size="default" :icon="useRenderIcon(ShareIcon)"
+                <template
+                  v-if="String(row.status) === 'Done' && row.processed_oss_path"
+                >
+                  <el-tooltip
+                    content="生成分享链接"
+                    placement="top"
+                    effect="dark"
+                  >
+                    <el-button
+                      class="icon-button"
+                      type="success"
+                      size="default"
+                      :icon="useRenderIcon(ShareIcon)"
                       @click="
                         () =>
                           generateShortLink(
                             share_link_prefix + row.processed_oss_path
                           )
-                      " />
+                      "
+                    />
                   </el-tooltip>
                 </template>
               </div>
@@ -227,9 +302,18 @@ watch(dialogVisible, newVal => {
           </template>
           <template #download="{ row }">
             <div style="white-space: nowrap" class="opt-buttons">
-              <el-tooltip content="下载可分享的带水印视频" placement="top" effect="dark">
-                <el-button v-if="String(row.status) === 'Done' && row.processed_oss_path" class="icon-button"
-                  type="danger" size="default" :icon="useRenderIcon(DownloadIcon)" @click="
+              <el-tooltip
+                content="下载可分享的带水印视频"
+                placement="top"
+                effect="dark"
+              >
+                <el-button
+                  v-if="String(row.status) === 'Done' && row.processed_oss_path"
+                  class="icon-button"
+                  type="danger"
+                  size="default"
+                  :icon="useRenderIcon(DownloadIcon)"
+                  @click="
                     () => {
                       const url = download_link_prefix + row.processed_oss_path;
                       message('正在启动下载带水印视频，请稍等...', {
@@ -240,12 +324,22 @@ watch(dialogVisible, newVal => {
                         (row.processed_oss_path.split('/').pop() || '').trim()
                       );
                     }
-                  " />
+                  "
+                />
               </el-tooltip>
 
-              <el-tooltip content="下载无水印的原视频" placement="top" effect="dark">
-                <el-button v-if="String(row.status) === 'Done' && row.original_oss_path" class="icon-button"
-                  type="default" size="default" :icon="useRenderIcon(DownloadIcon)" @click="
+              <el-tooltip
+                content="下载无水印的原视频"
+                placement="top"
+                effect="dark"
+              >
+                <el-button
+                  v-if="String(row.status) === 'Done' && row.original_oss_path"
+                  class="icon-button"
+                  type="default"
+                  size="default"
+                  :icon="useRenderIcon(DownloadIcon)"
+                  @click="
                     () => {
                       const url = download_link_prefix + row.original_oss_path;
                       const name = row.o_filename;
@@ -256,7 +350,8 @@ watch(dialogVisible, newVal => {
                       console.log('name', name);
                       downloadByUrl(url, row.o_filename);
                     }
-                  " />
+                  "
+                />
               </el-tooltip>
             </div>
           </template>
@@ -265,47 +360,123 @@ watch(dialogVisible, newVal => {
     </PureTableBar>
 
     <!-- 编辑记录模态框 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" class="custom-dialog">
-      <el-form ref="ruleFormRef" :model="form" :rules="driveViewFormRules" label-width="6em">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogTitle"
+      class="custom-dialog"
+    >
+      <el-form
+        ref="ruleFormRef"
+        :model="form"
+        :rules="driveViewFormRules"
+        label-width="6em"
+      >
         <el-form-item label="公寓名称" required prop="apartmentName">
-          <el-input v-model="form.apartmentName" placeholder="地点名称" required data-marker="apartmentName" />
+          <el-input
+            v-model="form.apartmentName"
+            placeholder="地点名称"
+            required
+            data-marker="apartmentName"
+          />
         </el-form-item>
         <el-form-item label="Unit/APT" prop="unit">
           <el-input v-model="form.unit" />
         </el-form-item>
+        <el-form-item label="房间类型" required prop="roomType">
+          <el-select
+            v-model="form.roomType"
+            placeholder="请选择房间类型"
+            required
+          >
+            <el-option
+              v-for="opt in roomOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="详细地址" required prop="address">
-          <el-input v-model="form.address" placeholder="address" required data-marker="address" />
+          <el-input
+            v-model="form.address"
+            placeholder="address"
+            required
+            data-marker="address"
+          />
         </el-form-item>
         <el-form-item label="区域" required prop="area">
           <el-select v-model="form.area" placeholder="请选择" required>
-            <el-option v-for="area in areas" :key="area" :label="area" :value="area" />
+            <el-option
+              v-for="area in areas"
+              :key="area"
+              :label="area"
+              :value="area"
+            />
           </el-select>
         </el-form-item>
-        <el-form-item> <span>不支持更换已上传的视频，如传错需删除后重新上传。</span></el-form-item>
+        <el-form-item>
+          <span
+            >不支持更换已上传的视频，如传错需删除后重新上传。</span
+          ></el-form-item
+        >
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">关闭</el-button>
-        <el-button type="primary" @click="onSubmit(ruleFormRef)">保存</el-button>
+        <el-button type="primary" @click="onSubmit(ruleFormRef)"
+          >保存</el-button
+        >
       </template>
     </el-dialog>
 
-    <el-dialog v-model="permissionDialogVisible" :title="permissionDialogTitle" width="600px">
+    <el-dialog
+      v-model="permissionDialogVisible"
+      :title="permissionDialogTitle"
+      width="600px"
+    >
       <el-form :model="permissionForm">
         <!-- 个人盘白名单 | 团队盘白名单 -->
         <el-form-item label="白名单" prop="whiteList">
-          <el-select v-model="permissionForm.whiteList" multiple filterable remote reserve-keyword placeholder="请输入用户名称"
-            :remote-method="handleRemoteSearch" :loading="permissionLoading">
-            <el-option v-for="user in filteredWhiteListNameList" :key="user.hid" :label="user.userAgentName"
-              :value="user.hid" />
+          <el-select
+            v-model="permissionForm.whiteList"
+            multiple
+            filterable
+            remote
+            reserve-keyword
+            placeholder="请输入用户名称"
+            :remote-method="handleRemoteSearch"
+            :loading="permissionLoading"
+          >
+            <el-option
+              v-for="user in filteredWhiteListNameList"
+              :key="user.hid"
+              :label="user.userAgentName"
+              :value="user.hid"
+            />
           </el-select>
         </el-form-item>
 
         <!-- 团队盘黑名单 -->
-        <el-form-item v-if="permissionType === 'team'" label="黑名单" prop="blackList">
-          <el-select v-model="permissionForm.blackList" multiple filterable remote reserve-keyword placeholder="请输入用户名称"
-            :remote-method="handleRemoteSearch" :loading="permissionLoading">
-            <el-option v-for="user in filteredBlackListNameList" :key="user.hid" :label="user.userAgentName"
-              :value="user.hid" />
+        <el-form-item
+          v-if="permissionType === 'team'"
+          label="黑名单"
+          prop="blackList"
+        >
+          <el-select
+            v-model="permissionForm.blackList"
+            multiple
+            filterable
+            remote
+            reserve-keyword
+            placeholder="请输入用户名称"
+            :remote-method="handleRemoteSearch"
+            :loading="permissionLoading"
+          >
+            <el-option
+              v-for="user in filteredBlackListNameList"
+              :key="user.hid"
+              :label="user.userAgentName"
+              :value="user.hid"
+            />
           </el-select>
         </el-form-item>
       </el-form>
@@ -315,7 +486,6 @@ watch(dialogVisible, newVal => {
         <el-button type="primary" @click="savePermission">保存</el-button>
       </template>
     </el-dialog>
-
   </div>
 </template>
 
@@ -425,17 +595,18 @@ watch(dialogVisible, newVal => {
   padding: 8px;
   margin-left: 6px;
 }
+
 /* 让 el-select 宽度根据文字自动撑开，不做百分百全宽 */
 .auto-width-select {
   display: inline-block;
-  width: fit-content;            /* 或者 用 auto */
+  width: fit-content; /* 或者 用 auto */
   min-width: 180px;
-  max-width: 100%;               /* 防止超出容器 */
+  max-width: 100%; /* 防止超出容器 */
 }
 
 /* 内部 input 也要同步 */
 .auto-width-select .el-input__inner {
   width: fit-content !important; /* 覆盖默认 100% 宽度 */
-  white-space: nowrap;           /* 文本不换行 */
+  white-space: nowrap; /* 文本不换行 */
 }
 </style>

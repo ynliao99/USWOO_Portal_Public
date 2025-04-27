@@ -49,6 +49,12 @@ interface FetchRecordsResponse {
   message?: string;
 }
 
+interface SaveRecordResponse {
+  status: "success" | string | number; // 状态可能是 "success" 或其他错误标识
+  message?: string; // 操作结果的消息提示
+  [key: string]: any; // 其他可能的字段
+}
+
 // const backendFilters = reactive<Record<string, string[]>>({});
 
 export function useGjgyRecords() {
@@ -97,7 +103,7 @@ export function useGjgyRecords() {
       columnKey: "area"
     },
     {
-      label: "名称",
+      label: "公寓名称",
       prop: "building_name",
       columnKey: "building_name",
       slot: "building_name"
@@ -273,12 +279,59 @@ export function useGjgyRecords() {
       });
   }
 
-  async function saveRecord(rec: Partial<AptRecord>) {
-    const action = rec.id ? "update" : "add";
+  async function saveRecord(rec: Partial<AptRecord>): Promise<boolean> {
+    const action = rec.id ? "update" : "add"; // 判断是新增还是更新
     const params: any = { action };
-    if (rec.id) params.caseID = rec.id;
-    await http.request("post", "/portalapi/co111/", { params, data: rec });
-    fetchRecords();
+    if (rec.id) {
+      params.caseID = rec.id; // 如果是更新，则添加 caseID 参数
+    }
+
+    // 添加 loading 状态，可选，用于指示保存操作正在进行
+    // loading.value = true; // 如果希望在保存时也显示加载状态
+
+    try {
+      // 发起 POST 请求保存数据，并等待响应
+      // 明确指定期望的响应类型为 SaveRecordResponse
+      const response = await http.request<SaveRecordResponse>(
+        "post",
+        "/portalapi/gjgy/",
+        {
+          params,
+          data: rec // 将记录数据放在请求体中
+        }
+      );
+
+      // 检查响应状态
+      if (response && response.status === "success") {
+        // 如果状态是 'success'，显示成功消息
+        // 可以优先使用后端返回的 message，如果没有则显示默认成功消息
+        message(response.message || "操作成功！", { type: "success" });
+
+        // 操作成功后，调用 fetchRecords 刷新列表
+        fetchRecords();
+        return true; // <--- 返回 true 表示成功
+      } else {
+        // 如果状态不是 'success' 或 response 不存在
+        // 显示警告信息，优先使用后端返回的 message，否则使用默认错误消息
+        message(response?.message || "操作失败，请稍后重试", {
+          duration: 5000,
+          showClose: true,
+          type: "warning"
+        });
+        // 注意：这里决定了即使保存失败也要刷新列表
+        return false; // <--- 返回 false 表示失败
+      }
+    } catch (error) {
+      // 如果请求本身失败 (例如网络问题、服务器错误500等)
+      console.error("保存记录时发生错误:", error); // 在控制台记录详细错误信息
+      message("网络错误，请重试", { type: "error" }); // 显示统一的网络错误提示
+      // 发生异常时，通常不刷新列表，因为操作未成功，列表状态可能未改变
+      // 如果有特殊需求（例如即使失败也要刷新以获取最新状态），可以在这里调用 fetchRecords()
+      return false; // <--- 返回 false 表示失败
+    } finally {
+      // 可选：停止 loading 状态
+      loading.value = false;
+    }
   }
 
   onMounted(() => {

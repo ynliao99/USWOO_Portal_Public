@@ -5,6 +5,7 @@ import type { AxiosProgressEvent } from "axios";
 export interface UploadMeta {
   apartmentName: string;
   roomType: string;
+  address: string;
   unit?: string;
   area: string;
   target_source: string;
@@ -66,10 +67,11 @@ export async function formUpload(opts: FormUploadOptions): Promise<void> {
         onUploadProgress: (progressEvent: AxiosProgressEvent) => {
           const loadedThis = progressEvent.loaded ?? 0;
           const loadedAll = idx * chunkSize + loadedThis;
-          const percent = Math.min(
-            100,
-            Math.round((loadedAll / meta.filesize) * 100)
-          );
+          const totalSize = file.size; // 使用文件的总字节数
+          let percent = 0;
+          if (totalSize > 0) {
+            percent = Math.min(100, Math.round((loadedAll / totalSize) * 100));
+          }
           onProgress(percent);
         }
       }
@@ -81,6 +83,17 @@ export async function formUpload(opts: FormUploadOptions): Promise<void> {
     const start = i * chunkSize;
     const end = Math.min(file.size, start + chunkSize);
     const blob = file.slice(start, end);
-    await uploadPart(i, blob);
+    try {
+      await uploadPart(i, blob);
+    } catch (error) {
+      console.error(`上传分片 ${i + 1} 失败:`, error);
+      // 抛出错误，让上层 try...catch 捕获
+      throw new Error(`上传分片 ${i + 1} 失败`);
+    }
+  }
+
+  // (可选) 确保最后报告 100%，以防万一 axios 的最后一次 progress 事件没到 100
+  if (totalChunks > 0) {
+    onProgress(100);
   }
 }

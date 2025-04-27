@@ -5,11 +5,11 @@ import { message } from "@/utils/message";
 import { fetchAreas } from "@/api/fechAreas";
 import {
   loadTargetSources,
-  SelectOption,
+  type SelectOption,
   loadWhiteListTargetSources
 } from "@/api/drivePathList";
 // 顶部：引入 CancelTokenSource
-import axios, { CancelTokenSource } from 'axios';
+import axios, { type CancelTokenSource } from "axios";
 
 // 顶部：声明一个全局取消源
 let fetchCancelSource: CancelTokenSource | null = null;
@@ -21,16 +21,15 @@ export async function useSourceOptions() {
   const whiteListSources = ref<SelectOption[]>([]);
   try {
     // 私人/团队/公共/白名单盘
-    
+
     await loadTargetSources(privateSources);
     sourceOptions.value = [...publicSources.value, ...privateSources.value];
     await loadWhiteListTargetSources(whiteListSources);
     sourceOptions.value = [
-  ...publicSources.value,
-  ...privateSources.value,
-  ...whiteListSources.value
-];
-
+      ...publicSources.value,
+      ...privateSources.value,
+      ...whiteListSources.value
+    ];
   } catch (err: any) {
     message(err.message || "加载选项失败", { type: "error" });
   }
@@ -58,6 +57,7 @@ export function useRecords() {
   const form = reactive({
     vid: null,
     apartmentName: "",
+    roomType: "",
     address: "",
     unit: "",
     area: ""
@@ -72,36 +72,34 @@ export function useRecords() {
     filters: {} as Record<string, string[]>
   });
 
- 
-
- // 切换存储源后更新参数并重新拉取
+  // 切换存储源后更新参数并重新拉取
   function handleChangeSource(val: string) {
-  // “self” 表示“我上传的”，后端以空串表示
-  queryParams.source = val === 'self' ? '' : val;
-  fetchRecords();
-}
-
-function fetchRecords() {
-  // 先 cancel 掉上一次的请求（如果有的话）
-  if (fetchCancelSource) {
-    fetchCancelSource.cancel('取消上一次 fetchRecords 请求');
+    // “self” 表示“我上传的”，后端以空串表示
+    queryParams.source = val === "self" ? "" : val;
+    fetchRecords();
   }
-  fetchCancelSource = axios.CancelToken.source();
 
-  loading.value = true;
-  const params: any = {
-    page: pagination.currentPage,
-    per_page: pagination.pageSize,
-    source: queryParams.source,
-    search: queryParams.search
-  };
+  function fetchRecords() {
+    // 先 cancel 掉上一次的请求（如果有的话）
+    if (fetchCancelSource) {
+      fetchCancelSource.cancel("取消上一次 fetchRecords 请求");
+    }
+    fetchCancelSource = axios.CancelToken.source();
 
-  http
-    .request('get', '/portalapi/upload/', {
-      params,
-      cancelToken: fetchCancelSource.token
-    })
-    .then((res: any) => {
+    loading.value = true;
+    const params: any = {
+      page: pagination.currentPage,
+      per_page: pagination.pageSize,
+      source: queryParams.source,
+      search: queryParams.search
+    };
+
+    http
+      .request("get", "/portalapi/upload/", {
+        params,
+        cancelToken: fetchCancelSource.token
+      })
+      .then((res: any) => {
         if (res.status === "success" && Array.isArray(res.data.content)) {
           dataList.value = res.data.content;
           pagination.total = res.data.totalCount;
@@ -126,16 +124,16 @@ function fetchRecords() {
           dataList.value = [];
         }
       })
-    .catch(err => {
-      if (!axios.isCancel(err)) {
-        message('加载失败' + err, { type: 'warning' });
-        dataList.value = [];
-      }
-    })
-    .finally(() => {
-      loading.value = false;
-    });
-}
+      .catch(err => {
+        if (!axios.isCancel(err)) {
+          message("加载失败" + err, { type: "warning" });
+          dataList.value = [];
+        }
+      })
+      .finally(() => {
+        loading.value = false;
+      });
+  }
 
   // 以下保持 openDialog、handleSave、handleDelete 实现不变
   function openDialog(mode: string, row: any = null) {
@@ -145,33 +143,33 @@ function fetchRecords() {
     form.address = row.address || "";
     form.unit = row.unit || "";
     form.apartmentName = row.apartmentName || "";
-
+    form.roomType = row.roomType || "";
     dialogVisible.value = true;
   }
-  
-// 分页切换时重新加载数据
-function handleSizeChange(val: number) {
-  pagination.pageSize = val;
-  pagination.currentPage = 1;
-  fetchRecords();
-}
 
-function handleCurrentChange(val: number) {
-  pagination.currentPage = val;
-  fetchRecords();
-}
+  // 分页切换时重新加载数据
+  function handleSizeChange(val: number) {
+    pagination.pageSize = val;
+    pagination.currentPage = 1;
+    fetchRecords();
+  }
 
-// handleSearch 只更新参数并调用 fetchRecords
-function handleSearch(val: string) {
-  queryParams.search = val;
-  pagination.currentPage = 1; // 可选：搜新关键字回第一页
-  fetchRecords();
-}
+  function handleCurrentChange(val: number) {
+    pagination.currentPage = val;
+    fetchRecords();
+  }
+
+  // handleSearch 只更新参数并调用 fetchRecords
+  function handleSearch(val: string) {
+    queryParams.search = val;
+    pagination.currentPage = 1; // 可选：搜新关键字回第一页
+    fetchRecords();
+  }
 
   function handleSave() {
     const action = "edit";
     http
-      .request("post", `/portalapi/upload1/?action=${action}`, {
+      .request("post", `/portalapi/upload/?action=${action}`, {
         data: { ...form }
       })
       .then((res: any) => {
@@ -194,7 +192,7 @@ function handleSearch(val: string) {
 
   function handleDelete(row: any) {
     http
-      .request("post", `/portalapi/upload1/?action=delete`, {
+      .request("post", `/portalapi/upload/?action=delete`, {
         data: { id: row.vid }
       })
       .then((res: any) => {
@@ -249,7 +247,7 @@ function handleSearch(val: string) {
       columnKey: "filesize"
     },
     { label: "状态", prop: "status", columnKey: "status" },
-     { label: "上传时间", prop: "timestamp", columnKey: "timestamp" },
+    { label: "上传时间", prop: "timestamp", columnKey: "timestamp" },
     { label: "上传用户", prop: "userName", columnKey: "userName" },
     {
       label: "存储源",
@@ -284,21 +282,25 @@ function handleSearch(val: string) {
 export function usePermissionManagement() {
   // 对话框显隐与标题
   const permissionDialogVisible = ref(false);
-  const permissionDialogTitle = ref('');
+  const permissionDialogTitle = ref("");
   // 区分 personal/team
-  const permissionType = ref<'personal' | 'team'>('personal');
-  const currentSource = ref('');
+  const permissionType = ref<"personal" | "team">("personal");
+  const currentSource = ref("");
 
   // 用户列表及加载状态
-  const whiteListNameList = ref<Array<{ hid: string; userAgentName: string }>>([]);
-  const blackListNameList = ref<Array<{ hid: string; userAgentName: string }>>([]);
+  const whiteListNameList = ref<Array<{ hid: string; userAgentName: string }>>(
+    []
+  );
+  const blackListNameList = ref<Array<{ hid: string; userAgentName: string }>>(
+    []
+  );
   const permissionLoading = ref(false);
-  const searchQuery = ref('');
+  const searchQuery = ref("");
 
   // 表单数据
   const permissionForm = reactive({
     whiteList: [] as string[],
-    blackList: [] as string[],
+    blackList: [] as string[]
   });
 
   // 白名单搜索结果
@@ -325,27 +327,27 @@ export function usePermissionManagement() {
   async function loadUserList() {
     permissionLoading.value = true;
     try {
-      const res: any = await http.request('get', '/portalapi/upload/', {
-        params: { action: 'getNameList', inquiry_source: currentSource.value }
+      const res: any = await http.request("get", "/portalapi/upload/", {
+        params: { action: "getNameList", inquiry_source: currentSource.value }
       });
       if (res.success) {
-        
         whiteListNameList.value = res.whiteListNameList || [];
-        
+
         permissionForm.whiteList = res.white_list || [];
-        if (permissionType.value === 'team') {
+        if (permissionType.value === "team") {
           permissionForm.blackList = res.black_list || [];
           blackListNameList.value = res.blackListNameList || [];
           // 从白名单列表中过滤掉属于黑名单的项
           const blackHids = new Set(blackListNameList.value.map(b => b.hid));
-          whiteListNameList.value = whiteListNameList.value.filter(u => !blackHids.has(u.hid));
+          whiteListNameList.value = whiteListNameList.value.filter(
+            u => !blackHids.has(u.hid)
+          );
         }
-        
       } else {
         message(`获取名单失败：${res.message}`, { type: "warning" });
       }
     } catch {
-      message('请求失败，请稍后重试', { type: "warning" });
+      message("请求失败，请稍后重试", { type: "warning" });
     } finally {
       permissionLoading.value = false;
     }
@@ -354,16 +356,16 @@ export function usePermissionManagement() {
   // 打开对话框
   function openPermissionDialog(source: string) {
     currentSource.value = source;
-    if (source.endsWith('personal')) {
-      permissionType.value = 'personal';
-      permissionDialogTitle.value = '编辑我的个人盘权限';
+    if (source.endsWith("personal")) {
+      permissionType.value = "personal";
+      permissionDialogTitle.value = "编辑我的个人盘权限";
     } else {
-      permissionType.value = 'team';
-      permissionDialogTitle.value = '编辑我的团队盘权限';
+      permissionType.value = "team";
+      permissionDialogTitle.value = "编辑我的团队盘权限";
     }
     permissionForm.whiteList = [];
     permissionForm.blackList = [];
-    searchQuery.value = '';
+    searchQuery.value = "";
     loadUserList();
     permissionDialogVisible.value = true;
   }
@@ -375,20 +377,24 @@ export function usePermissionManagement() {
         target_source: currentSource.value,
         white_list: permissionForm.whiteList
       };
-      if (permissionType.value === 'team') {
+      if (permissionType.value === "team") {
         payload.black_list = permissionForm.blackList;
       }
-      const res: any = await http.request('post', '/portalapi/upload/?action=savePermission', {
-        data: payload
-      });
+      const res: any = await http.request(
+        "post",
+        "/portalapi/upload/?action=savePermission",
+        {
+          data: payload
+        }
+      );
       if (res.success) {
-        message('保存成功', { type: "success" });
+        message("保存成功", { type: "success" });
         permissionDialogVisible.value = false;
       } else {
         message(`失败：${res.message}`, { type: "warning" });
       }
     } catch {
-      message('请求失败，请稍后重试', { type: "warning" });
+      message("请求失败，请稍后重试", { type: "warning" });
     }
   }
 
@@ -402,6 +408,6 @@ export function usePermissionManagement() {
     filteredWhiteListNameList,
     handleRemoteSearch,
     openPermissionDialog,
-    savePermission,
+    savePermission
   };
 }

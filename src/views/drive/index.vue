@@ -260,7 +260,6 @@ const roomOptions = [
   { label: "5B+", value: "5B+" },
   { label: "Other", value: "Other" },
   { label: "公共设施", value: "公共设施" }
-  /* … 其他选项 … */
 ];
 
 const areas = ref<string[]>([]);
@@ -383,6 +382,7 @@ async function submit() {
     const meta: UploadMeta = {
       apartmentName: validateForm.apartmentName,
       roomType: validateForm.roomType,
+      address: validateForm.apartmentAddress,
       unit: validateForm.unit,
       area: validateForm.area,
       target_source: validateForm.targetSource,
@@ -392,12 +392,22 @@ async function submit() {
     };
 
     try {
+      console.log("Starting upload..."); // 添加开始日志
       await formUpload({
-        file: selectedFile.value,
+        file: selectedFile.value!, // 确保 selectedFile 不是 null
         meta,
-        onProgress: p => (percent.value = p)
+        onProgress: p => {
+          console.log("Progress Update Received:", p); // <--- 添加日志，检查 p 的值和调用频率
+          // 确保 p 是数字类型且在 0-100 之间
+          if (typeof p === "number" && p >= 0 && p <= 100) {
+            percent.value = Math.round(p); // 可以取整避免小数
+          } else {
+            console.warn("Invalid progress value received:", p);
+          }
+        }
       });
       message("上传并保存成功", { type: "success" });
+
       formRef.value.resetFields();
       selectedFile.value = undefined;
     } catch (err: any) {

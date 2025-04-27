@@ -11,6 +11,7 @@ import {
   reactive,
   toRaw
 } from "vue";
+
 import { ElForm, ElMessageBox, FormInstance } from "element-plus";
 import { message } from "@/utils/message";
 import { useGjgyRecords, AptRecord } from "./useGjgyRecords";
@@ -306,6 +307,7 @@ async function onSubmit() {
     await f.validate();
   } catch (err) {
     message("请填写所有的必填项目", { type: "warning" });
+    return;
     console.warn("提交被拦截：", err);
   }
   // 拿到原始 & 当前快照
@@ -368,6 +370,7 @@ async function onSubmit() {
 
   // 删字段
   delete payload.created_at;
+  delete payload.value;
   delete payload.updated_at;
   delete payload.userAgentId;
   delete payload.userAgentName;
@@ -382,10 +385,18 @@ async function onSubmit() {
 
   // 保存
   try {
-    await saveRecord(payload);
-    dialogVisible.value = false;
-    console.log("提交成功");
-    message("提交成功", { type: "success" });
+    // 调用修改后的 saveRecord 并获取结果
+    const success = await saveRecord(payload); // <--- success 是 true 或 false
+
+    // 根据保存结果执行操作
+    if (success) {
+      // 保存成功
+      dialogVisible.value = false; // <--- 关闭对话框
+      fetchRecords(); // <--- 刷新列表
+      console.log("记录已成功保存。");
+    } else {
+      console.log("记录保存失败，对话框保持打开。");
+    }
   } catch (saveErr) {
     console.error("保存记录失败：", saveErr);
     message("保存失败：网络错误，请稍后重试", { type: "error" });
@@ -519,7 +530,7 @@ watch(dialogVisible, newVal => {
             "building_name,address",
             "building_name",
             "address",
-            "none",
+            "website",
             "building_name"
           );
           autoCompleteInitialized.value = true;
@@ -641,51 +652,68 @@ onMounted(() => {
         >
           <template #operation="{ row }">
             <div style="white-space: nowrap" class="opt-buttons">
-              <el-button
-                class="icon-button"
-                color="#557DED"
-                :icon="useRenderIcon(EditIcon)"
-                size="default"
-                @click="openDialog('edit', row)"
-              />
-              <el-button
-                class="icon-button"
-                type="primary"
-                :icon="useRenderIcon(ViewIcon)"
-                size="default"
-                @click="showDetails(row)"
-              />
+              <el-tooltip content="编辑公寓信息" placement="top">
+                <el-button
+                  class="icon-button"
+                  color="#557DED"
+                  :icon="useRenderIcon(EditIcon)"
+                  size="default"
+                  @click="openDialog('edit', row)"
+                />
+              </el-tooltip>
 
-              <el-button
+              <el-tooltip content="查看详情" placement="top">
+                <el-button
+                  class="icon-button"
+                  type="primary"
+                  :icon="useRenderIcon(ViewIcon)"
+                  size="default"
+                  @click="showDetails(row)"
+                />
+              </el-tooltip>
+
+              <el-tooltip
                 v-if="row.sightmap_id"
-                class="icon-button"
-                color="#8f16f3"
-                size="default"
-                :icon="useRenderIcon(BuildingIcon)"
-                @click="
-                  openDialogTWithOptions({
-                    url: `https://sightmap.com/embed/${row.sightmap_id}?enable_api=1`,
-                    title: '实时房源预览'
-                  })
-                "
-              />
+                content="查看实时房源"
+                placement="top"
+              >
+                <el-button
+                  class="icon-button"
+                  color="#8f16f3"
+                  size="default"
+                  :icon="useRenderIcon(BuildingIcon)"
+                  @click="
+                    openDialogTWithOptions({
+                      url: `https://sightmap.com/embed/${row.sightmap_id}?enable_api=1`,
+                      title: '实时房源预览'
+                    })
+                  "
+                />
+              </el-tooltip>
 
-              <el-button
+              <el-tooltip
                 v-if="row.tour_url"
-                class="icon-button"
-                :icon="useRenderIcon(CalendarIcon)"
-                :type="isTourDialog(row) ? 'success' : undefined"
-                :color="!isTourDialog(row) ? '#0045f3' : undefined"
-                @click="handleTourClick(row)"
-              />
+                content="预约看房"
+                placement="top"
+              >
+                <el-button
+                  class="icon-button"
+                  :icon="useRenderIcon(CalendarIcon)"
+                  :type="isTourDialog(row) ? 'success' : undefined"
+                  :color="!isTourDialog(row) ? '#0045f3' : undefined"
+                  @click="handleTourClick(row)"
+                />
+              </el-tooltip>
 
-              <el-button
-                class="icon-button"
-                color="#557DED"
-                :icon="useRenderIcon(VideoIcon)"
-                size="default"
-                @click="showVideoDialog(row)"
-              />
+              <el-tooltip content="实拍视频" placement="top">
+                <el-button
+                  class="icon-button"
+                  color="#557DED"
+                  :icon="useRenderIcon(VideoIcon)"
+                  size="default"
+                  @click="showVideoDialog(row)"
+                />
+              </el-tooltip>
             </div>
           </template>
           <template #building_name="{ row }">
@@ -904,7 +932,7 @@ onMounted(() => {
             placeholder="请选择"
             :disabled="confirmNoChange.broker_fee"
             data-marker="broker_fee"
-            style="flex-shrink: 0; width: 160px"
+            style="flex-shrink: 0; width: 100px"
           >
             <el-option label="Full" value="Full" />
             <el-option label="Half" value="Half" />
