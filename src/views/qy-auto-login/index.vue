@@ -117,9 +117,15 @@ const goToLogin = () => {
 
 // 组件挂载后执行
 onMounted(async () => {
-  const { code, state } = route.query; // 从 URL 获取 code 和 state
-  const jumpPath = route.query.jump as string; // 从 URL 获取 jump
+  // --- 修改开始 ---
+  // 1. 从 window.location.search 获取 # 号之前的查询参数
+  const searchParams = new URLSearchParams(window.location.search);
+  const code = searchParams.get("code"); // 从 searchParams 获取 code
+  const state = searchParams.get("state"); // 从 searchParams 获取 state (如果需要验证)
 
+  // 2. 从 route.query 获取 # 号之后的查询参数
+  const jumpPath = route.query.jump as string; // jump 参数在 # 之后，继续用 route.query 获取
+  // --- 修改结束 ---
   console.log("回调页面加载. Code:", code, "State:", state, "Jump:", jumpPath);
 
   // 校验 code 是否存在
@@ -142,7 +148,7 @@ onMounted(async () => {
     isLoading.value = true;
     error.value = null;
 
-    const apiUrl = "/portalapi/qyAutoLogin"; // 确认 API 端点名称
+    const apiUrl = "/portalapi/qyAutoLogin/"; // 确认 API 端点名称
     console.log(`发送 code 到后端 API: ${apiUrl}`);
 
     // 调用后端 API，发送 code
