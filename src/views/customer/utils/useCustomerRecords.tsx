@@ -1,8 +1,7 @@
-import { ref, reactive, computed, onMounted, watch } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { http } from "@/utils/http";
 import { message } from "@/utils/message";
 
-import type { ElForm, FormInstance,  AutocompleteFetchSuggestionsCallback } from "element-plus";
 import { ElMessageBox } from "element-plus";
 
 // --- Interfaces ---
@@ -77,8 +76,9 @@ export interface CreateOrUpdateCustomerRecord {
   first_name: string;
   email: string;
   // Send selected file names as an array of strings
-  uploaded_files?: string | null;
+  uploaded_files?: UploadedFileDetail[] | string | null;
   file_only?: boolean;
+  [key: string]: any; // To allow other properties not explicitly defined
 }
 
 // API Response structure
@@ -93,31 +93,44 @@ interface FetchCustomerRecordsResponse {
 
 // Building List API Response structure
 interface FetchBuildingListResponse {
-    status: "success" | "error";
-    data: {
-        content: BuildingInfo[];
-        status: number;
-    };
-    message?: string;
+  status: "success" | "error";
+  data: {
+    content: BuildingInfo[];
+    status: number;
+  };
+  message?: string;
 }
 
-
+interface UploadedFileDetail {
+  file_name: string;
+  path: string;
+  // include other properties if they exist, e.g., size, type
+}
 
 // List of files that can be requested
 export const availableFiles = [
-    "Passport", "Visa", "I20", "DS2019", "Offer",
-    "Pay_Stub", "Bank_Statement", "Financial_Document", "Other"
+  "Passport",
+  "Visa",
+  "I20",
+  "DS2019",
+  "Offer",
+  "Pay_Stub",
+  "Bank_Statement",
+  "Financial_Document",
+  "Other"
 ];
 
 // Status mapping
 export const statusMap: Record<number, string> = {
-  0: '未开始',
-  1: '填写中',
-  2: '已完成',
-  4: '已作废'
+  0: "未开始",
+  1: "填写中",
+  2: "已完成",
+  4: "已作废"
 };
-export const statusList = Object.entries(statusMap).map(([value, text]) => ({ value: parseInt(value), text }));
-
+export const statusList = Object.entries(statusMap).map(([value, text]) => ({
+  value: parseInt(value),
+  text
+}));
 
 // --- Hook Logic ---
 
@@ -168,45 +181,40 @@ export function useCustomerRecords() {
       prop: "created_at",
       sortable: true,
 
-      formatter: (row) => formatDate(row.created_at) // Format date
+      formatter: row => formatDate(row.created_at) // Format date
     },
     {
       label: "客户姓名",
-      prop: "fullName", // Use computed fullName
-
+      prop: "fullName" // Use computed fullName
     },
     {
       label: "公寓名称",
-      prop: "community_name",
-
+      prop: "community_name"
     },
     {
       label: "Unit",
-      prop: "unit",
-
+      prop: "unit"
     },
     {
       label: "Move-in",
       prop: "move_in_date",
       sortable: "custom",
-      formatter: (row) => formatDate(row.move_in_date) // Format date
+      formatter: row => formatDate(row.move_in_date) // Format date
     },
     {
       label: "客户中介费", // Changed label to be specific
-      prop: "broker_fee",
-
+      prop: "broker_fee"
     },
     {
       label: "文件",
       prop: "uploaded_files",
       slot: "files",
-      minWidth: 200,
-
+      minWidth: 200
     },
     {
       label: "状态",
       prop: "is_completed",
-      slot: "status",
+      slot: "status"
 
       // --- Element Plus Table Column Filter ---
       // Example if using built-in filters instead of separate dialog
@@ -223,7 +231,8 @@ export function useCustomerRecords() {
   function fetchRecords() {
     loading.value = true;
     http
-      .request<FetchCustomerRecordsResponse>("get", "/portalapi/crm/", { // Adjust endpoint if needed
+      .request<FetchCustomerRecordsResponse>("get", "/portalapi/crm/", {
+        // Adjust endpoint if needed
         params: { action: "view" }
       })
       .then(res => {
@@ -231,26 +240,27 @@ export function useCustomerRecords() {
           // Process data: Add fullName, parse uploaded_files
           const processedData = res.data.map(r => ({
             ...r,
-            fullName: `${r.first_name || ''} ${r.last_name || ''}`.trim(),
+            fullName: `${r.first_name || ""} ${r.last_name || ""}`.trim(),
             // Parse uploaded_files if it's a JSON string
-            uploaded_files: typeof r.uploaded_files === 'string'
-                            ? parseJsonSafe<UploadedFileInfo[]>(r.uploaded_files, [])
-                            : r.uploaded_files || [],
+            uploaded_files:
+              typeof r.uploaded_files === "string"
+                ? parseJsonSafe<UploadedFileInfo[]>(r.uploaded_files, [])
+                : r.uploaded_files || [],
             // Ensure file_only is boolean for consistency
-             file_only: !!r.file_only
+            file_only: !!r.file_only
           }));
 
           records.value = processedData; // Keep original order or sort as needed
           currentUserAgentId.value = res.currentUserId;
-          currentUserName.value = res.currentUserName || '';
+          currentUserName.value = res.currentUserName || "";
           // Initial sort is handled by computed property if sortField/Order are set
           // updateColumnFilters(); // Update if using column filters
         } else {
-           records.value = []; // Clear data on error
-           message(res.message || "加载数据失败", { type: "warning" });
+          records.value = []; // Clear data on error
+          message(res.message || "加载数据失败", { type: "warning" });
         }
       })
-      .catch((err) => {
+      .catch(err => {
         console.error("Fetch Records Error:", err);
         message("加载数据失败，请检查网络或联系管理员", { type: "error" });
         records.value = []; // Clear data on catch
@@ -263,110 +273,154 @@ export function useCustomerRecords() {
   // Fetch building list for autocomplete
   async function fetchBuildings() {
     try {
-        const res = await http.request<FetchBuildingListResponse>("get", "/portalapi/portal_support/get_building_list.php");
-        if (res.status === 'success' && res.data.status === 200 && Array.isArray(res.data?.content)) {
-            buildings.value = res.data.content.map(b => ({
-                ...b,
-                value: b.name, // for autocomplete display
-                label: b.name  // for autocomplete display
-            }));
-        } else {
-            message(res.message || "加载公寓列表失败", { type: "warning" });
-        }
+      const res = await http.request<FetchBuildingListResponse>(
+        "get",
+        "/portalapi/portal_support/get_building_list.php"
+      );
+      if (
+        res.status === "success" &&
+        res.data.status === 200 &&
+        Array.isArray(res.data?.content)
+      ) {
+        buildings.value = res.data.content.map(b => ({
+          ...b,
+          value: b.name, // for autocomplete display
+          label: b.name // for autocomplete display
+        }));
+      } else {
+        message(res.message || "加载公寓列表失败", { type: "warning" });
+      }
     } catch (err) {
-        console.error("Fetch Buildings Error:", err);
-        message("加载公寓列表失败", { type: "error" });
+      console.error("Fetch Buildings Error:", err);
+      message("加载公寓列表失败", { type: "error" });
     }
-}
+  }
 
   // --- Save/Update Record ---
-async function saveRecord(recordData: CreateOrUpdateCustomerRecord) {
+  async function saveRecord(recordData: CreateOrUpdateCustomerRecord) {
     const action = recordData.id ? "update" : "add";
     loading.value = true;
 
+    let fileNamesOnly: string[] = [];
+    // Check if uploaded_files exists and is an array before mapping
+    if (Array.isArray(recordData.uploaded_files)) {
+      fileNamesOnly = recordData.uploaded_files.map(
+        fileObject => fileObject.file_name
+      );
+    }
+    // Optional: You might want to handle the case where it's already a stringified JSON array
+    else if (typeof recordData.uploaded_files === "string") {
+      try {
+        const parsed = JSON.parse(recordData.uploaded_files);
+        if (Array.isArray(parsed)) {
+          fileNamesOnly = parsed.map(fileObject => fileObject.file_name);
+        }
+      } catch (e) {
+        console.error("Could not parse uploaded_files string:", e);
+      }
+    }
+    // If it's null, undefined, or not parseable/array, fileNamesOnly remains []
+    // --- End Extraction ---
+
     // Payload already contains the JSON string in recordData.uploaded_files
     const payload = {
-        ...recordData,
-        // Ensure it's a valid string or default to empty array string
-        uploaded_files: recordData.uploaded_files || '[]',
-        file_only: !!recordData.file_only
+      ...recordData,
+      // Ensure it's a valid string or default to empty array string
+
+      uploaded_files: fileNamesOnly,
+      file_only: !!recordData.file_only
     };
 
     // Prepare parameters (action, id/uuid) - same as before
     const params: any = { action };
-    if (action === 'update') {
+    if (action === "update") {
       if ((payload as any).uuid) params.uuid = (payload as any).uuid;
-      else if (payload.id) params.caseID = payload.id;
+      else if (payload.id) params.id = payload.id;
     }
 
     try {
       // Make the API request - payload.uploaded_files is already the JSON string
-       const response = await http.request<{ status: string; message?: string }>("post", "/portalapi/crm1/", { // Adjust endpoint
-           params: params,
-           data: payload // Send the payload directly
-       });
-
-       // Handle response... (same as before)
-       if (response.status === 'success' || response.status === 'successNoEmail') {
-            message(response.message || "保存成功！", { type: response.status === 'success' ? "success" : "warning" });
-            fetchRecords();
-            return true;
-        } else {
-            message(response.message || "保存失败，请重试。", { type: "error" });
-            return false;
+      const response = await http.request<{ status: string; message?: string }>(
+        "post",
+        "/portalapi/crm/",
+        {
+          // Adjust endpoint
+          params: params,
+          data: payload // Send the payload directly
         }
-    } catch (error: any) {
-        // Handle error... (same as before)
-         console.error("Save Record Error:", error);
-        const errorMsg = error?.response?.data?.message || error.message || "保存请求失败";
-        message(errorMsg, { type: "error" });
+      );
+
+      // Handle response... (same as before)
+      if (
+        response.status === "success" ||
+        response.status === "successNoEmail"
+      ) {
+        message("成功！" + response.message, {
+          type: response.status === "success" ? "success" : "warning"
+        });
+        fetchRecords();
+        return true;
+      } else {
+        message(response.message || "保存失败，请重试。", { type: "error" });
         return false;
+      }
+    } catch (error: any) {
+      // Handle error... (same as before)
+      console.error("Save Record Error:", error);
+      const errorMsg =
+        error?.response?.data?.message || error.message || "保存请求失败";
+      message(errorMsg, { type: "error" });
+      return false;
     } finally {
-        loading.value = false;
+      loading.value = false;
     }
-}
+  }
 
   // --- Void Record ---
-   async function voidRecord(uuid: string) {
-       try {
-            await ElMessageBox.confirm(
-                "确定要作废此条记录吗？此操作不可撤销！",
-                "确认作废",
-                { type: 'warning' }
-            );
+  async function voidRecord(uuid: string) {
+    try {
+      await ElMessageBox.confirm(
+        "确定要作废此条记录吗？此操作不可撤销！",
+        "确认作废",
+        { type: "warning" }
+      );
 
-            // Proceed if confirmed
-            loading.value = true;
-            // Adjust endpoint and params as needed, matching legacy `applictaion_process.php?action=void&type=4&uuid=`
-            const response = await http.request<{ status: string; message?: string }>("post", "/portalapi/crm1/", { // Assuming same endpoint handles void
-                params: {
-                    action: 'void',
-                    type: 4, // Legacy type for voiding
-                    uuid: uuid
-                }
-                // No data needed usually for void
-            });
+      // Proceed if confirmed
+      loading.value = true;
+      // Adjust endpoint and params as needed, matching legacy `applictaion_process.php?action=void&type=4&uuid=`
+      const response = await http.request<{ status: string; message?: string }>(
+        "post",
+        "/portalapi/crm/",
+        {
+          // Assuming same endpoint handles void
+          data: {
+            action: "void",
+            type: 4, // Legacy type for voiding
+            uuid: uuid
+          }
+          // No data needed usually for void
+        }
+      );
 
-            if (response.status === 'success') {
-                message("记录已作废！", { type: "success" });
-                fetchRecords(); // Refresh data
-            } else {
-                message(response.message || "作废失败，请重试。", { type: "error" });
-            }
-
-       } catch (error) {
-           // Catch potential errors from http request or if user cancels confirm dialog
-           if (error === 'cancel') {
-                // User cancelled the confirmation
-                message("操作已取消", { type: "info" });
-           } else {
-               console.error("Void Record Error:", error);
-               message("作废请求失败", { type: "error" });
-           }
-       } finally {
-            loading.value = false;
-       }
-   }
+      if (response.status === "success") {
+        message("记录已作废！", { type: "success" });
+        fetchRecords(); // Refresh data
+      } else {
+        message(response.message || "作废失败，请重试。", { type: "error" });
+      }
+    } catch (error) {
+      // Catch potential errors from http request or if user cancels confirm dialog
+      if (error === "cancel") {
+        // User cancelled the confirmation
+        message("操作已取消", { type: "info" });
+      } else {
+        console.error("Void Record Error:", error);
+        message("作废请求失败", { type: "error" });
+      }
+    } finally {
+      loading.value = false;
+    }
+  }
 
   // --- Computed Properties for Filtering/Sorting/Pagination ---
   const filteredAndSortedRecords = computed(() => {
@@ -381,26 +435,39 @@ async function saveRecord(recordData: CreateOrUpdateCustomerRecord) {
 
     // 2. Filter by Status (from filter dialog)
     if (statusFilter.value.length > 0) {
-        // Legacy logic: If 'Completed (2)' is selected, include 2 AND any other non-(0, 1, 4) status?
-        // Current simpler logic: exact match
-        const filterSet = new Set(statusFilter.value);
-        data = data.filter(r => r.is_completed !== undefined && filterSet.has(r.is_completed));
-
+      // Legacy logic: If 'Completed (2)' is selected, include 2 AND any other non-(0, 1, 4) status?
+      // Current simpler logic: exact match
+      const filterSet = new Set(statusFilter.value);
+      data = data.filter(
+        r => r.is_completed !== undefined && filterSet.has(r.is_completed)
+      );
     }
-
 
     // 3. Filter by Search Term
     if (searchTerm.value) {
       const term = searchTerm.value.toLowerCase();
       // Search specific relevant fields (adjust as needed)
       const searchFields: (keyof CustomerRecord)[] = [
-          'fullName', 'community_name', 'address', 'unit', 'email', 'broker_fee', 'll_broker_fee', 'move_in_date', 'userAgentName'
+        "fullName",
+        "community_name",
+        "address",
+        "unit",
+        "email",
+        "broker_fee",
+        "ll_broker_fee",
+        "move_in_date",
+        "userAgentName"
       ];
-      data = data.filter(r =>
-        searchFields.some(field =>
-          r[field] && typeof r[field] === "string" && r[field]!.toLowerCase().includes(term)
-        ) || (r.first_name && r.first_name.toLowerCase().includes(term)) // Explicitly check first/last name if fullName isn't enough
-         || (r.last_name && r.last_name.toLowerCase().includes(term))
+      data = data.filter(
+        r =>
+          searchFields.some(
+            field =>
+              r[field] &&
+              typeof r[field] === "string" &&
+              r[field]!.toLowerCase().includes(term)
+          ) ||
+          (r.first_name && r.first_name.toLowerCase().includes(term)) || // Explicitly check first/last name if fullName isn't enough
+          (r.last_name && r.last_name.toLowerCase().includes(term))
       );
     }
 
@@ -408,28 +475,38 @@ async function saveRecord(recordData: CreateOrUpdateCustomerRecord) {
     if (sortField.value) {
       data.sort((a, b) => {
         const field = sortField.value as keyof CustomerRecord;
-        let valA = a[field];
-        let valB = b[field];
+        const valA = a[field];
+        const valB = b[field];
 
         // Handle different types for sorting
         let comparison = 0;
-        if (typeof valA === 'number' && typeof valB === 'number') {
-            comparison = valA - valB;
-        } else if (field === 'created_at' || field === 'updated_at' || field === 'move_in_date' || field === 'move_out_date') {
-             // Date comparison
-             const dateA = (typeof valA === 'string' || typeof valA === 'number' || valA instanceof Date) 
-                 ? new Date(valA).getTime() 
-                 : 0;
-             const dateB = (typeof valB === 'string' || typeof valB === 'number' || valB instanceof Date) 
-                 ? new Date(valB).getTime() 
-                 : 0;
-             comparison = dateA - dateB;
-        }
-        else {
-            // Default to string comparison (case-insensitive)
-             const strA = String(valA || '').toLowerCase();
-             const strB = String(valB || '').toLowerCase();
-             comparison = strA.localeCompare(strB);
+        if (typeof valA === "number" && typeof valB === "number") {
+          comparison = valA - valB;
+        } else if (
+          field === "created_at" ||
+          field === "updated_at" ||
+          field === "move_in_date" ||
+          field === "move_out_date"
+        ) {
+          // Date comparison
+          const dateA =
+            typeof valA === "string" ||
+            typeof valA === "number" ||
+            valA instanceof Date
+              ? new Date(valA).getTime()
+              : 0;
+          const dateB =
+            typeof valB === "string" ||
+            typeof valB === "number" ||
+            valB instanceof Date
+              ? new Date(valB).getTime()
+              : 0;
+          comparison = dateA - dateB;
+        } else {
+          // Default to string comparison (case-insensitive)
+          const strA = String(valA || "").toLowerCase();
+          const strB = String(valB || "").toLowerCase();
+          comparison = strA.localeCompare(strB);
         }
 
         return sortOrder.value === "asc" ? comparison : -comparison;
@@ -447,16 +524,15 @@ async function saveRecord(recordData: CreateOrUpdateCustomerRecord) {
     // Ensure currentPage is valid after filtering might reduce total pages
     const maxPage = Math.ceil(pagination.total / pagination.pageSize);
     if (pagination.currentPage > maxPage && maxPage > 0) {
-        pagination.currentPage = maxPage;
+      pagination.currentPage = maxPage;
     } else if (pagination.currentPage < 1) {
-         pagination.currentPage = 1;
+      pagination.currentPage = 1;
     }
 
     const start = (pagination.currentPage - 1) * pagination.pageSize;
     const end = start + pagination.pageSize;
     return filteredAndSortedRecords.value.slice(start, end);
   });
-
 
   // --- State Update Functions ---
   function setSearchTerm(value: string) {
@@ -466,14 +542,15 @@ async function saveRecord(recordData: CreateOrUpdateCustomerRecord) {
 
   function setSort(field: string, order: "asc" | "desc" | "") {
     sortField.value = field;
-    sortOrder.value = order || 'asc'; // Default to asc if order is empty
+    sortOrder.value = order || "asc"; // Default to asc if order is empty
     pagination.currentPage = 1; // Reset to first page on sort
   }
 
-   function setStatusFilter(statuses: number[]) {
-     statusFilter.value = statuses;
-     pagination.currentPage = 1; // Reset to first page on filter change
-   }
+  function setStatusFilter(newStatusValues: number[]) {
+    statusFilter.value = [...newStatusValues]; // 更新 hook 内部状态
+    pagination.currentPage = 1; // 筛选条件改变，重置页码
+    // 触发数据更新，如果 fetchRecords 依赖 statusFilter，或者重新计算 computed 属性
+  }
 
   function toggleOnlyMine(value: boolean) {
     onlyMine.value = value;
@@ -497,33 +574,37 @@ async function saveRecord(recordData: CreateOrUpdateCustomerRecord) {
 
   // --- Helper Functions ---
   function formatDate(dateStr: string | undefined | null): string {
-      if (!dateStr) return '';
-      try {
-          // Handle potential full timestamp or just date
-          const date = new Date(dateStr.includes(' ') ? dateStr : dateStr + 'T00:00:00');
-          if (isNaN(date.getTime())) return dateStr; // Return original if invalid
+    if (!dateStr) return "";
+    try {
+      // Handle potential full timestamp or just date
+      const date = new Date(
+        dateStr.includes(" ") ? dateStr : dateStr + "T00:00:00"
+      );
+      if (isNaN(date.getTime())) return dateStr; // Return original if invalid
 
-          // Format as MM/DD/YYYY (matching legacy format slightly better)
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          const year = date.getFullYear();
-          return `${month}/${day}/${year}`;
-      } catch (e) {
-          return dateStr; // Return original on error
-      }
+      // Format as MM/DD/YYYY (matching legacy format slightly better)
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${month}/${day}/${year}`;
+    } catch {
+      return dateStr; // Return original on error
+    }
   }
 
   // Safe JSON parsing helper
-    function parseJsonSafe<T>(jsonString: string | undefined | null, defaultValue: T): T {
-        if (!jsonString) return defaultValue;
-        try {
-            return JSON.parse(jsonString) as T;
-        } catch (e) {
-            console.error("Failed to parse JSON:", e, jsonString);
-            return defaultValue;
-        }
+  function parseJsonSafe<T>(
+    jsonString: string | undefined | null,
+    defaultValue: T
+  ): T {
+    if (!jsonString) return defaultValue;
+    try {
+      return JSON.parse(jsonString) as T;
+    } catch (e) {
+      console.error("Failed to parse JSON:", e, jsonString);
+      return defaultValue;
     }
-
+  }
 
   // --- Returned Values ---
   return {
