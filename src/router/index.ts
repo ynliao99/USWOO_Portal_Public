@@ -33,6 +33,7 @@ import {
   removeToken,
   multipleTabsKey
 } from "@/utils/auth";
+import { isWeCom } from "@/utils/env";
 
 /** 自动导入全部静态路由，无需再手动引入！匹配 src/router/modules 目录（任何嵌套级别）中具有 .ts 扩展名的所有文件，除了 remaining.ts 文件
  * 如何匹配所有文件请看：https://github.com/mrmlnc/fast-glob#basic-syntax
@@ -104,7 +105,7 @@ export function resetRouter() {
 }
 
 /** 路由白名单 */
-const whiteList = ["/login"];
+const whiteList = ["/login", "/qyautologin"];
 
 const { VITE_HIDE_HOME } = import.meta.env;
 
@@ -133,6 +134,7 @@ router.beforeEach((to: ToRouteType, _from, next) => {
     whiteList.includes(to.fullPath) ? next(_from.fullPath) : next();
   }
   if (Cookies.get(multipleTabsKey) && userInfo) {
+    //--- 用户已登录 ---
     // 无权限跳转403页面
     if (to.meta?.roles && !isOneOfArray(to.meta?.roles, userInfo?.roles)) {
       next({ path: "/error/403" });
@@ -190,13 +192,49 @@ router.beforeEach((to: ToRouteType, _from, next) => {
       toCorrectRoute();
     }
   } else {
+    // --- User is NOT Logged In ---
     if (to.path !== "/login") {
       if (whiteList.indexOf(to.path) !== -1) {
         next();
       } else {
         removeToken();
         //next({ path: "/login" });
-        next({ path: "/login", query: { redirect: to.fullPath } });
+        if (isWeCom()) {
+          // --- WeCom Environment: Redirect to OAuth ---
+          console.log("WeCom environment detected, redirecting to OAuth...");
+
+          const appId = "ww834a5bbb7a5d1db4"; // Use environment variable ideally
+          const agentId = "1000006"; // Use environment variable ideally
+          const state = "STATE_" + Date.now(); // Generate a unique state for security
+
+          // Base URL of your application for the redirect URI
+          const redirectBaseUri = window.location.origin;
+          // Callback path within your Vue app (needs to be added to router)
+          const callbackPath = "/qyautologin";
+          // Encode the original intended path (where the user wanted to go)
+          const encodedJumpPath = encodeURIComponent(to.fullPath);
+
+          // Construct the full redirect URI for WeCom
+          // Note: Adjust `/#' for hash mode, or just `${callbackPath}` for history mode
+          const redirectUri = `${redirectBaseUri}/#${callbackPath}?jump=${encodedJumpPath}`;
+          const encodedRedirectUri = encodeURIComponent(redirectUri);
+
+          // Construct the final WeCom OAuth URL
+          const weComAuthUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${encodedRedirectUri}&response_type=code&scope=snsapi_base&state=${state}&agentid=${agentId}#wechat_redirect`;
+
+          // Redirect the entire browser window (not using vue-router's next)
+          window.location.href = weComAuthUrl;
+
+          // No need to call next() because the browser is navigating away.
+          // Return to stop further processing in the guard.
+          return;
+        } else {
+          // --- Not in WeCom Environment: Redirect to Standard Login ---
+          console.log(
+            "Not in WeCom environment, redirecting to standard login page."
+          );
+          next({ path: "/login", query: { redirect: to.fullPath } });
+        }
       }
     } else {
       next();

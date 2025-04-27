@@ -221,6 +221,7 @@ menus:
   pureWaterfall: 瀑布流无限滚动
   pureWatermark: 水印
   pureWavesurfer: 音频可视化
+  qyAtudoLogin: 企业微信自动登录
   teamManagement: 团队管理
 panel:
   pureClearCache: 清空缓存

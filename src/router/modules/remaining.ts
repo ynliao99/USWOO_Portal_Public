@@ -41,11 +41,21 @@ export default [
   },
   {
     path: "/anythingtodashboard",
-    name: "http://localhost:8848/#/dashboard/index",
+    name: "https://portal.uswoo.cn/#/dashboard/index",
     meta: {
       title: $t("menus.dashboard"),
       icon: DashBoardIcon,
       rank: 36
+    }
+  },
+  {
+    path: "/qyautologin",
+    name: "qyAutoLogin",
+    component: () => import("@/views/qy-auto-login/index.vue"),
+    meta: {
+      title: $t("menus.qyAtudoLogin"),
+      showLink: false,
+      rank: 203
     }
   },
   {
@@ -56,8 +66,8 @@ export default [
       title: $t("menus.dashboard"),
       rank: 114,
       icon: DashBoardIcon,
-      showLink: false,
-      }
+      showLink: false
+    }
   },
   {
     path: "/account-settings",
