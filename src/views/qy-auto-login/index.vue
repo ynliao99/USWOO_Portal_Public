@@ -23,11 +23,40 @@
         </el-button>
       </el-alert>
     </div>
+
+
+  <!-- 绑定表单 -->
+    <div v-if="showBindForm" class="bind-form" style="max-width: 400px; width: 100%;">
+      <el-alert type="warning" title="请先将企业微信账号与本系统账号绑定" center :closable="false" />
+      <el-form :model="bindForm" status-icon>
+        <el-form-item label="账号" :label-width="formLabelWidth">
+          <el-input v-model="bindForm.username" autocomplete="username" />
+        </el-form-item>
+        <el-form-item label="密码" :label-width="formLabelWidth">
+          <el-input
+            type="password"
+            v-model="bindForm.password"
+            autocomplete="current-password"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button
+            type="primary"
+            :loading="isLoading"
+            @click="handleBind"
+          >
+            绑定并登录
+          </el-button>
+        </el-form-item>
+        <p v-if="error" class="error-message" style="color: #f56c6c;">{{ error }}</p>
+      </el-form>
+    </div>
   </div>
+
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, reactive } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStoreHook } from "@/store/modules/user"; // 引入用户 Store
 import { initRouter } from "@/router/utils"; // 引入路由初始化工具
@@ -47,6 +76,15 @@ const userStore = useUserStoreHook(); // 获取用户 Store 实例
 
 const isLoading = ref(true);
 const error = ref<string | null>(null);
+
+// 绑定流程相关
+const showBindForm = ref(false);
+const bindForm = reactive({
+  username: "",
+  password: ""
+});
+const bindCode = ref("");
+const formLabelWidth = "80px";
 
 /**
  * 处理登录成功后的逻辑：
@@ -108,6 +146,56 @@ const handleLoginSuccess = async (apiResponseData: any) => {
   }
 };
 
+
+/** 处理绑定提交 **/
+const handleBind = async () => {
+  if (!bindForm.username || !bindForm.password) {
+    error.value = "请输入账号和密码再提交。";
+    return;
+  }
+
+  try {
+    isLoading.value = true;
+    error.value = null;
+
+    const apiUrl = "/portalapi/qyAutoLogin/";
+    const response = await http.request<{
+      success: boolean;
+      message?: string;
+      errcode?: number;
+      code?: string;
+      data?: any;
+    }>(
+      "post",
+      apiUrl,
+      {
+        data: {
+          action: "bind",
+          code: bindCode.value,
+          username: bindForm.username,
+          password: bindForm.password
+        }
+      }
+    );
+
+    if (response.success) {
+      // 绑定成功，直接登录
+      await handleLoginSuccess(response.data);
+    } else if (response.errcode === -6) {
+      // 绑定失败，需要重新输入，后端返回新的 code
+      error.value = response.message || "绑定失败，请重试。";
+      bindCode.value = response.code || "";
+      isLoading.value = false;
+    } else {
+      // 其他错误
+      throw new Error(response.message || "绑定流程出错");
+    }
+  } catch (err: any) {
+    error.value = err.message || "绑定请求失败，请检查网络。";
+    isLoading.value = false;
+  }
+};
+
 /**
  * 跳转回手动登录页面
  */
@@ -117,74 +205,53 @@ const goToLogin = () => {
 
 // 组件挂载后执行
 onMounted(async () => {
-  // --- 修改开始 ---
-  // 1. 从 window.location.search 获取 # 号之前的查询参数
+  // 获取回调参数
   const searchParams = new URLSearchParams(window.location.search);
-  const code = searchParams.get("code"); // 从 searchParams 获取 code
-  const state = searchParams.get("state"); // 从 searchParams 获取 state (如果需要验证)
+  const code = searchParams.get("code")!;
+  const state = searchParams.get("state");
+  const jumpPath = route.query.jump as string;
 
-  // 2. 从 route.query 获取 # 号之后的查询参数
-  const jumpPath = route.query.jump as string; // jump 参数在 # 之后，继续用 route.query 获取
-  // --- 修改结束 ---
-  console.log("回调页面加载. Code:", code, "State:", state, "Jump:", jumpPath);
-
-  // 校验 code 是否存在
-  if (!code || typeof code !== "string") {
-    error.value = "企业微信回调参数无效或缺失 (code)，无法登录。";
-    isLoading.value = false;
+  if (!code) {
+    error.value = "企业微信回调参数无效或缺失 (code)。";
     return;
   }
-
-  // TODO: 在这里添加 state 参数的校验逻辑（如果需要）
-  // const expectedState = storageLocal().getItem('oauth_state');
-  // if (!state || state !== expectedState) {
-  //   error.value = '无效的 state 参数，可能存在安全风险。';
-  //   isLoading.value = false;
-  //   return;
-  // }
-  // storageLocal().removeItem('oauth_state'); // 验证后移除
 
   try {
     isLoading.value = true;
     error.value = null;
 
-    const apiUrl = "/portalapi/qyAutoLogin/"; // 确认 API 端点名称
-    console.log(`发送 code 到后端 API: ${apiUrl}`);
-
-    // 调用后端 API，发送 code
-    // 注意：根据你的 http 客户端封装，确认 data 包装方式。
-    // 如果 http.request 自动处理 JSON，通常第三个参数直接是数据对象。
-    // 如果需要明确指定 data 字段，则用 { data: { code: code } }
+    const apiUrl = "/portalapi/qyAutoLogin/";
     const response = await http.request<{
       success: boolean;
       message?: string;
+      errcode?: number;
+      code?: string;
       data?: any;
     }>(
       "post",
       apiUrl,
-      { data: { code: code } } 
+      { data: { code } }
     );
 
-    console.log("后端 API 响应:", response);
-
-    // 处理后端响应
-    if (response && response.success) {
-      // 登录成功，调用 handleLoginSuccess 处理后续流程
-      await handleLoginSuccess(response.data); // 将后端返回的 data 传递过去
+    if (response.success) {
+      await handleLoginSuccess(response.data);
+    } else if (response.errcode === -5) {
+      // 进入绑定流程
+      bindCode.value = response.code || "";
+      showBindForm.value = true;
+      isLoading.value = false;
     } else {
-      // 后端返回登录失败
       error.value =
-        response?.message ||
+        response.message ||
         "企业微信登录认证失败，可能是 Code 无效、用户未绑定或未授权。";
       isLoading.value = false;
     }
   } catch (apiError: any) {
-    // 请求后端 API 本身失败（网络错误等）
-    console.error(`请求 API 失败:`, apiError);
-    error.value = `请求企业微信登录接口失败 (${apiError.statusCode || "Network Error"})，请检查网络或联系管理员。`;
+    error.value = `请求企业微信登录接口失败：${apiError.message || "网络错误"}`;
     isLoading.value = false;
   }
 });
+
 </script>
 
 <style scoped>
