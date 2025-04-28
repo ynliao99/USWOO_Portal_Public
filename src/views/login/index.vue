@@ -25,6 +25,8 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useTranslationLang } from "@/layout/hooks/useTranslationLang";
 import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange";
 
+import { isWeCom } from "@/utils/env";
+
 import dayIcon from "@/assets/svg/day.svg?component";
 import darkIcon from "@/assets/svg/dark.svg?component";
 import globalization from "@/assets/svg/globalization.svg?component";
@@ -115,6 +117,10 @@ const immediateDebounce: any = debounce(
   1000,
   true
 );
+
+function jumpto(url: string) {
+  router.push(url);
+}
 
 useEventListener(document, "keydown", ({ code }) => {
   if (
@@ -320,28 +326,31 @@ watch(loginDay, value => {
             </Motion> -->
           </el-form>
 
-          <!-- <Motion v-if="currentPage === 0" :delay="350">
-            <el-form-item>
-              <el-divider>
-                <p class="text-gray-500 text-xs">
-                  {{ t("login.pureThirdLogin") }}
-                </p>
-              </el-divider>
-              <div class="w-full flex justify-evenly">
-                <span
-                  v-for="(item, index) in thirdParty"
-                  :key="index"
-                  :title="t(item.title)"
-                >
-                  <IconifyIconOnline
-                    :icon="`ri:${item.icon}-fill`"
-                    width="20"
-                    class="cursor-pointer text-gray-500 hover:text-blue-400"
-                  />
-                </span>
-              </div>
-            </el-form-item>
-          </Motion> -->
+          <div v-if="isWeCom()">
+            <Motion v-if="currentPage === 0" :delay="350">
+              <el-form-item>
+                <el-divider>
+                  <p class="text-gray-500 text-xs">
+                    {{ t("login.pureThirdLogin") }}
+                  </p>
+                </el-divider>
+                <div class="w-full flex justify-evenly">
+                  <span
+                    v-for="(item, index) in thirdParty"
+                    :key="index"
+                    :title="t(item.title)"
+                  >
+                    <IconifyIconOnline
+                      :icon="`ant-design:${item.icon}-outlined`"
+                      width="20"
+                      class="cursor-pointer text-gray-500 hover:text-blue-400"
+                      @click="jumpto(item.url)"
+                    />
+                  </span>
+                </div>
+              </el-form-item>
+            </Motion>
+          </div>
           <!-- 手机号登录 -->
           <!-- <LoginPhone v-if="currentPage === 1" /> -->
           <!-- 二维码登录 -->
