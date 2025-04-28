@@ -136,7 +136,7 @@ const platforms = ref<Platform[]>([
     target: "_blank",
     fields: [
       { name: "name", value: "hooli" },
-      { name: "pass", value: "Hooli2022!" }, // 警告：硬编码密码非常不安全
+      { name: "pass", value: "Hooli2022!" },
       { name: "form_id", value: "user_login_block" },
       { name: "op", value: "Log in" }
     ]
@@ -144,13 +144,13 @@ const platforms = ref<Platform[]>([
   {
     id: "fineberg",
     name: "Fineberg Companies",
-    logo: "/assets/listing/fblogo.png", // 替换为实际 Logo
+    logo: "/assets/listing/fblogo.png",
     actionUrl: "http://list.finebergcompanies.com/",
     method: "post",
     target: "_blank",
     fields: [
       { name: "txtUsername", value: "nextgen" },
-      { name: "txtPassword", value: "TrueLeaders1" }, // 警告：硬编码密码非常不安全
+      { name: "txtPassword", value: "TrueLeaders1" },
       { name: "btnLogin", value: "Login" },
       {
         name: "__VIEWSTATE",
@@ -168,13 +168,13 @@ const platforms = ref<Platform[]>([
   {
     id: "ygl",
     name: "You Got Listings",
-    logo: "https://app.yougotlistings.com/images/logo.svg", // 替换为实际 Logo
+    logo: "https://app.yougotlistings.com/images/logo.svg",
     actionUrl: "https://app.yougotlistings.com/login",
     method: "post",
     target: "_blank",
     fields: [
       { name: "username", value: "uswooteam" },
-      { name: "password", value: "Cl0seM0re2023$" }, // 警告：硬编码密码非常不安全
+      { name: "password", value: "Cl0seM0re2023$" },
       { name: "loginSubmit", value: "" }
     ]
   }
