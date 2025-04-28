@@ -26,31 +26,51 @@
 
 
   <!-- 绑定表单 -->
-    <div v-if="showBindForm" class="bind-form" style="max-width: 400px; width: 100%;">
-      <el-alert type="warning" title="请先将企业微信账号与本系统账号绑定" center :closable="false" />
-      <el-form :model="bindForm" status-icon>
-        <el-form-item label="账号" :label-width="formLabelWidth">
-          <el-input v-model="bindForm.username" autocomplete="username" />
+     <transition name="fade-slide">
+    <div
+      v-if="showBindForm"
+      class="bind-form-card"
+      @mouseenter="hover = true"
+      @mouseleave="hover = false"
+    >
+
+      <el-form :model="bindForm" status-icon class="bind-form">
+        <div class="bind-prompt">
+        请先将企业微信账号与HRM账号绑定
+      </div>
+
+        <el-form-item label="HRM账号" :label-width="formLabelWidth">
+          <el-input
+            v-model="bindForm.username"
+            autocomplete="username"
+            class="fancy-input"
+          />
         </el-form-item>
-        <el-form-item label="密码" :label-width="formLabelWidth">
+
+        <el-form-item label="HRM密码" :label-width="formLabelWidth">
           <el-input
             type="password"
             v-model="bindForm.password"
             autocomplete="current-password"
+            class="fancy-input"
           />
         </el-form-item>
-        <el-form-item>
+
+        <el-form-item class="btn-wrapper">
           <el-button
             type="primary"
             :loading="isLoading"
             @click="handleBind"
+            class="pulse-btn"
           >
             绑定并登录
           </el-button>
         </el-form-item>
-        <p v-if="error" class="error-message" style="color: #f56c6c;">{{ error }}</p>
+
+        <p v-if="error" class="error-msg">{{ error }}</p>
       </el-form>
     </div>
+  </transition>
   </div>
 
 </template>
@@ -76,6 +96,7 @@ const userStore = useUserStoreHook(); // 获取用户 Store 实例
 
 const isLoading = ref(true);
 const error = ref<string | null>(null);
+const hover = ref(false); // Define hover as a reactive reference
 
 // 绑定流程相关
 const showBindForm = ref(false);
@@ -290,5 +311,148 @@ onMounted(async () => {
 
 .is-loading {
   margin-top: 15px;
+}
+
+
+
+/* 外层卡片 + 渐变边框 */
+.bind-form-card {
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 30px 24px;
+  background: #1e1e2f;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.bind-form-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    #ff416c,
+    #ff4b2b,
+    #2b86c5,
+    #8e2de2,
+    #ff416c
+  );
+  animation: rotateGrad 6s linear infinite;
+  z-index: 0;
+}
+.bind-form-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8);
+}
+
+/* 内层覆盖，保证内容在最上层 */
+.bind-form-card .el-alert,
+.bind-form-card .bind-form {
+  position: relative;
+  z-index: 1;
+}
+
+/* 表单项 */
+.fancy-input ::v-deep .el-input__inner {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.fancy-input ::v-deep .el-input__inner:focus,
+.fancy-input ::v-deep .el-input__inner:hover {
+  border-color: #ff4b2b;
+  box-shadow: 0 0 8px rgba(255, 75, 43, 0.6);
+}
+
+/* 按钮脉冲效果 */
+.pulse-btn {
+  width: 100%;
+  font-weight: bold;
+  box-shadow: 0 0 0 rgba(255, 75, 43, 0.7);
+  animation: pulse 2s infinite;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.pulse-btn:hover {
+  animation-duration: 1.2s;
+}
+
+/* 错误提示 */
+.error-msg {
+  margin-top: 12px;
+  color: #ff6b6b;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* 过渡动画 */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.5s ease;
+}
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+}
+.fade-slide-enter-to {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.fade-slide-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+}
+
+/* 表单项标签改为白色 */
+:deep(.el-form-item__label) {
+  color: #fff !important;
+}
+
+/* 输入框文字改为深灰，placeholder 也同步调整 */
+.fancy-input ::v-deep .el-input__inner {
+  color: #333 !important;
+}
+.fancy-input ::v-deep .el-input__inner::placeholder {
+  color: #888 !important;
+}
+
+/* Keyframes */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 75, 43, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 20px rgba(255, 75, 43, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 75, 43, 0);
+  }
+}
+@keyframes rotateGrad {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.bind-prompt {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  margin-bottom: 16px;
 }
 </style>
