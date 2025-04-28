@@ -34,7 +34,7 @@ import {
   multipleTabsKey
 } from "@/utils/auth";
 import { isWeCom } from "@/utils/env";
-
+import { message } from "@/utils/message";
 /** 自动导入全部静态路由，无需再手动引入！匹配 src/router/modules 目录（任何嵌套级别）中具有 .ts 扩展名的所有文件，除了 remaining.ts 文件
  * 如何匹配所有文件请看：https://github.com/mrmlnc/fast-glob#basic-syntax
  * 如何排除文件请看：https://cn.vitejs.dev/guide/features.html#negative-patterns
@@ -133,8 +133,14 @@ router.beforeEach((to: ToRouteType, _from, next) => {
   function toCorrectRoute() {
     whiteList.includes(to.fullPath) ? next(_from.fullPath) : next();
   }
+
   if (Cookies.get(multipleTabsKey) && userInfo) {
-    //--- 用户已登录 ---
+    // --- 用户已登录 ---
+    
+    // 判断是否有完成必要的工作，如果没有的话跳转相应页面
+
+    // 判断是否要提醒完成任务
+    
     // 无权限跳转403页面
     if (to.meta?.roles && !isOneOfArray(to.meta?.roles, userInfo?.roles)) {
       next({ path: "/error/403" });

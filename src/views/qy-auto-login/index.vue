@@ -162,8 +162,7 @@ onMounted(async () => {
     }>(
       "post",
       apiUrl,
-      { data: { code: code } } // 将 code 包装在 data 属性中以符合 AxiosRequestConfig 类型
-      // 或者如果你的封装需要: { data: { code: code } }
+      { data: { code: code } } 
     );
 
     console.log("后端 API 响应:", response);
