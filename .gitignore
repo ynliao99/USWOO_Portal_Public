@@ -22,3 +22,5 @@ tests/**/coverage/
 tsconfig.tsbuildinfo
 
 .husky
+
+vite.config.ts
