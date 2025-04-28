@@ -153,6 +153,7 @@ router.beforeEach(async (to: ToRouteType, _from, next) => {
       }
 
     }
+    
     // 如果是新组员并且没有设置是否按全职员工管理的选项，则弹窗提示
     if (isTlHasNewUntaggedMemember) {
       
