@@ -260,7 +260,7 @@ watch(loginDay, value => {
             <Motion :delay="250">
               <el-form-item>
                 <div class="w-full h-[20px] flex justify-between items-center">
-                  <el-checkbox v-model="checked">
+                  <el-checkbox v-model="checked" checked>
                     <span class="flex">
                       <select
                         v-model="loginDay"
