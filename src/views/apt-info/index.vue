@@ -31,7 +31,7 @@ import CalendarIcon from "~icons/ph/calendar-fill";
 import BuildingIcon from "~icons/carbon/floorplan";
 import VideoIcon from "~icons/icon-park-solid/play";
 import VideoList from "@/views/drive/video-list.vue";
-
+import ExternalLinkIcon from "~icons/ri/external-link-line";
 import { aptFormRules } from "./utils/rule";
 
 import IframeDialog, {
@@ -1214,12 +1214,15 @@ onMounted(() => {
         >
           <span class="detail-label">网站：</span>
           <span class="detail-value">
-            <a
-              :href="recordDetail.website"
-              target="_blank"
-              class="detail-link"
-              >{{ recordDetail.website }}</a
-            >
+            <a :href="recordDetail.website" target="_blank" class="detail-link">
+              <el-button
+                type="primary"
+                link
+                :icon="useRenderIcon(ExternalLinkIcon)"
+              >
+                查看官网
+              </el-button>
+            </a>
           </span>
         </div>
         <div
@@ -1233,8 +1236,15 @@ onMounted(() => {
               :href="recordDetail.tour_url"
               target="_blank"
               class="detail-link"
-              >{{ recordDetail.tour_url }}</a
             >
+              <el-button
+                type="primary"
+                link
+                :icon="useRenderIcon(ExternalLinkIcon)"
+              >
+                点击前往预约
+              </el-button>
+            </a>
           </span>
         </div>
 
