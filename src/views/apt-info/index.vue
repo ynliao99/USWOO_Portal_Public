@@ -34,10 +34,23 @@ import VideoList from "@/views/drive/video-list.vue";
 import ExternalLinkIcon from "~icons/ri/external-link-line";
 import { aptFormRules } from "./utils/rule";
 
+/**
+ * 检查给定的角色数组中是否包含 'cn_market' 角色。
+ *
+ * @param roles - 一个包含用户角色的字符串数组。
+ * @returns 如果数组中包含 'cn_market'，则返回 true，否则返回 false。
+ */
+function hasCnMarketRole(): boolean {
+  const roles = storageLocal().getItem<DataInfo<number>>(userKey)?.roles ?? [];
+  return roles.includes("cn_market");
+}
+
 import IframeDialog, {
   IframeDialogProps
 } from "@/components/IframeDialog/Iframe.vue";
 import { useNav } from "@/layout/hooks/useNav";
+import { DataInfo, getToken, userKey } from "@/utils/auth";
+import { storageLocal } from "@pureadmin/utils";
 const { device } = useNav();
 
 const iframeDialog = ref();
@@ -654,7 +667,11 @@ onMounted(() => {
         >
           <template #operation="{ row }">
             <div style="white-space: nowrap" class="opt-buttons">
-              <el-tooltip content="编辑公寓信息" placement="top">
+              <el-tooltip
+                v-if="!hasCnMarketRole()"
+                content="编辑公寓信息"
+                placement="top"
+              >
                 <el-button
                   class="icon-button"
                   color="#557DED"
