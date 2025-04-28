@@ -65,6 +65,7 @@ export interface GoalStatusResult {
   goal?: number;
   season?: string;
   message?: string; // Include message for potential API info/warnings
+  isTlHasNewUntaggedMemember?: boolean; // Optional, based on your API
 }
 
 export async function checkGoalSetStatus(): Promise<GoalStatusResult> {
@@ -76,6 +77,8 @@ export async function checkGoalSetStatus(): Promise<GoalStatusResult> {
             isGoalSet?: boolean;   // Make optional
             goal?: number;
             message?: string;
+            isTlHasNewUntaggedMemember?: boolean; // Optional, based on your API
+            
         }>('get', '/portalapi/checkGoal/'); // Use the correct API endpoint
 
         if (response.status === 'success' && response.currentSeason !== undefined && response.isGoalSet !== undefined) {

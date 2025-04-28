@@ -38,6 +38,7 @@ import { message } from "@/utils/message";
 
 import { checkGoalSetStatus } from '@/components/SetGoal/'
 import { ref } from "vue";
+import { ElMessageBox } from "element-plus";
 
 
 
@@ -142,16 +143,24 @@ router.beforeEach(async (to: ToRouteType, _from, next) => {
 
   if (Cookies.get(multipleTabsKey) && userInfo) {
     // --- 用户已登录 ---
-    const { isGoalSet } = await checkGoalSetStatus()
+    const { isGoalSet, isTlHasNewUntaggedMemember = false } = await checkGoalSetStatus();
+
+    // 如果是新组员并且没有设置目标，则弹窗提示
     if (!isGoalSet) {
       
       if (to.path !== "/welcome") {
         return next({ path: '/welcome' })
       }
-    }
-    // 判断是否有完成必要的工作，如果没有的话跳转相应页面
 
-    // 判断是否要提醒完成任务
+    }
+    // 如果是新组员并且没有设置是否按全职员工管理的选项，则弹窗提示
+    if (isTlHasNewUntaggedMemember) {
+      
+      if (to.path !== "/team-manage/index") {
+        return next({ path: '/team-manage/index' })
+      }
+
+    }
     
     // 无权限跳转403页面
     if (to.meta?.roles && !isOneOfArray(to.meta?.roles, userInfo?.roles)) {

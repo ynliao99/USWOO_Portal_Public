@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useTeamManagement } from "./utils/hook";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
@@ -10,10 +10,27 @@ import AccountMultipleIcon from "~icons/mdi/account-multiple?width=38&height=38"
 import AlertIcon from "~icons/mdi/alert?width=38&height=38";
 import FinanceIcon from "~icons/mdi/finance?width=38&height=38";
 // Note: Refresh icon is usually handled by PureTableBar's refresh button/event
+import { checkGoalSetStatus } from '@/components/SetGoal/'
+import { ElMessageBox } from "element-plus";
 
 defineOptions({
   name: "TeamManagement" // Unique component name
 });
+
+
+const checkInitialGoalStatus = async () => {
+  const { isTlHasNewUntaggedMemember = false } = await checkGoalSetStatus();
+
+  if (isTlHasNewUntaggedMemember) {
+
+    ElMessageBox.alert("请为你的新组员指定是否按全职员工管理。", "你有新组员", {
+      confirmButtonText: "去设置",
+      type: "warning"
+    });
+
+
+  }
+}
 
 const formRef = ref();
 const {
@@ -56,6 +73,11 @@ const onSwitchChange = (newState: boolean, row) => {
   // We directly call the update function from the hook
   handleUpdateUserAccess(row.userAgentId, newState);
 };
+
+onMounted(() => {
+  // Check if the user has new untagged members
+  checkInitialGoalStatus();
+});
 </script>
 
 <template>
@@ -72,7 +94,7 @@ const onSwitchChange = (newState: boolean, row) => {
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-gray-500 text-sm mb-1">
-                  团队人数 (全/兼/实/培/总)
+                  团队人数 (全职/兼职/实习/培训/总计)
                 </p>
                 <p class="text-xl font-semibold">
                   {{ summaryStats.teamMemberCountText || "加载中..." }}
