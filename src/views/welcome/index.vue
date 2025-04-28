@@ -92,12 +92,15 @@ const checkInitialGoalStatus = async () => {
   goalCheckError.value = null;
   isGoalInitiallySet.value = null;
   currentSeasonName.value = '';
-  console.log("Checking initial goal status...");
+  console.log("Checking seasonal goal status...");
   try {
     const statusResult: GoalStatusResult = await checkGoalSetStatus();
     isGoalInitiallySet.value = statusResult.isGoalSet;
     currentSeasonName.value = statusResult.season ?? '本季度';
-    console.log("Goal status checked:", statusResult);
+    console.log("Goal status checked:", statusResult, isGoalInitiallySet.value);
+    if (!isGoalInitiallySet.value) {
+      handleSetGoalClick(); // 如果没有设置目标，自动打开设置弹窗
+    }
   } catch (error: any) {
     console.error("Failed to check initial goal status:", error);
     goalCheckError.value = error.message || "检查季度目标状态失败。";
@@ -168,11 +171,11 @@ onMounted(() => {
             class="flex flex-col items-center justify-center h-full text-center px-2 goal-prompt-card"
             :initial="{ opacity: 0, scale: 0.9 }"
             :enter="{ opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 300, damping: 20, delay: 100 } }">
-            <p class="text-sm font-medium text-gray-600 mb-2">请设置{{ currentSeasonName }}目标</p>
-            <p class="text-xs text-gray-400 mb-3">设置后可追踪进度</p>
-            <el-button type="primary" round size="small" class="set-goal-button animate-pulse-strong"
+            <p class="text-sm font-medium text-gray-600" style="margin-bottom: 0.5em;">请设置{{ currentSeasonName }}目标</p>
+            <p class="text-xs text-gray-400" style="margin-bottom: 1em;">设置后可追踪进度</p>
+            <el-button type="primary" round size="default" class="set-goal-button animate-pulse-strong mt-2"
               @click="handleSetGoalClick">
-              >
+
               <Icon icon="mdi:plus-circle-outline" class="mr-1" />
               立即设置
             </el-button>
@@ -415,12 +418,6 @@ onMounted(() => {
 
 
 
-@keyframes pulse-strong {
-  /* ... */
-}
-
-
-
 .line-card {
   height: 155px;
   display: flex;
@@ -463,5 +460,27 @@ onMounted(() => {
   .el-timeline-item {
     margin: 0 6px;
   }
+}
+
+/* Animation for the Set Goal button */
+@keyframes pulse-strong {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    // Increased scale slightly for a stronger visual pulse
+    transform: scale(1.08);
+    // Slightly reduced opacity for a clearer "breath" effect
+    opacity: 0.9;
+  }
+}
+
+.animate-pulse-strong {
+  // Keep the existing animation properties
+  animation: pulse-strong 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 </style>

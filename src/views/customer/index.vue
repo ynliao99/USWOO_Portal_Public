@@ -183,7 +183,7 @@ function debounceSearch(value: string) {
   }
   searchTimeout = setTimeout(() => {
     setSearchTerm(value);
-  }, 300); // 300ms delay
+  }, 100); // 100ms delay
 }
 
 // Open Add/Edit Dialog

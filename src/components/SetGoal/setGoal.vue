@@ -20,22 +20,23 @@
                 <polyline fill="none" stroke="#68E534" stroke-width="24" points="88,214 173,284 304,138"
                   stroke-linecap="round" stroke-linejoin="round" class="tick" :class="{ 'animate-tick': animateSvg }" />
               </svg>
-              <p class="goalText text-lg" :class="{ 'animate-title': animateSvg }"> 目标已设置: {{
+              <p class="goalText text-lg" :class="{ 'animate-title': animateSvg }"> 目标已设置: ${{
                 goalValue?.toLocaleString() ?? "N/A" }}
               </p>
             </div>
 
             <div v-else-if="!isGoalSet && !apiErrorOccurred">
               <p id="goalWarningText" class="text-base text-gray-600 mb-6" v-html="warningText"></p>
-              <input id="s2goal" ref="goalInputRef" v-model.number="inputValue" type="number" label="s2goal"
-                class="w-full input-underline-only p-2 text-center mt-4" min="0" placeholder="输入目标值 (数字)"
-                :disabled="isLoading" @keydown="preventInvalidKeys" @keyup.enter="handleSetClick" />
+              <input id="s2goal" ref="goalInputRef" type="text" insectes inputmode="numeric" :value="displayValue"
+                label="s2goal" class="w-full p-2 text-center mt-4" placeholder="输入目标值 (数字)" :disabled="isLoading"
+                @input="handleRealtimeInput" @keydown="preventInvalidKeys"
+                @keyup.enter="handleSetClick" />
             </div>
 
             <div v-else-if="isGoalSet && !apiErrorOccurred" class="flex flex-col justify-center">
               <p class="text-base text-gray-700 mb-3"> 您已设置 {{ currentSeason }} 目标：
               </p>
-              <p class="text-3xl font-bold text-rose-400 mb-3"> {{ goalValue?.toLocaleString() ?? "N/A" }}
+              <p class="text-3xl font-bold text-rose-400 mb-3"> ${{ goalValue?.toLocaleString() ?? "N/A" }}
               </p>
               <p class="text-sm text-gray-500">(目标设置后不可修改)</p>
             </div>
@@ -78,6 +79,7 @@ import {
   nextTick,
   computed,
   defineProps,
+  watch,
 } from "vue";
 import { http } from "@/utils/http"; // Ensure path is correct
 import { ElButton } from 'element-plus'; 
@@ -105,7 +107,9 @@ const isLoading = ref(true);
 const isGoalSet = ref(false);
 const goalValue = ref<number | null>(null);
 const currentSeason = ref<string>("");
-const inputValue = ref<number | null>(null);
+const inputValue = ref<number | null>(null); // Stores the RAW number
+const displayValue = ref<string>("");      // Stores the FORMATTED string for display
+
 const errorMessage = ref<string | null>(null);
 const showSuccessAnimation = ref(false);
 const animateSvg = ref(false);
@@ -124,7 +128,90 @@ const warningText = computed(() => {
   return `您尚未设置 ${seasonText} 业绩目标。\n请先设置，设置后不可修改！`;
 });
 
+// --- Formatting Helpers ---
+const formatCurrency = (value: number | null | undefined): string => {
+  if (value === null || value === undefined || isNaN(value)) {
+    return ""; // Return empty string if no valid number
+  }
+  // Format with commas and prepend '$', remove fractional digits for integers
+  return `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+};
+
+const unformatCurrency = (value: string): number | null => {
+  if (!value) return null;
+  // Remove '$' and ',' characters
+  const numericString = value.replace(/[$,]/g, '');
+  // Parse to number, handle potential empty string or invalid chars remaining
+  const num = parseInt(numericString, 10);
+  return isNaN(num) ? null : num;
+};
+
 // --- Functions ---
+
+const handleRealtimeInput = (event: Event) => {
+  const inputElement = event.target as HTMLInputElement;
+  const originalValue = inputElement.value;
+  const originalCursorPos = inputElement.selectionStart ?? 0;
+
+  // --- Cursor Position Calculation ---
+  // Store how many digits were before the cursor in the *original* value
+  let originalDigitsBeforeCursor = 0;
+  for (let i = 0; i < originalCursorPos; i++) {
+    if (/\d/.test(originalValue[i])) {
+      originalDigitsBeforeCursor++;
+    }
+  }
+
+  // 1. Get raw number value by stripping all non-digits
+  const rawValueString = originalValue.replace(/[^0-9]/g, '');
+  const currentNumericValue = rawValueString === '' ? null : parseInt(rawValueString, 10);
+
+  // Update the underlying numeric model (important for v-if/disabled states etc.)
+  inputValue.value = currentNumericValue;
+
+  // 2. Format the raw number
+  const formattedValue = formatCurrency(currentNumericValue); // e.g., "$1,234" or "$0" or ""
+
+  // Update the reactive variable that the input's :value is bound to
+  displayValue.value = formattedValue;
+
+  // 3. Calculate the new cursor position in the *formatted* string
+  nextTick(() => {
+    let newCursorPos = 0;
+    let digitsCounted = 0;
+    for (let i = 0; i < formattedValue.length; i++) {
+      if (/\d/.test(formattedValue[i])) {
+        digitsCounted++;
+      }
+      if (digitsCounted === originalDigitsBeforeCursor) {
+        newCursorPos = i + 1; // Place cursor *after* the corresponding digit
+        break;
+      }
+    }
+    // If no digits were present originally (or all deleted), cursor goes to start
+    // If cursor was originally at the start (before any digits), it should be after '$' if present
+    if (originalDigitsBeforeCursor === 0 && rawValueString !== '') {
+      newCursorPos = 1; // After '$'
+    } else if (rawValueString === '') {
+      newCursorPos = 0; // Start of empty input
+    }
+    // Edge case: If the loop finishes without finding enough digits (e.g., formatting removed them?)
+    // place cursor at the end. This might happen if formatting logic changes.
+    if (newCursorPos === 0 && originalDigitsBeforeCursor > 0 && formattedValue.length > 0) {
+      newCursorPos = formattedValue.length;
+    }
+
+
+    // Force update the input element's value (sometimes needed with nextTick)
+    inputElement.value = formattedValue;
+    // Set the calculated cursor position
+    inputElement.setSelectionRange(newCursorPos, newCursorPos);
+  });
+
+  errorMessage.value = null; // Clear error on input
+};
+
+
 const checkGoalStatus = async () => {
   isLoading.value = true;
   errorMessage.value = null;
@@ -214,8 +301,8 @@ const triggerSuccessAnimation = () => {
 };
 
 const handleSetClick = () => {
-  if (inputValue.value === null || inputValue.value < 0) {
-    errorMessage.value = "请输入一个有效的目标值 (大于等于0)。";
+  if (inputValue.value === null || inputValue.value < 10000) {
+    errorMessage.value = "请输入一个有效的目标值 (大于等于10,000)。";
     goalInputRef.value?.focus();
     return;
   }
@@ -242,6 +329,14 @@ const handleClose = (status: "success" | "error" | "closed", data?: any) => {
 
 // --- Lifecycle Hook ---
 onMounted(() => { checkGoalStatus(); });
+
+// --- Watcher to update displayValue if inputValue changes programmatically ---
+// (This might be redundant given the focus/blur logic, but can be a safeguard)
+watch(inputValue, (newValue) => {
+  
+     displayValue.value = formatCurrency(newValue);
+  
+});
 
 </script>
 
@@ -295,37 +390,42 @@ onMounted(() => { checkGoalStatus(); });
 
 #s2goal {
   font-size: 2.5em;
-  /* 稍微加大字体 */
   font-weight: 600;
-  /* 加粗一点 */
   color: #f95865;
   caret-color: #f95865;
   border: none;
   border-bottom: 2px solid #e5e7eb;
-  /* 灰色下划线 */
   outline: none;
   background-color: transparent;
-  /* 透明背景 */
   transition: border-color 0.3s ease;
-  /* 平滑过渡 */
   padding-bottom: 4px;
-  /* 增加一点下边距 */
+  /* Ensure text-align is center if needed */
+  text-align: center;
 }
 
 #s2goal:focus {
   border-bottom-color: #f95865;
-  /* 聚焦时颜色变化 */
 }
 
 #s2goal::placeholder {
   font-size: 0.5em;
-  /* 调整 placeholder 大小 */
   color: #9ca3af;
   vertical-align: middle;
   font-weight: 400;
-  /* placeholder 不加粗 */
 }
 
+/* Hide spinner buttons (might not be necessary for type="text", but good practice) */
+#s2goal::-webkit-inner-spin-button,
+#s2goal::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#s2goal[type="number"] {
+  /* Keep this rule for safety if type somehow reverts */
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
 /* 成功动画样式 */
 .goalText {
   font-family: Helvetica, Arial, sans-serif;
@@ -375,7 +475,33 @@ onMounted(() => { checkGoalStatus(); });
     opacity: 1;
   }
 }
+@keyframes shake {
 
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translateX(-3px);
+  }
+
+  40%,
+  60% {
+    transform: translateX(3px);
+  }
+}
+
+.shake {
+  animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+}
 .animate-circle {
   animation: circle-animation 0.8s ease-out forwards;
 }

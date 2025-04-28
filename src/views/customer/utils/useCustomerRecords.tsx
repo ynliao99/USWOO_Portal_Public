@@ -216,14 +216,6 @@ export function useCustomerRecords() {
       prop: "is_completed",
       slot: "status"
 
-      // --- Element Plus Table Column Filter ---
-      // Example if using built-in filters instead of separate dialog
-      // columnKey: "is_completed",
-      // filters: statusList.map(s => ({ text: s.text, value: s.value })),
-      // filterMethod: (value: number, row: CustomerRecord) => {
-      //   // Adjust logic if needed (e.g., 'Completed' includes others)
-      //   return row.is_completed === value;
-      // }
     }
   ];
 
