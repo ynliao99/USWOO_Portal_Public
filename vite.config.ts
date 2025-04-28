@@ -26,16 +26,7 @@ export default ({ mode }: ConfigEnv): UserConfigExport => {
       allowedHosts: ["devportal.uswoo.cn", "portal.uswoo.cn"], // ← 要允许的域名
       // 本地跨域代理
       proxy: {
-        "/portalapi": {
-          target: "https://api.portal.uswoo.cn/agent/api", // api服务地址
-          changeOrigin: true,
-          rewrite: path => path.replace(/^\/portalapi/, "")
-        },
-        "/uswooapi": {
-          target: "https://api.uswoo.cn", // api服务地址
-          changeOrigin: true,
-          rewrite: path => path.replace(/^\/uswooapi/, "")
-        }
+       
       },
       // 预热文件以提前转换和缓存结果，降低启动期间的初始页面加载时长并防止转换瀑布
       warmup: {
